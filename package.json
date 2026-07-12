@@ -1,0 +1,28 @@
+{
+  "name": "counsel-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Counsel — B2B AI suite for legal & consulting firms",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm -w apps/api run dev",
+    "dev:web": "npm -w apps/web run dev",
+    "dev:ai": "npm -w services/ai run dev",
+    "build": "npm -w apps/web run build && npm -w apps/api run build",
+    "db:migrate": "npm -w packages/database run migrate",
+    "db:push": "npm -w packages/database run push",
+    "db:seed": "npm -w packages/database run seed",
+    "db:studio": "npm -w packages/database run studio",
+    "test": "npm -w apps/api run test",
+    "lint": "npm -w apps/web run lint && npm -w apps/api run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0"
+  }
+}

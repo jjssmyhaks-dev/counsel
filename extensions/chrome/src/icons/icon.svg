@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <!-- Background rounded rectangle -->
+  <rect width="128" height="128" rx="24" fill="#1a73e8"/>
+  
+  <!-- Document/legal text lines -->
+  <!-- Line 1 - full width -->
+  <rect x="28" y="38" width="72" height="7" rx="3.5" fill="white"/>
+  
+  <!-- Line 2 - full width -->
+  <rect x="28" y="52" width="72" height="7" rx="3.5" fill="white"/>
+  
+  <!-- Line 3 - partial width (work in progress) -->
+  <rect x="28" y="66" width="48" height="7" rx="3.5" fill="white"/>
+  
+  <!-- Line 4 - full width -->
+  <rect x="28" y="80" width="72" height="7" rx="3.5" fill="white" opacity="0.7"/>
+</svg>

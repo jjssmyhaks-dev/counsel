@@ -1,0 +1,17 @@
+{
+  "name": "counsel-chrome-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Counsel browser extension for Gmail integration",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "lint": "eslint src/**/*.js",
+    "package": "node build.js --zip"
+  },
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "archiver": "^6.0.0",
+    "chokidar": "^3.5.3"
+  }
+}

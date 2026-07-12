@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counsel Sidebar</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <div id="counsel-sidebar" class="counsel-sidebar">
+    <!-- Header -->
+    <header class="counsel-sidebar__header">
+      <div class="counsel-sidebar__logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect width="24" height="24" rx="6" fill="#1a73e8"/>
+          <path d="M7 8h10M7 12h10M7 16h7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="counsel-sidebar__title">Counsel</span>
+      </div>
+      <button id="counsel-close-btn" class="counsel-icon-btn" title="Close sidebar">&times;</button>
+    </header>
+
+    <!-- Auth State -->
+    <div id="counsel-auth-section" class="counsel-auth-section">
+      <!-- Logged out -->
+      <div id="counsel-login-form" class="counsel-card counsel-card--centered" style="display:none;">
+        <h3>Sign in to Counsel</h3>
+        <p class="counsel-text--muted">Connect your Counsel account to unlock AI drafting and analysis.</p>
+        <div class="counsel-form-group">
+          <label for="counsel-login-email">Email</label>
+          <input type="email" id="counsel-login-email" placeholder="you@firm.com" class="counsel-input">
+        </div>
+        <div class="counsel-form-group">
+          <label for="counsel-login-password">Password</label>
+          <input type="password" id="counsel-login-password" placeholder="••••••••" class="counsel-input">
+        </div>
+        <div id="counsel-login-error" class="counsel-error-msg" style="display:none;"></div>
+        <button id="counsel-login-btn" class="counsel-btn counsel-btn--primary counsel-btn--full">
+          Sign In
+        </button>
+        <p class="counsel-text--muted counsel-text--sm">
+          Or <a id="counsel-open-options" href="#">enter API token manually</a>
+        </p>
+      </div>
+
+      <!-- Logged in -->
+      <div id="counsel-user-info" class="counsel-card" style="display:none;">
+        <div class="counsel-user-row">
+          <div class="counsel-avatar" id="counsel-user-avatar"></div>
+          <div class="counsel-user-meta">
+            <div class="counsel-user-name" id="counsel-user-name">User</div>
+            <div class="counsel-user-firm" id="counsel-user-firm"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="counsel-tabs">
+      <button class="counsel-tab counsel-tab--active" data-tab="draft">
+        ✎ Draft
+      </button>
+      <button class="counsel-tab" data-tab="analyze">
+        🔍 Analyze
+      </button>
+      <button class="counsel-tab" data-tab="quick">
+        ⚡ Quick
+      </button>
+    </nav>
+
+    <!-- Tab: Drafting Assistant -->
+    <div id="counsel-tab-draft" class="counsel-tab-content">
+      <div class="counsel-card">
+        <div class="counsel-form-group">
+          <label for="counsel-draft-instructions">What should the email say?</label>
+          <textarea id="counsel-draft-instructions"
+            class="counsel-textarea"
+            rows="4"
+            placeholder="E.g., Politely decline the extension request but offer an alternative timeline..."></textarea>
+        </div>
+        <div class="counsel-form-group">
+          <label for="counsel-draft-tone">Tone</label>
+          <select id="counsel-draft-tone" class="counsel-select">
+            <option value="professional">Professional</option>
+            <option value="concise">Concise</option>
+            <option value="persuasive">Persuasive</option>
+            <option value="friendly">Friendly</option>
+            <option value="formal">Formal</option>
+          </select>
+        </div>
+        <div class="counsel-form-group">
+          <label for="counsel-draft-context">Additional Context (optional)</label>
+          <textarea id="counsel-draft-context"
+            class="counsel-textarea"
+            rows="2"
+            placeholder="Reply context, key points to include..."></textarea>
+        </div>
+        <div id="counsel-draft-email-subject" class="counsel-context-badge" style="display:none;"></div>
+        <button id="counsel-draft-generate" class="counsel-btn counsel-btn--primary counsel-btn--full">
+          Generate Draft
+        </button>
+      </div>
+
+      <!-- Draft Result -->
+      <div id="counsel-draft-result" class="counsel-card" style="display:none;">
+        <div class="counsel-card__header">
+          <h4>Draft Result</h4>
+          <div class="counsel-card__actions">
+            <button id="counsel-draft-copy" class="counsel-btn counsel-btn--ghost" title="Copy to clipboard">📋 Copy</button>
+            <button id="counsel-draft-regenerate" class="counsel-btn counsel-btn--ghost" title="Regenerate">🔄 Retry</button>
+            <button id="counsel-draft-insert" class="counsel-btn counsel-btn--ghost" title="Insert into compose">📥 Insert</button>
+          </div>
+        </div>
+        <div id="counsel-draft-output" class="counsel-draft-output"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Document Analysis -->
+    <div id="counsel-tab-analyze" class="counsel-tab-content" style="display:none;">
+      <div class="counsel-card">
+        <div class="counsel-form-group">
+          <label for="counsel-analyze-content">Content to analyze</label>
+          <textarea id="counsel-analyze-content"
+            class="counsel-textarea"
+            rows="6"
+            placeholder="Paste email or document content here, or use 'Analyze Current Email' below..."></textarea>
+        </div>
+        <div class="counsel-analyze-actions">
+          <button id="counsel-analyze-current" class="counsel-btn counsel-btn--secondary counsel-btn--sm">
+            📧 Use Current Email
+          </button>
+          <button id="counsel-analyze-summary" class="counsel-btn counsel-btn--primary">
+            Summarize
+          </button>
+          <button id="counsel-analyze-clauses" class="counsel-btn counsel-btn--secondary">
+            Extract Clauses
+          </button>
+          <button id="counsel-analyze-risks" class="counsel-btn counsel-btn--secondary">
+            Flag Risks
+          </button>
+        </div>
+        <div id="counsel-analyze-loading" class="counsel-loading" style="display:none;">
+          <span class="counsel-spinner"></span> Analyzing...
+        </div>
+        <div id="counsel-analyze-error" class="counsel-error-msg" style="display:none;"></div>
+      </div>
+      <!-- Analysis Result -->
+      <div id="counsel-analyze-result" class="counsel-card" style="display:none;">
+        <div class="counsel-card__header">
+          <h4 id="counsel-analyze-result-title">Analysis</h4>
+          <button id="counsel-analyze-clear" class="counsel-btn counsel-btn--ghost counsel-btn--sm">Clear</button>
+        </div>
+        <div id="counsel-analyze-output" class="counsel-analyze-output"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Quick Actions -->
+    <div id="counsel-tab-quick" class="counsel-tab-content" style="display:none;">
+      <div class="counsel-card">
+        <h4>Quick Actions</h4>
+        <div class="counsel-quick-actions">
+          <button id="counsel-quick-summarize" class="counsel-btn counsel-btn--secondary counsel-btn--full">
+            📋 Summarize This Email
+          </button>
+          <button id="counsel-quick-actions" class="counsel-btn counsel-btn--secondary counsel-btn--full">
+            ✅ Extract Action Items
+          </button>
+          <button id="counsel-quick-draft-reply" class="counsel-btn counsel-btn--secondary counsel-btn--full">
+            ✉️ Draft Reply
+          </button>
+        </div>
+      </div>
+
+      <!-- Email Context Preview -->
+      <div id="counsel-quick-context" class="counsel-card" style="display:none;">
+        <div class="counsel-card__header">
+          <h4>Current Email</h4>
+        </div>
+        <div id="counsel-quick-subject" class="counsel-quick-subject"></div>
+        <div id="counsel-quick-sender" class="counsel-quick-sender"></div>
+        <div id="counsel-quick-body-preview" class="counsel-quick-body"></div>
+      </div>
+
+      <div id="counsel-quick-result" class="counsel-card" style="display:none;">
+        <div class="counsel-card__header">
+          <h4 id="counsel-quick-result-title">Result</h4>
+          <button id="counsel-quick-copy" class="counsel-btn counsel-btn--ghost counsel-btn--sm">📋 Copy</button>
+        </div>
+        <div id="counsel-quick-output" class="counsel-quick-output"></div>
+      </div>
+    </div>
+
+    <!-- Settings Footer -->
+    <footer class="counsel-sidebar__footer">
+      <button id="counsel-open-settings" class="counsel-btn counsel-btn--ghost counsel-btn--sm">
+        ⚙️ Settings
+      </button>
+      <span id="counsel-status-indicator" class="counsel-status">● Connected</span>
+    </footer>
+  </div>
+
+  <script src="../shared/types.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/api.js"></script>
+  <script src="sidebar.js"></script>
+</body>
+</html>

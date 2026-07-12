@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counsel</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="counsel-popup">
+    <!-- Header -->
+    <header class="counsel-popup__header">
+      <div class="counsel-popup__logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect width="24" height="24" rx="6" fill="#1a73e8"/>
+          <path d="M7 8h10M7 12h10M7 16h7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="counsel-popup__title">Counsel</span>
+      </div>
+      <span class="counsel-popup__version">v0.1.0</span>
+    </header>
+
+    <!-- Status -->
+    <div class="counsel-popup__status">
+      <div class="counsel-status-dot counsel-status-dot--connected" id="popup-status-dot"></div>
+      <span id="popup-status-text">Connected to Demo Firm</span>
+    </div>
+
+    <!-- Account -->
+    <div class="counsel-popup__account" id="popup-account" style="display:none;">
+      <div class="counsel-avatar" id="popup-avatar">U</div>
+      <div>
+        <div class="counsel-popup__account-name" id="popup-account-name">User</div>
+        <div class="counsel-popup__account-email" id="popup-account-email">user@firm.com</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="counsel-popup__actions">
+      <button id="popup-open-app" class="counsel-popup-btn counsel-popup-btn--primary">
+        🌐 Open Web App
+      </button>
+      <button id="popup-open-sidebar" class="counsel-popup-btn counsel-popup-btn--secondary">
+        📝 Open Sidebar
+      </button>
+      <button id="popup-analyze-page" class="counsel-popup-btn counsel-popup-btn--secondary">
+        🔍 Analyze Current Page
+      </button>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="counsel-popup__section">
+      <div class="counsel-popup__section-title">Recent Activity</div>
+      <div id="popup-activity-list" class="counsel-popup__activity">
+        <div class="counsel-popup__empty">No recent activity</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="counsel-popup__footer">
+      <a id="popup-settings" href="#" class="counsel-popup__link">⚙️ Settings</a>
+      <a id="popup-logout" href="#" class="counsel-popup__link counsel-popup__link--danger" style="display:none;">Log out</a>
+    </footer>
+  </div>
+
+  <script src="../shared/types.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

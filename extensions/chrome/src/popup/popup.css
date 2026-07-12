@@ -1,0 +1,267 @@
+/* ── Counsel Popup Styles ───────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --counsel-primary: #1a73e8;
+  --counsel-primary-hover: #1557b0;
+  --counsel-primary-light: #e8f0fe;
+  --counsel-bg: #ffffff;
+  --counsel-bg-alt: #f8f9fa;
+  --counsel-border: #dadce0;
+  --counsel-text: #202124;
+  --counsel-text-muted: #5f6368;
+  --counsel-success: #1e8e3e;
+  --counsel-error: #d93025;
+  --counsel-radius: 8px;
+  --counsel-radius-sm: 4px;
+  --counsel-font: "Google Sans", Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+}
+
+html, body {
+  width: 320px;
+  min-height: 360px;
+  font-family: var(--counsel-font);
+  font-size: 13px;
+  color: var(--counsel-text);
+  background: var(--counsel-bg);
+  overflow-x: hidden;
+}
+
+.counsel-popup {
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.counsel-popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--counsel-border);
+}
+
+.counsel-popup__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.counsel-popup__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--counsel-primary);
+}
+
+.counsel-popup__version {
+  font-size: 11px;
+  color: var(--counsel-text-muted);
+  background: var(--counsel-bg-alt);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ── Status ─────────────────────────────────────────────────────────────── */
+
+.counsel-popup__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--counsel-text-muted);
+  background: var(--counsel-bg-alt);
+  border-bottom: 1px solid var(--counsel-border);
+}
+
+.counsel-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--counsel-border);
+}
+
+.counsel-status-dot--connected {
+  background: var(--counsel-success);
+}
+
+.counsel-status-dot--disconnected {
+  background: var(--counsel-error);
+}
+
+/* ── Account ────────────────────────────────────────────────────────────── */
+
+.counsel-popup__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--counsel-border);
+}
+
+.counsel-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--counsel-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.counsel-popup__account-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.counsel-popup__account-email {
+  font-size: 11px;
+  color: var(--counsel-text-muted);
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────── */
+
+.counsel-popup__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+}
+
+.counsel-popup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  font-family: var(--counsel-font);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--counsel-radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  outline: none;
+  text-align: center;
+}
+
+.counsel-popup-btn--primary {
+  background: var(--counsel-primary);
+  color: #fff;
+  border-color: var(--counsel-primary);
+}
+
+.counsel-popup-btn--primary:hover {
+  background: var(--counsel-primary-hover);
+}
+
+.counsel-popup-btn--secondary {
+  background: var(--counsel-bg);
+  color: var(--counsel-primary);
+  border-color: var(--counsel-border);
+}
+
+.counsel-popup-btn--secondary:hover {
+  background: var(--counsel-primary-light);
+  border-color: var(--counsel-primary);
+}
+
+/* ── Section ────────────────────────────────────────────────────────────── */
+
+.counsel-popup__section {
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+
+.counsel-popup__section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--counsel-text-muted);
+  padding: 8px 0 6px;
+  border-top: 1px solid var(--counsel-border);
+}
+
+/* ── Activity ───────────────────────────────────────────────────────────── */
+
+.counsel-popup__activity {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.counsel-popup__empty {
+  font-size: 12px;
+  color: var(--counsel-text-muted);
+  font-style: italic;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.counsel-popup__activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--counsel-border);
+}
+
+.counsel-popup__activity-item:last-child {
+  border-bottom: none;
+}
+
+.counsel-popup__activity-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.counsel-popup__activity-text {
+  color: var(--counsel-text);
+}
+
+.counsel-popup__activity-time {
+  font-size: 10px;
+  color: var(--counsel-text-muted);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+
+.counsel-popup__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--counsel-border);
+  margin-top: auto;
+}
+
+.counsel-popup__link {
+  font-size: 12px;
+  color: var(--counsel-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.counsel-popup__link:hover {
+  text-decoration: underline;
+}
+
+.counsel-popup__link--danger {
+  color: var(--counsel-error);
+}

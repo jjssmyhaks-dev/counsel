@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Counsel — AI for Legal & Consulting",
+  "version": "0.1.0",
+  "description": "AI copilot for email, documents, and research — embedded in Gmail",
+  "permissions": ["storage", "activeTab", "sidePanel", "scripting"],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://*.counsel.app/*",
+    "http://localhost:3001/*"
+  ],
+  "side_panel": {
+    "default_path": "src/sidebar/sidebar.html"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "src/icons/icon16.png",
+      "48": "src/icons/icon48.png",
+      "128": "src/icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["src/content/gmail-compose.js", "src/content/gmail-read.js"],
+      "css": ["src/content/gmail.css"]
+    }
+  ],
+  "options_page": "src/options/options.html",
+  "icons": {
+    "16": "src/icons/icon16.png",
+    "48": "src/icons/icon48.png",
+    "128": "src/icons/icon128.png"
+  }
+}

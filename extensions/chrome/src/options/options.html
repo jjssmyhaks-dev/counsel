@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counsel Settings</title>
+  <style>
+    /* Inline styles for options page to avoid extra file dependency */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+      --primary-light: #e8f0fe;
+      --bg: #ffffff;
+      --bg-alt: #f8f9fa;
+      --border: #dadce0;
+      --text: #202124;
+      --text-muted: #5f6368;
+      --success: #1e8e3e;
+      --error: #d93025;
+      --radius: 8px;
+      --radius-sm: 4px;
+      --font: "Google Sans", Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg-alt);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .counsel-options {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    .counsel-options__header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .counsel-options__title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .counsel-options__version {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--border);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .counsel-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .counsel-card__title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    .counsel-form-group {
+      margin-bottom: 14px;
+    }
+
+    .counsel-form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text-muted);
+    }
+
+    .counsel-form-group input,
+    .counsel-form-group select {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .counsel-form-group input:focus,
+    .counsel-form-group select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    .counsel-form-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .counsel-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .counsel-toggle:last-child {
+      border-bottom: none;
+    }
+
+    .counsel-toggle__label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .counsel-toggle__desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .counsel-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .counsel-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .counsel-switch__slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .counsel-switch__slider::before {
+      content: '';
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .counsel-switch input:checked + .counsel-switch__slider {
+      background: var(--primary);
+    }
+
+    .counsel-switch input:checked + .counsel-switch__slider::before {
+      transform: translateX(20px);
+    }
+
+    .counsel-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 20px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.2s;
+      outline: none;
+    }
+
+    .counsel-btn--primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .counsel-btn--primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .counsel-btn--secondary {
+      background: var(--bg);
+      color: var(--primary);
+      border-color: var(--border);
+    }
+
+    .counsel-btn--secondary:hover {
+      background: var(--primary-light);
+    }
+
+    .counsel-btn--danger {
+      background: var(--bg);
+      color: var(--error);
+      border-color: var(--error);
+    }
+
+    .counsel-btn--danger:hover {
+      background: #fce8e6;
+    }
+
+    .counsel-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .counsel-save-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #323232;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .counsel-save-toast--visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="counsel-options">
+    <!-- Header -->
+    <div class="counsel-options__header">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <rect width="24" height="24" rx="6" fill="#1a73e8"/>
+        <path d="M7 8h10M7 12h10M7 16h7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h1 class="counsel-options__title">Counsel</h1>
+      <span class="counsel-options__version">v0.1.0</span>
+    </div>
+
+    <!-- API Settings -->
+    <div class="counsel-card">
+      <h2 class="counsel-card__title">API Connection</h2>
+      <div class="counsel-form-group">
+        <label for="options-api-url">API Base URL</label>
+        <input type="text" id="options-api-url" placeholder="http://localhost:3001/api/v1">
+        <div class="counsel-form-hint">The base URL of your Counsel API instance.</div>
+      </div>
+      <div class="counsel-form-group">
+        <label for="options-api-token">API Token</label>
+        <input type="password" id="options-api-token" placeholder="Enter your API token...">
+        <div class="counsel-form-hint">Manually enter a token if you don't use login. Takes precedence over stored credentials.</div>
+      </div>
+      <div class="counsel-actions">
+        <button id="options-test-connection" class="counsel-btn counsel-btn--secondary">
+          Test Connection
+        </button>
+        <button id="options-save-api" class="counsel-btn counsel-btn--primary">
+          Save API Settings
+        </button>
+      </div>
+      <div id="options-connection-status" style="margin-top:10px;font-size:12px;"></div>
+    </div>
+
+    <!-- Preferences -->
+    <div class="counsel-card">
+      <h2 class="counsel-card__title">Preferences</h2>
+
+      <div class="counsel-toggle">
+        <div>
+          <div class="counsel-toggle__label">Auto-inject buttons</div>
+          <div class="counsel-toggle__desc">Show Counsel buttons in Gmail compose and email views</div>
+        </div>
+        <label class="counsel-switch">
+          <input type="checkbox" id="options-auto-inject" checked>
+          <span class="counsel-switch__slider"></span>
+        </label>
+      </div>
+
+      <div class="counsel-form-group" style="margin-top:14px;">
+        <label for="options-default-tone">Default Drafting Tone</label>
+        <select id="options-default-tone">
+          <option value="professional">Professional</option>
+          <option value="concise">Concise</option>
+          <option value="persuasive">Persuasive</option>
+          <option value="friendly">Friendly</option>
+          <option value="formal">Formal</option>
+        </select>
+      </div>
+
+      <div class="counsel-actions">
+        <button id="options-save-prefs" class="counsel-btn counsel-btn--primary">
+          Save Preferences
+        </button>
+      </div>
+    </div>
+
+    <!-- Account -->
+    <div class="counsel-card">
+      <h2 class="counsel-card__title">Account</h2>
+      <div id="options-account-info" style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">
+        Not signed in
+      </div>
+      <div class="counsel-actions">
+        <button id="options-clear-data" class="counsel-btn counsel-btn--danger">
+          Clear All Data
+        </button>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="counsel-card">
+      <h2 class="counsel-card__title">About</h2>
+      <p style="font-size:13px;color:var(--text-muted);">
+        Counsel Chrome Extension v0.1.0<br>
+        AI copilot for legal & consulting professionals.<br>
+        Embedded in Gmail for seamless drafting, analysis, and research.
+      </p>
+    </div>
+  </div>
+
+  <!-- Save toast -->
+  <div id="options-toast" class="counsel-save-toast">Settings saved</div>
+
+  <script src="../shared/types.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
