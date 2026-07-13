@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { mockGetDocument, mockGetAnalysis } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Document, Analysis, ClauseCard } from '@/lib/types';
 
 function formatDate(d: string) {
@@ -100,12 +100,12 @@ export default function DocumentDetailPage() {
     setLoading(true);
     setError('');
     try {
-      const document = await mockGetDocument(id);
+      const document = await api.get<Document>(`/documents/${id}`);
       setDoc(document);
 
       if (document.status === 'ready') {
         try {
-          const a = await mockGetAnalysis(id);
+          const a = await api.get<Analysis>(`/documents/${id}/analysis`);
           setAnalysis(a);
         } catch {
           // No analysis yet
@@ -124,7 +124,7 @@ export default function DocumentDetailPage() {
     await new Promise((r) => setTimeout(r, 2000));
     if (doc) {
       try {
-        const a = await mockGetAnalysis(doc.id);
+        const a = await api.get<Analysis>(`/documents/${doc.id}/analysis`);
         setAnalysis(a);
       } catch {
         // Still no analysis mock for this doc

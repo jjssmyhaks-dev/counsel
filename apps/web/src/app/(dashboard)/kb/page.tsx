@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { mockKbQuery } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { KbAnswer, KbQueryRequest, KbSource } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -89,7 +89,7 @@ export default function KbPage() {
 
     try {
       const req: KbQueryRequest = { question: question.trim() };
-      const answer = await mockKbQuery(req);
+      const answer = await api.post<KbAnswer>('/kb/query', req);
       setResult(answer);
 
       const record: QueryRecord = {

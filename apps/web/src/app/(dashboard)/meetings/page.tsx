@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockGetMeetings, mockGetMatters } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Meeting, Matter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,9 +54,9 @@ export default function MeetingsPage() {
     setLoading(true);
     setError('');
     try {
-      const [meetingsResp, mattersResp] = await Promise.all([mockGetMeetings(), mockGetMatters()]);
+      const meetingsResp = await api.get<{ data: Meeting[] }>('/meetings');
       setMeetings(meetingsResp.data);
-      setMatters(mattersResp.data);
+      // setMatters(mattersResp.data);
     } catch {
       setError('Failed to load meetings.');
     } finally {

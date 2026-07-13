@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockGetDrafts, mockGetMatters } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Draft, Matter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,9 +48,8 @@ export default function DraftsPage() {
     setLoading(true);
     setError('');
     try {
-      const [draftsResp, mattersResp] = await Promise.all([mockGetDrafts(), mockGetMatters()]);
+      const draftsResp = await api.get<{ data: Draft[] }>('/drafts');
       setDrafts(draftsResp.data);
-      setMatters(mattersResp.data);
     } catch {
       setError('Failed to load drafts.');
     } finally {

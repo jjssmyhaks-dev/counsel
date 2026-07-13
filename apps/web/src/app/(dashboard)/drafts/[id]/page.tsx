@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { mockGetDraft, mockGetMatters } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Draft, Matter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -243,11 +243,11 @@ export default function DraftEditorPage() {
     setLoading(true);
     setError('');
     try {
-      const mattersResp = await mockGetMatters();
+      const mattersResp = await api.get<{ data: Matter[] }>('/matters');
       setMatters(mattersResp.data);
 
       if (!isNew) {
-        const d = await mockGetDraft(draftId);
+        const d = await api.get<Draft>(`/drafts/${draftId}`);
         setDraft(d);
         setTitle(d.title);
         setType(d.type);

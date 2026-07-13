@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { mockGetMeeting, mockGetActionItems, mockGetDecisions } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Meeting, MeetingActionItem, MeetingDecision } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,9 +91,9 @@ export default function MeetingDetailPage() {
     setError('');
     try {
       const [m, ai, dec] = await Promise.all([
-        mockGetMeeting(meetingId),
-        mockGetActionItems(meetingId),
-        mockGetDecisions(meetingId),
+        api.get<Meeting>(`/meetings/${meetingId}`),
+        api.get<MeetingActionItem[]>(`/meetings/${meetingId}/action-items`),
+        api.get<MeetingDecision[]>(`/meetings/${meetingId}/decisions`),
       ]);
       setMeeting(m);
       setActionItems(ai);

@@ -1,7 +1,6 @@
 'use client';
 
 import type { User, Firm, LoginRequest, LoginResponse } from '@/lib/types';
-import { mockLogin } from '@/lib/api';
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -35,9 +34,24 @@ export function getFirm(): Firm | null {
 }
 
 export async function login(req: LoginRequest): Promise<LoginResponse> {
-  // In production, this would call the real API.
-  // For demo, use mock login directly.
-  return mockLogin(req);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+  const res = await fetch(`${apiUrl}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || data.message || 'Login failed');
+  }
+  const data = await res.json();
+  // Persist auth state
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('counsel_token', data.token);
+    localStorage.setItem('counsel_user', JSON.stringify(data.user));
+    if (data.firm) localStorage.setItem('counsel_firm', JSON.stringify(data.firm));
+  }
+  return data;
 }
 
 export function logout(): void {

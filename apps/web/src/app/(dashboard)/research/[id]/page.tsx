@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { mockGetResearchBrief } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { ResearchBrief } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -188,13 +188,10 @@ export default function ResearchDetailPage() {
     setLoading(true);
     setError('');
     try {
-      // Try API first, then use mock data
-      const data = mockGetResearchBrief(briefId);
-      const detailed = getMockDetailedBrief(briefId);
-      setBrief(detailed);
+      const data = await api.get<ResearchBrief>(`/research/${briefId}`);
+      setBrief(data);
     } catch {
-      // Fallback to mock detail
-      setBrief(getMockDetailedBrief(briefId));
+      setError('Failed to load research brief.');
     } finally {
       setLoading(false);
     }

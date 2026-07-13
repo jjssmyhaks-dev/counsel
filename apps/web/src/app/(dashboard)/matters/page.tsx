@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockGetMatters, mockCreateMatter } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Matter } from '@/lib/types';
 
 function formatDate(d: string) {
@@ -44,7 +44,7 @@ export default function MattersPage() {
     setLoading(true);
     setError('');
     try {
-      const resp = await mockGetMatters();
+      const resp = await api.get<{ data: Matter[] }>('/matters');
       setMatters(resp.data);
     } catch {
       setError('Failed to load matters.');
@@ -58,12 +58,11 @@ export default function MattersPage() {
     if (!formName || !formClient) return;
     setFormSubmitting(true);
     try {
-      const matter = await mockCreateMatter({
+      const matter = await api.post<Matter>('/matters', {
         name: formName,
         clientName: formClient,
         description: formDesc,
         practiceArea: formArea,
-        responsibleUserId: 'user-001',
       });
       setMatters((prev) => [matter, ...prev]);
       setShowNew(false);

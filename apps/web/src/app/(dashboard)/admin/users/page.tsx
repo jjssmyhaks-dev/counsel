@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { mockGetUsers } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,7 @@ export default function UsersPage() {
     setLoading(true);
     setError('');
     try {
-      const resp = await mockGetUsers();
+      const resp = await api.get<{ data: UserType[] }>('/admin/users');
       setUsers(resp.data);
     } catch {
       setError('Failed to load users.');

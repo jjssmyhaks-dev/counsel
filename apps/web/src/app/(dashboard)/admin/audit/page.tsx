@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { mockGetAuditLogs } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { AuditLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -118,7 +118,7 @@ export default function AuditLogPage() {
     setLoading(true);
     setError('');
     try {
-      const resp = await mockGetAuditLogs();
+      const resp = await api.get<{ data: AuditLog[] }>('/audit');
       setLogs(resp.data);
     } catch {
       setError('Failed to load audit logs.');

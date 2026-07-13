@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { mockGetPlaybookRules } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { PlaybookRule } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +49,7 @@ export default function PlaybookPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await mockGetPlaybookRules();
+      const data = await api.get<PlaybookRule[]>('/admin/playbook');
       setRules(data);
     } catch {
       setError('Failed to load playbook rules.');

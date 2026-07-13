@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockGetResearch, mockCreateResearch, mockGetMatters } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { ResearchBrief, Matter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +46,7 @@ export default function ResearchPage() {
     setLoading(true);
     setError('');
     try {
-      const [researchResp, mattersResp] = await Promise.all([mockGetResearch(), mockGetMatters()]);
+      const [researchResp, mattersResp] = await Promise.all([api.get('/research'), api.get('/matters')]);
       setBriefs(researchResp.data);
       setMatters(mattersResp.data);
     } catch {
@@ -60,7 +60,7 @@ export default function ResearchPage() {
     if (!newTitle.trim() || !newQuery.trim() || !newMatterId) return;
     setCreating(true);
     try {
-      const brief = await mockCreateResearch({
+      const brief = await api.post<ResearchBrief>('/research', {
         title: newTitle,
         query: newQuery,
         matterId: newMatterId,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { mockGetMatter, mockGetDocuments, mockGetResearch, mockGetDrafts } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Matter, Document, ResearchBrief, Draft } from '@/lib/types';
 
 function formatDate(d: string) {
@@ -54,10 +54,10 @@ export default function MatterDetailPage() {
     setError('');
     try {
       const [m, docsRes, researchRes, draftsRes] = await Promise.all([
-        mockGetMatter(id),
-        mockGetDocuments(),
-        mockGetResearch(),
-        mockGetDrafts(),
+        api.get<Matter>(`/matters/${id}`),
+        api.get<{ data: Document[] }>('/documents'),
+        api.get<{ data: ResearchBrief[] }>('/research'),
+        api.get<{ data: Draft[] }>('/drafts'),
       ]);
       setMatter(m);
       setDocuments(docsRes.data.filter((d) => d.matterId === id));

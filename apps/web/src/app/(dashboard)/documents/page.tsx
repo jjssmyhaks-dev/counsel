@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockGetDocuments } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Document } from '@/lib/types';
 
 function formatDate(d: string) {
@@ -57,7 +57,7 @@ export default function DocumentsPage() {
     setLoading(true);
     setError('');
     try {
-      const resp = await mockGetDocuments();
+      const resp = await api.get<{ data: Document[] }>('/documents');
       setDocuments(resp.data);
       setFiltered(resp.data);
     } catch {
