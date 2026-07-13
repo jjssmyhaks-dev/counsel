@@ -1,0 +1,83 @@
+config:
+  target: "http://localhost:3001"
+  phases:
+    - name: "warmup"
+      duration: 30
+      arrivalRate: 1
+    - name: "ramp"
+      duration: 60
+      arrivalRate: 5
+    - name: "sustained"
+      duration: 120
+      arrivalRate: 20
+  variables:
+    token: "{{ $processEnvironment.TEST_TOKEN }}"
+  processor: "./helpers.js"
+  ensure:
+    p99: 3000
+    maxErrorRate: 5
+
+scenarios:
+  - name: "Document Upload and Analysis Flow"
+    weight: 4
+    flow:
+      - get:
+          url: "/api/v1/documents"
+          headers:
+            Authorization: "{{ token }}"
+      - think: 1
+      - get:
+          url: "/api/v1/matters?page=1&limit=20"
+          headers:
+            Authorization: "{{ token }}"
+
+  - name: "Knowledge Base Query"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/v1/kb/query"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            question: "What is our standard limitation of liability clause?"
+
+  - name: "Draft Generation"
+    weight: 3
+    flow:
+      - post:
+          url: "/api/v1/drafts"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            title: "Client Update"
+            type: "email"
+            instructions: "Draft a brief update email"
+
+  - name: "Matter Listing"
+    weight: 8
+    flow:
+      - get:
+          url: "/api/v1/matters?page=1&limit=20"
+          headers:
+            Authorization: "{{ token }}"
+
+  - name: "Document List + Polling"
+    weight: 6
+    flow:
+      - get:
+          url: "/api/v1/documents"
+          headers:
+            Authorization: "{{ token }}"
+      - think: 2
+      - get:
+          url: "/api/v1/jobs/latest"
+          headers:
+            Authorization: "{{ token }}"
+
+  - name: "Audit Log Access"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/v1/audit/logs?limit=50"
+          headers:
+            Authorization: "{{ token }}"

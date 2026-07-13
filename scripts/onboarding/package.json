@@ -1,0 +1,16 @@
+{
+  "name": "counsel-onboarding",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "onboard": "tsx cli.ts onboard",
+    "list": "tsx cli.ts list"
+  },
+  "dependencies": {
+    "@counsel/database": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
