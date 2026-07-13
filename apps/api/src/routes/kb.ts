@@ -82,8 +82,8 @@ router.post(
         data: {
           answer,
           sourceChunks,
-          confidence: 0.91,
-          modelUsed: 'gpt-4o',
+          confidence,
+          modelUsed,
         },
         include: {
           createdBy: {
