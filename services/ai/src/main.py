@@ -6,8 +6,11 @@ draft generation, and meeting transcript processing.
 """
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -46,6 +49,10 @@ from .synthesis.research_synthesizer import research_synthesizer
 from .drafting.draft_generator import draft_generator
 from .meetings.meeting_processor import meeting_processor
 from .db.client import close_pool, ensure_tables, get_pool
+from .orchestrator.router import RouterAgent
+from .orchestrator.quality_gate import QualityGateAgent, GateResult
+from .orchestrator.pipeline_orchestrator import PipelineOrchestrator, PipelineJob
+from .orchestrator.audit_agent import audit_trail, AuditAction
 
 
 # ── Lifespan ────────────────────────────────────────────────────
@@ -316,6 +323,145 @@ async def full_pipeline(req: DocumentParseRequest):
         "chunks": len(chunk_dicts),
         "embeddings": len(embeddings),
         "status": "processed",
+    }
+
+
+# ── Orchestrator schemas ────────────────────────────────────────
+
+
+class RouteRequest(BaseModel):
+    prompt: str
+    context: Optional[Dict[str, Any]] = None
+
+
+class RouteResponse(BaseModel):
+    intent: str
+    confidence: float
+    reasoning: str
+    required_agents: List[str]
+    parameters: Dict[str, Any]
+
+
+class ValidateRequest(BaseModel):
+    output: str
+    context: Optional[Dict[str, Any]] = None
+
+
+class ValidateResponse(BaseModel):
+    passed: bool
+    blocked: bool
+    warnings: List[str]
+    checks: List[Dict[str, Any]]
+
+
+class PipelineStartRequest(BaseModel):
+    job_type: str
+    context: Dict[str, Any]
+
+
+class PipelineStatusResponse(BaseModel):
+    id: str
+    type: str
+    status: str
+    progress: float
+    steps: List[Dict[str, Any]]
+
+
+class AuditQueryRequest(BaseModel):
+    user_id: Optional[str] = None
+    firm_id: Optional[str] = None
+    action: Optional[str] = None
+    limit: int = 100
+    offset: int = 0
+
+
+# ── Agent initializations ───────────────────────────────────────
+
+router_agent = RouterAgent()
+quality_gate = QualityGateAgent(confidence_threshold=0.7)
+pipeline_orchestrator = PipelineOrchestrator()
+
+
+# ── Orchestrator / Router ───────────────────────────────────────
+
+
+@app.post("/orchestrator/route", response_model=RouteResponse)
+async def route_request(req: RouteRequest) -> RouteResponse:
+    """Route a user prompt to determine intent and required agents."""
+    decision = router_agent.route(req.prompt, req.context)
+    return RouteResponse(
+        intent=decision.intent.value,
+        confidence=decision.confidence,
+        reasoning=decision.reasoning,
+        required_agents=decision.required_agents,
+        parameters=decision.parameters,
+    )
+
+
+@app.post("/orchestrator/validate", response_model=ValidateResponse)
+async def validate_output(req: ValidateRequest) -> ValidateResponse:
+    """Run quality gate checks on an AI output."""
+    result = quality_gate.validate(req.output, req.context or {})
+    return ValidateResponse(
+        passed=result.passed,
+        blocked=result.blocked,
+        warnings=result.warnings,
+        checks=[{"check": c["check"], "passed": c["passed"]} for c in result.checks],
+    )
+
+
+@app.post("/orchestrator/pipeline/start", response_model=PipelineStatusResponse)
+async def start_pipeline(req: PipelineStartRequest) -> PipelineStatusResponse:
+    """Start a new pipeline job (ingestion, analysis, synthesis, etc.)."""
+    job = pipeline_orchestrator.create_job(req.job_type, req.context)
+    audit_trail.log(
+        action=AuditAction.CONTRACT_ANALYSIS_STARTED,
+        resource_id=req.context.get("document_id"),
+        firm_id=req.context.get("firm_id"),
+        metadata={"job_id": job.id, "job_type": req.job_type},
+    )
+    # Run in background — in production this uses a task queue
+    asyncio.create_task(pipeline_orchestrator.run_job(job))
+    return PipelineStatusResponse(
+        id=job.id,
+        type=job.type,
+        status=job.status.value,
+        progress=job.progress,
+        steps=[{"name": s.name, "agent": s.agent, "status": s.status.value} for s in job.steps],
+    )
+
+
+@app.get("/orchestrator/pipeline/{job_id}", response_model=PipelineStatusResponse)
+async def get_pipeline_status(job_id: str):
+    """Get the current status of a pipeline job."""
+    status = pipeline_orchestrator.get_job_status(job_id)
+    if not status:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+    return status
+
+
+@app.post("/orchestrator/pipeline/{job_id}/cancel")
+async def cancel_pipeline(job_id: str):
+    """Cancel a running pipeline job."""
+    if pipeline_orchestrator.cancel_job(job_id):
+        return {"status": "cancelled", "job_id": job_id}
+    raise HTTPException(status_code=404, detail=f"Job {job_id} not found or already completed")
+
+
+@app.post("/orchestrator/audit/query")
+async def query_audit_log(req: AuditQueryRequest):
+    """Query the audit trail."""
+    entries = audit_trail.query(
+        user_id=req.user_id,
+        firm_id=req.firm_id,
+        action=AuditAction(req.action) if req.action else None,
+        limit=req.limit,
+        offset=req.offset,
+    )
+    return {
+        "entries": audit_trail.to_dict_list(entries),
+        "total": len(entries),
+        "stats": audit_trail.get_stats(firm_id=req.firm_id),
     }
 
 
