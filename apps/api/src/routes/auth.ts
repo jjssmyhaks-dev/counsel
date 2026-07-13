@@ -4,6 +4,15 @@ import { signToken } from '../lib/jwt';
 import { z } from 'zod';
 import { validate } from '../middleware/validate';
 import { UnauthorizedError } from '../lib/errors';
+import {
+  workos,
+  getAuthorizationUrl,
+  authenticateWithCode,
+  createOrganization,
+  listDirectories,
+  listDirectoryUsers,
+  createUser as createWorkOSUser,
+} from '../lib/workos';
 
 const router = Router();
 
@@ -25,7 +34,7 @@ router.post(
         throw new UnauthorizedError('Invalid credentials');
       }
 
-      // Look up the user by email (with full role enum for type safety)
+      // Look up the user by email
       const user = await prisma.user.findUnique({
         where: { email },
         select: {
@@ -114,9 +123,196 @@ router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
 
 // ─── POST /logout ───────────────────────────────────────────────────────────
 router.post('/logout', (_req: Request, res: Response) => {
-  // No-op for JWT — client should discard the token
-  // In production, you might add the token to a blocklist
   res.json({ message: 'Logged out successfully' });
+});
+
+// ─── WorkOS SSO ─────────────────────────────────────────────────────────────
+
+// GET /sso/connections — list available SSO connections
+router.get('/sso/connections', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { data } = await workos.sso.listConnections();
+    res.json({
+      connections: data.map((c) => ({
+        id: c.id,
+        name: c.name,
+        state: c.state,
+        connectionType: c.connectionType,
+        domains: c.domains,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /sso/authorize — get WorkOS SSO authorization URL
+router.post('/sso/authorize', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { connectionId, email, organizationId } = req.body;
+
+    let url: string;
+
+    if (email) {
+      // E-initiated flow: user enters their email, WorkOS resolves their IdP
+      url = await workos.sso.getAuthorizationUrl({
+        clientId: process.env.WORKOS_CLIENT_ID || '',
+        redirectUri: process.env.WORKOS_REDIRECT_URI || 'http://localhost:3001/api/v1/auth/callback',
+        email,
+      }).then((r) => r.url);
+    } else if (organizationId) {
+      url = await workos.sso.getAuthorizationUrl({
+        organization: organizationId,
+        redirectUri: process.env.WORKOS_REDIRECT_URI || 'http://localhost:3001/api/v1/auth/callback',
+      }).then((r) => r.url);
+    } else if (connectionId) {
+      url = await getAuthorizationUrl(connectionId);
+    } else {
+      res.status(400).json({ error: 'Must provide connectionId, email, or organizationId' });
+      return;
+    }
+
+    res.json({ url });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /callback — WorkOS SSO callback
+router.get('/callback', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { code } = req.query;
+
+    if (!code || typeof code !== 'string') {
+      res.status(400).json({ error: 'Missing authorization code' });
+      return;
+    }
+
+    const profile = await authenticateWithCode(code);
+
+    // Find or create user in our database keyed by WorkOS profile ID
+    // We'll store the WorkOS profile ID in the user record
+    let user = await prisma.user.findFirst({
+      where: {
+        // Look up by email (WorkOS-managed users)
+        email: profile.email,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        firmId: true,
+        role: true,
+        avatarUrl: true,
+      },
+    });
+
+    if (!user) {
+      // Auto-provision user if they have an associated firm
+      // In production you'd match by organization domain
+      const firm = await prisma.firm.findFirst({
+        orderBy: { createdAt: 'asc' },
+        select: { id: true },
+      });
+
+      if (!firm) {
+        res.status(400).json({ error: 'No firm found. Contact your administrator.' });
+        return;
+      }
+
+      const displayName = [profile.firstName, profile.lastName]
+        .filter(Boolean)
+        .join(' ') || profile.email.split('@')[0];
+
+      user = await prisma.user.create({
+        data: {
+          email: profile.email,
+          name: displayName,
+          firmId: firm.id,
+          role: 'READONLY', // SSO users default to read-only until admin promotes them
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          firmId: true,
+          role: true,
+          avatarUrl: true,
+        },
+      });
+    }
+
+    const token = signToken({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      firmId: user.firmId,
+      role: user.role,
+    });
+
+    // Redirect to frontend with token as query param
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/?token=${token}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── WorkOS Org Management (Admin) ──────────────────────────────────────────
+
+// POST /orgs — create a WorkOS organization for a firm
+router.post('/orgs', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, domains } = req.body;
+    if (!name || !domains || !Array.isArray(domains)) {
+      res.status(400).json({ error: 'name and domains (array) are required' });
+      return;
+    }
+
+    const org = await createOrganization(name, domains);
+    res.json(org);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /directories — list SCIM directories
+router.get('/directories', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { organizationId } = req.query;
+    const dirs = await listDirectories(organizationId as string | undefined);
+    res.json({ directories: dirs });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /directories/:id/users — list users synced from a directory
+router.get('/directories/:id/users', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await listDirectoryUsers(req.params.id);
+    res.json({ users });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── WorkOS User Management ─────────────────────────────────────────────────
+
+// POST /users/invite — invite a user via WorkOS
+router.post('/users/invite', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, firstName, lastName } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'email is required' });
+      return;
+    }
+
+    const workosUser = await createWorkOSUser({ email, firstName, lastName });
+    res.json(workosUser);
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

@@ -10,6 +10,8 @@ import { verifyToken, TokenPayload } from '../lib/jwt';
  */
 const publicPaths = [
   { method: 'POST', path: '/api/v1/auth/login' },
+  { method: 'GET', path: '/api/v1/auth/callback' },
+  { method: 'POST', path: '/api/v1/auth/sso' },
 ];
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction) {
