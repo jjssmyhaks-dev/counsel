@@ -247,7 +247,7 @@ model DocumentChunk {
   text         String
   sectionTitle String?  @map("section_title")
   pageNumber   Int?     @map("page_number")
-  embedding    Unsupported("vector(1536)")
+  embedding    Unsupported("vector(768)")
   metadata     Json   @default("{}")
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)

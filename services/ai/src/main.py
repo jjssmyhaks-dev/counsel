@@ -60,7 +60,7 @@ from .orchestrator.audit_agent import audit_trail, AuditAction
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: initialise DB pool and ensure tables exist.
+    """Startup: initialise DB pool, Cloudflare AI, ensure tables exist.
 
     Shutdown: close the pool cleanly.
     """
@@ -69,6 +69,20 @@ async def lifespan(app: FastAPI):
         await ensure_tables()
     except Exception:
         pass  # table-creation is best-effort at startup
+
+    # Initialise Cloudflare Workers AI if credentials are configured
+    if settings.cloudflare_account_id and settings.cloudflare_api_token:
+        from .providers.cloudflare import init_cloudflare
+        try:
+            cf = init_cloudflare(
+                account_id=settings.cloudflare_account_id,
+                api_token=settings.cloudflare_api_token,
+            )
+            health = await cf.check_health()
+            print(f"Cloudflare Workers AI initialised: {health}")
+        except Exception as e:
+            print(f"Cloudflare Workers AI init failed: {e}")
+
     yield
     await close_pool()
 
@@ -102,6 +116,18 @@ async def health() -> HealthResponse:
         embedding_dim=settings.embedding_dim,
         llm_provider=settings.llm_provider,
     )
+
+
+@app.get("/health/cloudflare")
+async def health_cloudflare():
+    """Check Cloudflare Workers AI connectivity."""
+    try:
+        from .providers.cloudflare import cloudflare_ai
+        if cloudflare_ai:
+            return await cloudflare_ai.check_health()
+        return {"status": "not_configured", "error": "Cloudflare AI not initialized"}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 # ── Document parsing ────────────────────────────────────────────
@@ -151,7 +177,8 @@ async def embed_texts(req: EmbeddingRequest) -> EmbeddingResponse:
     """Generate embeddings for a list of text chunks."""
     if not req.texts:
         return EmbeddingResponse(embeddings=[])
-    return EmbeddingResponse(embeddings=embedder.embed(req.texts))
+    embeddings = await embedder.embed(req.texts)
+    return EmbeddingResponse(embeddings=embeddings)
 
 
 # ── Indexing ────────────────────────────────────────────────────
@@ -177,7 +204,7 @@ async def index_document(req: IndexRequest) -> IndexResponse:
 @app.post("/search", response_model=SearchResponse)
 async def search(req: SearchRequest) -> SearchResponse:
     """Semantic search: embed the query, then run pgvector cosine similarity."""
-    query_embedding = embedder.embed_query(req.query)
+    query_embedding = await embedder.embed_query(req.query)
     raw_results = await retriever.search(
         query_embedding=query_embedding,
         firm_id=req.firm_id,
@@ -316,7 +343,7 @@ async def full_pipeline(req: DocumentParseRequest):
         document_id=req.document_id,
     )
     texts = [c["text"] for c in chunk_dicts]
-    embeddings = embedder.embed(texts) if texts else []
+    embeddings = await embedder.embed(texts) if texts else []
 
     return {
         "document_id": req.document_id,

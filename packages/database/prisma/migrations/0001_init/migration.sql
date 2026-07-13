@@ -129,7 +129,7 @@ CREATE TABLE "public"."document_chunks" (
     "text" TEXT NOT NULL,
     "section_title" TEXT,
     "page_number" INTEGER,
-    "embedding" vector(1536),
+    "embedding" vector(768),
     "metadata" JSONB NOT NULL DEFAULT '{}',
     CONSTRAINT "document_chunks_pkey" PRIMARY KEY ("id")
 );
