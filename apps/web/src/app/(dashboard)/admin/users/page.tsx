@@ -42,7 +42,7 @@ export default function UsersPage() {
     setLoading(true);
     setError('');
     try {
-      const resp = await api.get<{ data: UserType[] }>('/admin/users');
+      const resp = await api.get<{ data: User[] }>('/admin/users');
       setUsers(resp.data);
     } catch {
       setError('Failed to load users.');

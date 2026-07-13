@@ -46,7 +46,10 @@ export default function ResearchPage() {
     setLoading(true);
     setError('');
     try {
-      const [researchResp, mattersResp] = await Promise.all([api.get('/research'), api.get('/matters')]);
+      const [researchResp, mattersResp] = await Promise.all([
+        api.get<{ data: ResearchBrief[] }>('/research'),
+        api.get<{ data: Matter[] }>('/matters'),
+      ]);
       setBriefs(researchResp.data);
       setMatters(mattersResp.data);
     } catch {
