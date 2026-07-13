@@ -120,7 +120,7 @@ async function aiRequest<T>(
   options: RequestInit = {},
   clientOptions: AiClientOptions = {},
 ): Promise<T> {
-  const { timeout = 60000, retries = 2 } = clientOptions;
+  const { timeout = 5000, retries = 1 } = clientOptions;
   const url = `${AI_SERVICE_URL}${path}`;
   let lastError: Error | null = null;
 
@@ -153,14 +153,19 @@ async function aiRequest<T>(
     } catch (error) {
       lastError = error as Error;
       if (error instanceof AiServiceError) throw error;
+      // Connection refused / unreachable — don't retry, fail fast
+      if (lastError.message?.includes('fetch failed') || lastError.message?.includes('ECONNREFUSED')) {
+        break;
+      }
       if (attempt < retries) {
-        // Exponential backoff: 1s, 2s
         await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
       }
     }
   }
 
-  throw lastError || new Error('Unknown AI service error');
+  throw new AiServiceError(
+    `AI service unavailable at ${AI_SERVICE_URL}: ${lastError?.message || 'unknown error'}`,
+  );
 }
 
 export const aiClient = {

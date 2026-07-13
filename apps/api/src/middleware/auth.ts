@@ -12,6 +12,7 @@ const publicPaths = [
   { method: 'POST', path: '/api/v1/auth/login' },
   { method: 'GET', path: '/api/v1/auth/callback' },
   { method: 'POST', path: '/api/v1/auth/sso' },
+  { method: 'GET', path: '/api/health' },
 ];
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction) {

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 
 import { authMiddleware } from './middleware/auth';
 import { tenantMiddleware } from './middleware/tenant';
@@ -19,6 +20,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ─── Global middleware ──────────────────────────────────────────────────────
+
+// Security headers (CSP, HSTS, XSS filter, etc.)
+app.use(helmet());
 
 // CORS — allow all origins in dev
 app.use(
@@ -40,8 +44,24 @@ app.get('/api/health', (_req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    database: 'neon-postgres',
+    ai: 'cloudflare-workers-ai',
+    auth: 'jwt+workos-sso',
   });
 });
+
+// ─── Rate limiting ─────────────────────────────────────────────────────────
+import rateLimit from 'express-rate-limit';
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } },
+  }),
+);
 
 // ─── Auth middleware (applied to all routes except /auth/login) ─────────────
 app.use(authMiddleware);

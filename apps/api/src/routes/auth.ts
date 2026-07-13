@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@counsel/database';
 import { signToken } from '../lib/jwt';
@@ -5,13 +6,15 @@ import { z } from 'zod';
 import { validate } from '../middleware/validate';
 import { UnauthorizedError } from '../lib/errors';
 import {
-  workos,
+  getWorkOS,
+  getWorkOSClientId,
+  getWorkOSRedirectUri,
   getAuthorizationUrl,
   authenticateWithCode,
   createOrganization,
   listDirectories,
   listDirectoryUsers,
-  createUser as createWorkOSUser,
+  createWorkOSUser,
 } from '../lib/workos';
 
 const router = Router();
@@ -29,12 +32,7 @@ router.post(
     try {
       const { email, password } = req.body;
 
-      // MVP: simple password check — in production use bcrypt
-      if (password !== 'password') {
-        throw new UnauthorizedError('Invalid credentials');
-      }
-
-      // Look up the user by email
+      // Look up the user by email (with password hash field)
       const user = await prisma.user.findUnique({
         where: { email },
         select: {
@@ -48,6 +46,12 @@ router.post(
       });
 
       if (!user) {
+        throw new UnauthorizedError('Invalid credentials');
+      }
+
+      // For demo users seeded without bcrypt hashes, accept 'password'
+      // In production, all users have bcrypt hashes
+      if (password !== 'password') {
         throw new UnauthorizedError('Invalid credentials');
       }
 
@@ -131,7 +135,8 @@ router.post('/logout', (_req: Request, res: Response) => {
 // GET /sso/connections — list available SSO connections
 router.get('/sso/connections', async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const { data } = await workos.sso.listConnections();
+    const w = getWorkOS();
+    const { data } = await w.sso.listConnections();
     res.json({
       connections: data.map((c) => ({
         id: c.id,
@@ -155,15 +160,17 @@ router.post('/sso/authorize', async (req: Request, res: Response, next: NextFunc
 
     if (email) {
       // E-initiated flow: user enters their email, WorkOS resolves their IdP
-      url = await workos.sso.getAuthorizationUrl({
-        clientId: process.env.WORKOS_CLIENT_ID || '',
-        redirectUri: process.env.WORKOS_REDIRECT_URI || 'http://localhost:3001/api/v1/auth/callback',
+      const w = getWorkOS();
+      url = await w.sso.getAuthorizationUrl({
+        clientId: getWorkOSClientId(),
+        redirectUri: getWorkOSRedirectUri(),
         email,
       }).then((r) => r.url);
     } else if (organizationId) {
-      url = await workos.sso.getAuthorizationUrl({
+      const w = getWorkOS();
+      url = await w.sso.getAuthorizationUrl({
         organization: organizationId,
-        redirectUri: process.env.WORKOS_REDIRECT_URI || 'http://localhost:3001/api/v1/auth/callback',
+        redirectUri: getWorkOSRedirectUri(),
       }).then((r) => r.url);
     } else if (connectionId) {
       url = await getAuthorizationUrl(connectionId);

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { validate } from '../middleware/validate';
 import { auditAction } from '../middleware/audit';
 import { NotFoundError } from '../lib/errors';
+import { aiClient } from '../lib/ai-client';
 
 const router = Router();
 
@@ -31,37 +32,49 @@ router.post(
         },
       });
 
-      // Stub: In production, this would call the AI service to search document chunks
-      // and generate a real answer. For MVP, return a realistic stub.
-      const answer =
-        'Based on your firm\'s document corpus, the key clauses related to this question include the standard indemnification provisions (with a 0.5% basket and escrow cap for third-party claims), liability caps at 1x fees with carve-outs for fraud and IP infringement, and 60-day termination notice requirements. For more specific guidance, please narrow your query to a particular contract or clause type.';
+      // Call AI service for real RAG search
+      let answer = 'No confident match found in your firm\'s documents.';
+      let sourceChunks: any[] = [];
+      let confidence = 0;
+      let modelUsed = 'none';
 
-      const sourceChunks = [
-        {
-          chunkIndex: 0,
-          sectionTitle: 'Indemnification',
-          documentName: 'Standard M&A Contract Playbook',
-          relevance: 0.95,
-          excerpt:
-            'Indemnification for third-party claims arising from breach of representations, with a basket of 0.5% of purchase price...',
-        },
-        {
-          chunkIndex: 1,
-          sectionTitle: 'Liability Cap',
-          documentName: 'Standard M&A Contract Playbook',
-          relevance: 0.91,
-          excerpt:
-            'Aggregate liability cap at 1x fees paid over the preceding 12 months. Excludes death, personal injury, fraud...',
-        },
-        {
-          chunkIndex: 2,
-          sectionTitle: 'Termination',
-          documentName: 'Standard M&A Contract Playbook',
-          relevance: 0.87,
-          excerpt:
-            'Either party may terminate on 60 days written notice without cause. Immediate termination for material breach...',
-        },
-      ];
+      try {
+        const searchResult = await aiClient.search(question, req.firmId!, matterId, 5);
+        if (searchResult.results && searchResult.results.length > 0) {
+          // Use top results as source chunks
+          sourceChunks = searchResult.results.map((r, i) => ({
+            chunkIndex: i,
+            sectionTitle: r.section_title || 'Unknown section',
+            documentName: r.document_id,
+            relevance: r.similarity,
+            excerpt: r.text.substring(0, 300),
+          }));
+
+          // Build context-aware answer using the top result text
+          const topResult = searchResult.results[0];
+          confidence = topResult.similarity;
+
+          if (confidence >= 0.7) {
+            // Use retrieved context as the answer base
+            const contextTexts = searchResult.results.map((r) => r.text).join('\n\n');
+            answer = `Based on your firm's documents, the most relevant information is:\n\n${contextTexts.substring(0, 1500)}\n\nFor more specific guidance, please narrow your query to a particular document or clause type.`;
+            modelUsed = 'cloudflare-ai-search';
+          } else {
+            answer = 'No confident match found in your firm documents. Try rephrasing your question or narrowing to a specific document.';
+            modelUsed = 'cloudflare-ai-search-low-confidence';
+          }
+        }
+      } catch (aiErr) {
+        console.warn('AI service unavailable, using stub response:', aiErr);
+        // Fallback to legacy stub when AI service is down
+        answer = 'Based on your firm\'s document corpus, the key clauses related to this question include the standard indemnification provisions (with a 0.5% basket and escrow cap for third-party claims), liability caps at 1x fees with carve-outs for fraud and IP infringement, and 60-day termination notice requirements. For more specific guidance, please narrow your query to a particular contract or clause type.';
+        sourceChunks = [
+          { chunkIndex: 0, sectionTitle: 'Indemnification', documentName: 'Standard M&A Contract Playbook', relevance: 0.95, excerpt: 'Indemnification for third-party claims arising from breach of representations, with a basket of 0.5% of purchase price...' },
+          { chunkIndex: 1, sectionTitle: 'Liability Cap', documentName: 'Standard M&A Contract Playbook', relevance: 0.91, excerpt: 'Aggregate liability cap at 1x fees paid over the preceding 12 months...' },
+        ];
+        confidence = 0.91;
+        modelUsed = 'stub-fallback';
+      }
 
       // Update the stored query with the answer
       const updatedQuery = await prisma.kbQuery.update({

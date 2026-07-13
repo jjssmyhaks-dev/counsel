@@ -14,8 +14,8 @@ export async function tenantMiddleware(
   next: NextFunction,
 ) {
   if (!req.firmId) {
-    _res.status(500).json({ error: 'No firm context — auth middleware must run first' });
-    return;
+    // Public routes (login, callback, health) — skip tenant context
+    return next();
   }
 
   try {
