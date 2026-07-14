@@ -8,19 +8,19 @@
 import type { WorkOS as WorkOSType } from '@workos-inc/node';
 
 let _workos: WorkOSType | null = null;
-let _workosAvailable = false;
+let _workosAvailable: boolean | null = null; // null = not yet checked, true = available, false = unavailable
 let WORKOS_CLIENT_ID = '';
 let WORKOS_REDIRECT_URI = '';
 
 export function initWorkOS() {
-  if (_workos !== null) return; // already initialized
+  if (_workos !== null) return; // already initialized with a client
   if (_workosAvailable === false) return; // previously failed, don't retry
 
   const apiKey = process.env.WORKOS_API_KEY || '';
   const clientId = process.env.WORKOS_CLIENT_ID || '';
 
-  // Both empty: WorkOS is not configured
-  if (!apiKey && !clientId) {
+  // Both empty or just placeholder asterisks: WorkOS is not configured
+  if ((!apiKey || apiKey === '***' || apiKey.length < 10) && (!clientId || clientId.length < 10)) {
     _workosAvailable = false;
     console.warn('WorkOS not configured — SSO routes will be unavailable');
     return;
@@ -28,12 +28,15 @@ export function initWorkOS() {
 
   try {
     const { WorkOS } = require('@workos-inc/node');
-    _workos = apiKey && apiKey.length > 10
-      ? new WorkOS(apiKey)
-      : new WorkOS({ clientId });
+    if (apiKey && apiKey.length > 10) {
+      _workos = new WorkOS(apiKey);
+    } else {
+      _workos = new WorkOS({ clientId });
+    }
     _workosAvailable = true;
     WORKOS_CLIENT_ID = clientId;
     WORKOS_REDIRECT_URI = process.env.WORKOS_REDIRECT_URI || 'http://localhost:3001/api/v1/auth/callback';
+    console.log('WorkOS initialized successfully');
   } catch (err) {
     console.warn('Failed to initialize WorkOS:', (err as Error).message);
     _workosAvailable = false;

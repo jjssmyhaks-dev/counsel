@@ -142,8 +142,19 @@ async def parse_doc(req: DocumentParseRequest) -> DocumentParseResponse:
     if req.content is None:
         raise HTTPException(status_code=400, detail="content is required")
 
+    # Content may be base64-encoded (from Node API client) or raw bytes
+    content = req.content
+    if isinstance(content, bytes):
+        # Try base64 decode — if it contains ASCII chars, it's likely base64 string
+        try:
+            text = content.decode('ascii')
+            import base64
+            content = base64.b64decode(text)
+        except Exception:
+            pass  # raw binary, use as-is
+
     # Phase 1: parse into (page_number, text) tuples
-    pages = parser_registry.parse(req.mime_type, req.content)
+    pages = parser_registry.parse(req.mime_type, content)
 
     # Phase 2: semantic chunking
     chunk_dicts = semantic_chunker.chunk_document(
