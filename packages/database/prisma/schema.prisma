@@ -132,14 +132,15 @@ model Firm {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  firmId    String   @map("firm_id") @db.Uuid
-  email     String   @unique
-  name      String
-  role      UserRole @default(READONLY)
-  avatarUrl String?  @map("avatar_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  firmId       String    @map("firm_id") @db.Uuid
+  email        String    @unique
+  name         String
+  passwordHash String?   @map("password_hash")
+  role         UserRole  @default(READONLY)
+  avatarUrl    String?   @map("avatar_url")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   firm           Firm               @relation(fields: [firmId], references: [id], onDelete: Cascade)
   sessions       Session[]

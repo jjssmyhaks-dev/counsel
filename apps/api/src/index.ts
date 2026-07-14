@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import { authMiddleware } from './middleware/auth';
 import { tenantMiddleware } from './middleware/tenant';
 import { errorHandler } from './middleware/errorHandler';
+import { initWorkOS } from './lib/workos';
+import { initResend } from './lib/email';
 
 import authRoutes from './routes/auth';
 import firmRoutes from './routes/firms';
@@ -16,6 +18,10 @@ import meetingRoutes from './routes/meetings';
 import kbRoutes from './routes/kb';
 import jobRoutes from './routes/jobs';
 import auditRoutes from './routes/audit';
+
+// Initialize services
+initWorkOS();
+initResend();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

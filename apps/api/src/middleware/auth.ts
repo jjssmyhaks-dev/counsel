@@ -10,8 +10,10 @@ import { verifyToken, TokenPayload } from '../lib/jwt';
  */
 const publicPaths = [
   { method: 'POST', path: '/api/v1/auth/login' },
+  { method: 'POST', path: '/api/v1/auth/register' },
   { method: 'GET', path: '/api/v1/auth/callback' },
   { method: 'POST', path: '/api/v1/auth/sso' },
+  { method: 'GET', path: '/api/v1/auth/sso/connections' },
   { method: 'GET', path: '/api/health' },
 ];
 

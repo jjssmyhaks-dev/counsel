@@ -5,25 +5,41 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getUser, getFirm } from '@/lib/auth';
 import { api } from '@/lib/api';
-import type { User, Firm, Document } from '@/lib/types';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    UPLOADED: 'bg-blue-50 text-blue-700',
+    PROCESSING: 'bg-amber-50 text-amber-700',
+    READY: 'bg-emerald-50 text-emerald-700',
+    FAILED: 'bg-red-50 text-red-700',
+  };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-${status}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${map[status] || 'bg-slate-50 text-slate-600'}`}>
+      {(status || 'unknown').charAt(0).toUpperCase() + (status || 'unknown').slice(1).toLowerCase()}
     </span>
   );
 }
 
+interface DocRow {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  status: string;
+  createdAt: string;
+  matter?: { name: string };
+}
+
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [firm, setFirm] = useState<Firm | null>(null);
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [firm, setFirm] = useState<any>(null);
+  const [documents, setDocuments] = useState<DocRow[]>([]);
+  const [stats, setStats] = useState({ documents: 0, matters: 0, drafts: 0, meetings: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,34 +49,47 @@ export default function DashboardPage() {
     setUser(u);
     setFirm(f);
 
-    // Fetch real documents from API
-    api.get<{ data: Document[] }>('/documents?limit=5')
-      .then(res => setDocuments(res.data || []))
-      .catch(err => console.warn('Failed to load documents:', err))
+    Promise.all([
+      api.get('/documents?limit=5'),
+      api.get('/matters?limit=1'),
+      api.get('/drafts?limit=1'),
+      api.get('/meetings?limit=1'),
+    ])
+      .then(([docs, matters, drafts, meetings]) => {
+        const d = docs.data?.data || [];
+        setDocuments(Array.isArray(d) ? d.slice(0, 5) : []);
+        setStats({
+          documents: docs.data?.pagination?.total || (Array.isArray(d) ? d.length : 0),
+          matters: matters.data?.pagination?.total || (matters.data?.data?.length || 0),
+          drafts: drafts.data?.pagination?.total || (drafts.data?.data?.length || 0),
+          meetings: meetings.data?.pagination?.total || (meetings.data?.data?.length || 0),
+        });
+      })
+      .catch(err => console.warn('Dashboard fetch:', err))
       .finally(() => setLoading(false));
   }, [router]);
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="skeleton h-24 rounded-xl" />
+        <div className="animate-pulse bg-slate-200 h-24 rounded-xl" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="skeleton h-28 rounded-xl" />)}
+          {[1,2,3,4].map(i => <div key={i} className="animate-pulse bg-slate-100 h-28 rounded-xl" />)}
         </div>
       </div>
     );
   }
 
-  const stats = [
-    { icon: '\uD83D\uDCC4', value: documents.length.toString(), label: 'Recent Documents', trend: 'Latest uploads', trendUp: true },
-    { icon: '\uD83D\uDCCB', value: '--', label: 'Active Matters', trend: 'API connected', trendUp: true },
-    { icon: '\u270F\uFE0F', value: '--', label: 'Drafts Pending', trend: 'Real data wired', trendUp: false },
-    { icon: '\uD83D\uDCA1', value: '--', label: 'KB Queries', trend: 'AI-powered search', trendUp: true },
+  const statCards = [
+    { icon: '\uD83D\uDCC4', value: stats.documents, label: 'Documents', trend: 'Total uploaded', trendUp: true },
+    { icon: '\uD83D\uDCCB', value: stats.matters, label: 'Matters', trend: 'All matters', trendUp: true },
+    { icon: '\u270F\uFE0F', value: stats.drafts, label: 'Drafts', trend: 'Generated drafts', trendUp: false },
+    { icon: '\uD83D\uDCA1', value: stats.meetings, label: 'Meetings', trend: 'Processed', trendUp: true },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Welcome */}
+      {/* Welcome banner */}
       <div className="bg-gradient-to-r from-navy-800 to-navy-900 rounded-xl p-6 text-white">
         <h1 className="text-xl font-bold">Welcome back, {user?.name || 'Counselor'}</h1>
         {firm && <p className="text-blue-200 text-sm mt-1">{firm.name}</p>}
@@ -69,9 +98,9 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats */}
+      {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <div key={stat.label} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -87,12 +116,31 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Recent Documents */}
+      {/* Quick actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { href: '/documents', label: 'Upload Document', icon: '\uD83D\uDCC4', color: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
+          { href: '/matters', label: 'New Matter', icon: '\uD83D\uDCCB', color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
+          { href: '/drafts', label: 'Create Draft', icon: '\u270F\uFE0F', color: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
+          { href: '/research', label: 'Research', icon: '\uD83D\uDD0D', color: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
+        ].map(action => (
+          <Link
+            key={action.href}
+            href={action.href}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors ${action.color}`}
+          >
+            <span className="text-lg">{action.icon}</span>
+            {action.label}
+          </Link>
+        ))}
+      </div>
+
+      {/* Recent Documents table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200">
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="font-semibold text-slate-900">Recent Documents</h3>
           <Link href="/documents" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-            View all →
+            View all &rarr;
           </Link>
         </div>
         <div className="overflow-x-auto">
@@ -113,19 +161,21 @@ export default function DashboardPage() {
                   </td>
                 </tr>
               ) : (
-                documents.slice(0, 5).map((doc) => (
+                documents.map((doc) => (
                   <tr
                     key={doc.id}
                     className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
                     onClick={() => router.push(`/documents/${doc.id}`)}
                   >
                     <td className="px-5 py-3">
-                      <p className="text-sm font-medium text-slate-900 truncate max-w-[280px]">{doc.name}</p>
-                      <p className="text-xs text-slate-500">{(doc as any).matterName || '—'}</p>
+                      <p className="text-sm font-medium text-slate-900 truncate max-w-[280px]">
+                        {doc.originalName || 'Unnamed'}
+                      </p>
+                      <p className="text-xs text-slate-500">{doc.matter?.name || '\u2014'}</p>
                     </td>
                     <td className="px-5 py-3">
                       <span className="text-xs font-mono uppercase text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                        {doc.type}
+                        {(doc.mimeType || 'unknown').split('/')[1] || doc.mimeType}
                       </span>
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={doc.status} /></td>

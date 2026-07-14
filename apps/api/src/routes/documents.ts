@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { validate } from '../middleware/validate';
 import { auditAction } from '../middleware/audit';
 import { NotFoundError, ForbiddenError } from '../lib/errors';
-import { generateSignedUrl } from '../lib/r2';
+import { generateSignedUrl } from '../lib/storage';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -282,10 +282,7 @@ router.get(
         throw new NotFoundError('Document');
       }
 
-      const signed = generateSignedUrl({
-        key: document.r2Key,
-        expiresInSeconds: 3600,
-      });
+      const signed = generateSignedUrl(document.r2Key, 3600);
 
       res.json({
         url: signed.url,

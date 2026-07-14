@@ -33,26 +33,21 @@ router.post(
     try {
       const { email, password } = req.body;
 
-      // Look up the user by email (with password hash field)
+      // Look up the user by email
       const user = await prisma.user.findUnique({
         where: { email },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          firmId: true,
-          role: true,
-          avatarUrl: true,
-        },
       });
 
       if (!user) {
         throw new UnauthorizedError('Invalid credentials');
       }
 
-      // For demo users seeded without bcrypt hashes, accept 'password'
-      // In production, all users have bcrypt hashes
-      if (password !== 'password') {
+      // If the user has a bcrypt hash, verify it; otherwise accept 'password' (seeded users)
+      const isValid = user.passwordHash
+        ? await bcrypt.compare(password, user.passwordHash)
+        : password === 'password';
+
+      if (!isValid) {
         throw new UnauthorizedError('Invalid credentials');
       }
 
@@ -62,6 +57,11 @@ router.post(
         name: user.name,
         firmId: user.firmId,
         role: user.role,
+      });
+
+      const firm = await prisma.firm.findUnique({
+        where: { id: user.firmId },
+        select: { id: true, name: true, slug: true, plan: true, seatCount: true, createdAt: true },
       });
 
       res.json({
@@ -74,6 +74,13 @@ router.post(
           role: user.role,
           avatarUrl: user.avatarUrl,
         },
+        firm: firm ? {
+          id: firm.id,
+          name: firm.name,
+          slug: firm.slug,
+          plan: firm.plan,
+          seatCount: firm.seatCount,
+        } : { id: user.firmId },
       });
     } catch (err) {
       next(err);
@@ -131,6 +138,92 @@ router.post('/logout', (_req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 });
 
+// ─── POST /register ─────────────────────────────────────────────────────────
+const registerSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  name: z.string().min(1, 'Name is required'),
+  firmName: z.string().optional(),
+});
+
+router.post(
+  '/register',
+  validate('body', registerSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password, name, firmName } = req.body;
+
+      // Check if user already exists
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        res.status(409).json({ error: 'A user with this email already exists' });
+        return;
+      }
+
+      // Get or create a firm
+      let firmId: string;
+      const slug = (firmName || 'default').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50);
+      if (firmName) {
+        const firm = await prisma.firm.create({
+          data: { name: firmName, slug },
+        });
+        firmId = firm.id;
+      } else {
+        // Assign to first available firm (demo mode)
+        const firstFirm = await prisma.firm.findFirst({ select: { id: true } });
+        if (!firstFirm) {
+          const firm = await prisma.firm.create({
+            data: { name: 'Default Firm', slug: 'default' },
+          });
+          firmId = firm.id;
+        } else {
+          firmId = firstFirm.id;
+        }
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      // Create user
+      const user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          passwordHash,
+          firmId,
+          role: 'ASSOCIATE',
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          firmId: true,
+          role: true,
+          avatarUrl: true,
+        },
+      });
+
+      // Issue token
+      const token = signToken({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        firmId: user.firmId,
+        role: user.role as any,
+      });
+
+      const firm = await prisma.firm.findUnique({
+        where: { id: user.firmId },
+        select: { id: true, name: true, slug: true, plan: true },
+      });
+
+      res.status(201).json({ token, user, firm });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ─── WorkOS SSO ─────────────────────────────────────────────────────────────
 
 // GET /sso/connections — list available SSO connections
@@ -143,7 +236,7 @@ router.get('/sso/connections', async (_req: Request, res: Response, next: NextFu
     const w = getWorkOS();
     const { data } = await w.sso.listConnections();
     res.json({
-      connections: data.map((c) => ({
+      connections: data.map((c: any) => ({
         id: c.id,
         name: c.name,
         state: c.state,
@@ -165,29 +258,20 @@ router.post('/sso/authorize', async (req: Request, res: Response, next: NextFunc
     }
     const { connectionId, email, organizationId } = req.body;
 
-    let url: string;
+    let result: string;
 
     if (email) {
-      const w = getWorkOS();
-      url = await w.sso.getAuthorizationUrl({
-        clientId: getWorkOSClientId(),
-        redirectUri: getWorkOSRedirectUri(),
-        email,
-      }).then((r) => r.url);
+      result = await getAuthorizationUrl(connectionId || '', email);
     } else if (organizationId) {
-      const w = getWorkOS();
-      url = await w.sso.getAuthorizationUrl({
-        organization: organizationId,
-        redirectUri: getWorkOSRedirectUri(),
-      }).then((r) => r.url);
+      result = await getAuthorizationUrl(connectionId || '');
     } else if (connectionId) {
-      url = await getAuthorizationUrl(connectionId);
+      result = await getAuthorizationUrl(connectionId);
     } else {
       res.status(400).json({ error: 'Must provide connectionId, email, or organizationId' });
       return;
     }
 
-    res.json({ url });
+    res.json({ url: result });
   } catch (err) {
     next(err);
   }

@@ -2,13 +2,13 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma, UserRole } from '@counsel/database';
 import { z } from 'zod';
 import { validate } from '../middleware/validate';
-import { requireRole } from '../middleware/audit';
+import { requireRole } from '../middleware/rbac';
 import { NotFoundError } from '../lib/errors';
 
 const router = Router();
 
-// All audit routes require ADMIN or PARTNER role
-router.use(requireRole(UserRole.ADMIN, UserRole.PARTNER));
+// All audit routes require ADMIN role
+router.use(requireRole('ADMIN'));
 
 // ─── GET /logs ─── Filterable audit log retrieval ───────────────────────────
 const auditQuerySchema = z.object({

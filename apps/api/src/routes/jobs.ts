@@ -123,7 +123,7 @@ router.post('/process/:jobId', async (req: Request, res: Response, next: NextFun
         // Update document status
         await prisma.document.update({
           where: { id: document.id },
-          data: { status: 'READY', pageCount: parseResult.total_pages },
+          data: { status: 'READY' } as any,
         });
 
         await prisma.job.update({

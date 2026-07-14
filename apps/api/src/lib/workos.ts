@@ -8,7 +8,7 @@
 import type { WorkOS as WorkOSType } from '@workos-inc/node';
 
 let _workos: WorkOSType | null = null;
-let _workosAvailable: boolean | null = null; // null = not yet checked, true = available, false = unavailable
+let _workosAvailable: boolean = false;
 let WORKOS_CLIENT_ID = '';
 let WORKOS_REDIRECT_URI = '';
 
@@ -78,15 +78,15 @@ export interface WorkOSProfile {
 
 // ── SAML/OIDC SSO ───────────────────────────────────────────────────────────
 
-export async function getAuthorizationUrl(connectionId: string, state?: string) {
+export async function getAuthorizationUrl(connectionId: string, state?: string): Promise<string> {
   const workos = getWorkOS();
-  const { url } = await workos.sso.getAuthorizationUrl({
+  const result = await workos.sso.getAuthorizationUrl({
     connection: connectionId,
     clientId: getWorkOSClientId(),
     redirectUri: getWorkOSRedirectUri(),
     state: state || undefined,
   });
-  return url;
+  return result.url;
 }
 
 export async function authenticateWithCode(code: string): Promise<WorkOSProfile> {
