@@ -40,7 +40,10 @@ class ParserRegistry:
         """Parse document content into (page_num, text) tuples."""
         parser = self.get_parser(mime_type)
         if parser is None:
-            raise ValueError(f"Unsupported MIME type: {mime_type}")
+            supported = ", ".join(sorted(self._map.keys()))
+            raise ValueError(
+                f"Unsupported MIME type: {mime_type}. Supported: {supported}"
+            )
 
         if hasattr(parser, "parse_flat"):
             return parser.parse_flat(content)

@@ -86,13 +86,21 @@ class CloudflareAI:
 
                 result = data["result"]
                 if "data" in result:
-                    embeddings = result["data"]
+                    batch_embeddings = result["data"]
                 elif isinstance(result, list):
-                    embeddings = result
+                    batch_embeddings = result
                 else:
                     raise Exception(f"Unexpected embedding response shape: {list(result.keys()) if isinstance(result, dict) else type(result)}")
 
-                results.extend(embeddings)
+                # Validate embedding dimensions (bge-base-en-v1.5 should return 768-dim)
+                for idx, vec in enumerate(batch_embeddings):
+                    if not isinstance(vec, list) or len(vec) != self.EMBEDDING_DIM:
+                        raise Exception(
+                            f"Embedding dimension mismatch at batch {i // batch_size}, item {idx}: "
+                            f"expected {self.EMBEDDING_DIM}, got {len(vec) if isinstance(vec, list) else type(vec)}"
+                        )
+
+                results.extend(batch_embeddings)
                 logger.info("Embedded batch %d/%d (%d texts)", i // batch_size + 1, (len(texts) + batch_size - 1) // batch_size, len(batch))
 
             except Exception as e:

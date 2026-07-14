@@ -150,15 +150,11 @@ def _decode_content(content_str: str) -> bytes:
 
     try:
         return base64.b64decode(content_str, validate=True)
-    except Exception:
-        # Fallback: try without padding, or with lenient decoding
-        try:
-            return base64.b64decode(content_str)
-        except Exception as e:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid base64 content: {e}",
-            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid base64 content: {e}",
+        )
 
 
 @app.post("/parse", response_model=DocumentParseResponse)
