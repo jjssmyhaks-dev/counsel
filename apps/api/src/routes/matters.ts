@@ -3,6 +3,7 @@ import { prisma } from '@counsel/database';
 import { z } from 'zod';
 import { validate } from '../middleware/validate';
 import { auditAction } from '../middleware/audit';
+import { requireRole } from '../middleware/rbac';
 import { NotFoundError, ForbiddenError, ValidationError } from '../lib/errors';
 
 const router = Router();
@@ -215,6 +216,7 @@ router.patch(
 // ─── DELETE /:id ─── Delete a matter ────────────────────────────────────────
 router.delete(
   '/:id',
+  requireRole('PARTNER'),
   auditAction('Matter', 'MATTER_DELETED'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

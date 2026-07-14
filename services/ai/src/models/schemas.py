@@ -19,7 +19,7 @@ class DocumentParseRequest(BaseModel):
     document_id: str
     r2_key: Optional[str] = None
     mime_type: str
-    content: Optional[bytes] = None  # raw bytes for MVP direct upload
+    content: Optional[str] = None  # base64-encoded content from Node API client
 
 
 class DocumentParseResponse(BaseModel):

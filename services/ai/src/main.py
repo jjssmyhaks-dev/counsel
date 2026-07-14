@@ -133,28 +133,71 @@ async def health_cloudflare():
 # ── Document parsing ────────────────────────────────────────────
 
 
+def _decode_content(content_str: str) -> bytes:
+    """Decode a base64-encoded content string into raw bytes.
+
+    Handles standard base64, URL-safe base64, and padding variations.
+    """
+    import base64
+
+    # Normalise URL-safe and padding variations
+    # Some clients send URL-safe base64 (using - and _). Convert to standard.
+    content_str = content_str.replace('-', '+').replace('_', '/')
+    # Add padding if missing (base64 length must be multiple of 4)
+    missing_padding = len(content_str) % 4
+    if missing_padding:
+        content_str += '=' * (4 - missing_padding)
+
+    try:
+        return base64.b64decode(content_str, validate=True)
+    except Exception:
+        # Fallback: try without padding, or with lenient decoding
+        try:
+            return base64.b64decode(content_str)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid base64 content: {e}",
+            )
+
+
 @app.post("/parse", response_model=DocumentParseResponse)
 async def parse_doc(req: DocumentParseRequest) -> DocumentParseResponse:
     """Parse a document into structured semantic chunks.
 
-    Pipeline: raw bytes → parser (pages) → semantic chunker → Chunk models.
+    Pipeline: base64 → raw bytes → parser (pages) → semantic chunker → Chunk models.
     """
     if req.content is None:
         raise HTTPException(status_code=400, detail="content is required")
 
-    # Content may be base64-encoded (from Node API client) or raw bytes
-    content = req.content
-    if isinstance(content, bytes):
-        # Try base64 decode — if it contains ASCII chars, it's likely base64 string
-        try:
-            text = content.decode('ascii')
-            import base64
-            content = base64.b64decode(text)
-        except Exception:
-            pass  # raw binary, use as-is
+    # Check if mime_type is supported before decoding
+    if not parser_registry.supports(req.mime_type):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported MIME type: {req.mime_type}. Supported types: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, text/plain",
+        )
+
+    # Decode base64 content into raw bytes
+    raw_bytes = _decode_content(req.content)
 
     # Phase 1: parse into (page_number, text) tuples
-    pages = parser_registry.parse(req.mime_type, content)
+    try:
+        pages = parser_registry.parse(req.mime_type, raw_bytes)
+    except ImportError as e:
+        raise HTTPException(
+            status_code=501,
+            detail=f"Parser dependency missing for {req.mime_type}: {e}",
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to parse document: {e}",
+        )
 
     # Phase 2: semantic chunking
     chunk_dicts = semantic_chunker.chunk_document(
@@ -348,7 +391,29 @@ async def full_pipeline(req: DocumentParseRequest):
     if req.content is None:
         raise HTTPException(status_code=400, detail="content is required")
 
-    pages = parser_registry.parse(req.mime_type, req.content)
+    if not parser_registry.supports(req.mime_type):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported MIME type: {req.mime_type}",
+        )
+
+    raw_bytes = _decode_content(req.content)
+
+    try:
+        pages = parser_registry.parse(req.mime_type, raw_bytes)
+    except ImportError as e:
+        raise HTTPException(
+            status_code=501,
+            detail=f"Parser dependency missing for {req.mime_type}: {e}",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to parse document: {e}",
+        )
+
     chunk_dicts = semantic_chunker.chunk_document(
         pages=pages,
         document_id=req.document_id,

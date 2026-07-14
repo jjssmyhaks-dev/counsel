@@ -18,6 +18,7 @@ import meetingRoutes from './routes/meetings';
 import kbRoutes from './routes/kb';
 import jobRoutes from './routes/jobs';
 import auditRoutes from './routes/audit';
+import userRoutes from './routes/users';
 
 // Initialize services
 initWorkOS();
@@ -86,6 +87,7 @@ app.use('/api/v1/meetings', meetingRoutes);
 app.use('/api/v1/kb', kbRoutes);
 app.use('/api/v1/jobs', jobRoutes);
 app.use('/api/v1/audit', auditRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // ─── Global error handler (must be last) ────────────────────────────────────
 app.use(errorHandler);
