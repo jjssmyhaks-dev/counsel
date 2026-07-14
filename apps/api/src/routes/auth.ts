@@ -7,6 +7,7 @@ import { validate } from '../middleware/validate';
 import { UnauthorizedError } from '../lib/errors';
 import {
   getWorkOS,
+  isWorkOSAvailable,
   getWorkOSClientId,
   getWorkOSRedirectUri,
   getAuthorizationUrl,
@@ -135,6 +136,10 @@ router.post('/logout', (_req: Request, res: Response) => {
 // GET /sso/connections — list available SSO connections
 router.get('/sso/connections', async (_req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!isWorkOSAvailable()) {
+      res.json({ connections: [], note: 'WorkOS SSO not configured' });
+      return;
+    }
     const w = getWorkOS();
     const { data } = await w.sso.listConnections();
     res.json({
@@ -154,12 +159,15 @@ router.get('/sso/connections', async (_req: Request, res: Response, next: NextFu
 // POST /sso/authorize — get WorkOS SSO authorization URL
 router.post('/sso/authorize', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!isWorkOSAvailable()) {
+      res.status(503).json({ error: 'SSO not configured — set WORKOS_API_KEY and WORKOS_CLIENT_ID' });
+      return;
+    }
     const { connectionId, email, organizationId } = req.body;
 
     let url: string;
 
     if (email) {
-      // E-initiated flow: user enters their email, WorkOS resolves their IdP
       const w = getWorkOS();
       url = await w.sso.getAuthorizationUrl({
         clientId: getWorkOSClientId(),
@@ -188,6 +196,10 @@ router.post('/sso/authorize', async (req: Request, res: Response, next: NextFunc
 // GET /callback — WorkOS SSO callback
 router.get('/callback', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!isWorkOSAvailable()) {
+      res.status(503).json({ error: 'SSO not configured' });
+      return;
+    }
     const { code } = req.query;
 
     if (!code || typeof code !== 'string') {

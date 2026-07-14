@@ -174,11 +174,14 @@ export const aiClient = {
     aiRequest<{ status: string; embedding_model: string; embedding_dim: number; llm_provider: string }>('/health'),
 
   // Document Processing
-  parseDocument: (documentId: string, mimeType: string, content?: Uint8Array) =>
-    aiRequest<{ document_id: string; chunks: Chunk[]; total_pages: number }>('/parse', {
+  parseDocument: (documentId: string, mimeType: string, content?: Uint8Array) => {
+    // Content comes as base64 string from jobs route — send as-is
+    const contentStr = content ? (typeof content === 'string' ? content : Buffer.from(content).toString('base64')) : undefined;
+    return aiRequest<{ document_id: string; chunks: Chunk[]; total_pages: number }>('/parse', {
       method: 'POST',
-      body: JSON.stringify({ document_id: documentId, mime_type: mimeType, content: content ? Array.from(content) : undefined }),
-    }),
+      body: JSON.stringify({ document_id: documentId, mime_type: mimeType, content: contentStr }),
+    });
+  },
 
   embedTexts: (texts: string[]) =>
     aiRequest<{ embeddings: number[][] }>('/embed', {

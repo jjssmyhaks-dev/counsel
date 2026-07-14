@@ -1,6 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@counsel/database';
 import { NotFoundError } from '../lib/errors';
+import { aiClient } from '../lib/ai-client';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
 
@@ -63,6 +66,90 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         totalPages: Math.ceil(total / limit),
       },
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /process/:jobId ─── Process a pending job ─────────────────────────
+router.post('/process/:jobId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const job = await prisma.job.findFirst({
+      where: { id: req.params.jobId, firmId: req.firmId },
+    });
+
+    if (!job) throw new NotFoundError('Job');
+    if (job.status !== 'PENDING') {
+      res.json({ message: 'Job already processed', status: job.status });
+      return;
+    }
+
+    // Mark as processing
+    await prisma.job.update({ where: { id: job.id }, data: { status: 'PROCESSING' } });
+
+    try {
+      if (job.type === 'DOCUMENT_PARSE') {
+        const docId = (job.result as any)?.documentId;
+        const document = docId ? await prisma.document.findUnique({ where: { id: docId } }) : null;
+
+        if (!document) throw new Error('Document not found');
+
+        // Read file from disk
+        const filePath = path.resolve(process.cwd(), 'uploads', document.filename);
+        if (!fs.existsSync(filePath)) throw new Error('File not found on disk: ' + filePath);
+
+        const fileBytes = fs.readFileSync(filePath);
+
+        // Step 1: Parse (extract text) — send base64 encoded content
+        const parseResult = await aiClient.parseDocument(
+          document.id,
+          document.mimeType,
+          fileBytes,
+        );
+
+        // Step 2: Embed chunks
+        const texts = parseResult.chunks.map((c) => c.text);
+        const embedResult = await aiClient.embedTexts(texts);
+
+        // Step 3: Index
+        await aiClient.indexDocument(
+          document.id,
+          document.firmId,
+          parseResult.chunks,
+          embedResult.embeddings,
+          document.matterId || undefined,
+        );
+
+        // Update document status
+        await prisma.document.update({
+          where: { id: document.id },
+          data: { status: 'READY', pageCount: parseResult.total_pages },
+        });
+
+        await prisma.job.update({
+          where: { id: job.id },
+          data: {
+            status: 'COMPLETED',
+            completedAt: new Date(),
+            result: { documentId: document.id, chunks: parseResult.chunks.length, pages: parseResult.total_pages },
+          },
+        });
+
+        res.json({ status: 'COMPLETED', chunks: parseResult.chunks.length, pages: parseResult.total_pages });
+      } else {
+        res.status(400).json({ error: 'Unknown job type: ' + job.type });
+      }
+    } catch (err: any) {
+      await prisma.job.update({
+        where: { id: job.id },
+        data: { status: 'FAILED', error: err.message || 'Unknown error', completedAt: new Date() },
+      });
+      await prisma.document.update({
+        where: { id: (job.result as any)?.documentId },
+        data: { status: 'FAILED' },
+      });
+      res.status(500).json({ error: err.message });
+    }
   } catch (err) {
     next(err);
   }
