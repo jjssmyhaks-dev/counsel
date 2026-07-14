@@ -24,21 +24,11 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-interface DocRow {
-  id: string;
-  originalName: string;
-  mimeType: string;
-  sizeBytes: number;
-  status: string;
-  createdAt: string;
-  matter?: { name: string };
-}
-
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [firm, setFirm] = useState<any>(null);
-  const [documents, setDocuments] = useState<DocRow[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [stats, setStats] = useState({ documents: 0, matters: 0, drafts: 0, meetings: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -50,19 +40,20 @@ export default function DashboardPage() {
     setFirm(f);
 
     Promise.all([
-      api.get('/documents?limit=5'),
-      api.get('/matters?limit=1'),
-      api.get('/drafts?limit=1'),
-      api.get('/meetings?limit=1'),
+      api.get('/documents?limit=5').catch(() => ({ data: null })),
+      api.get('/matters?limit=1').catch(() => ({ data: null })),
+      api.get('/drafts?limit=1').catch(() => ({ data: null })),
+      api.get('/meetings?limit=1').catch(() => ({ data: null })),
     ])
-      .then(([docs, matters, drafts, meetings]) => {
-        const d = docs.data?.data || [];
-        setDocuments(Array.isArray(d) ? d.slice(0, 5) : []);
+      .then(([docsRes, mattersRes, draftsRes, meetingsRes]: any[]) => {
+        const d = docsRes?.data?.data || docsRes?.data || [];
+        const docList = Array.isArray(d) ? d.slice(0, 5) : [];
+        setDocuments(docList);
         setStats({
-          documents: docs.data?.pagination?.total || (Array.isArray(d) ? d.length : 0),
-          matters: matters.data?.pagination?.total || (matters.data?.data?.length || 0),
-          drafts: drafts.data?.pagination?.total || (drafts.data?.data?.length || 0),
-          meetings: meetings.data?.pagination?.total || (meetings.data?.data?.length || 0),
+          documents: docsRes?.data?.pagination?.total || docsRes?.pagination?.total || docList.length,
+          matters: mattersRes?.data?.pagination?.total || mattersRes?.pagination?.total || (mattersRes?.data?.data?.length || 0),
+          drafts: draftsRes?.data?.pagination?.total || draftsRes?.pagination?.total || (draftsRes?.data?.data?.length || 0),
+          meetings: meetingsRes?.data?.pagination?.total || meetingsRes?.pagination?.total || (meetingsRes?.data?.data?.length || 0),
         });
       })
       .catch(err => console.warn('Dashboard fetch:', err))
@@ -81,16 +72,16 @@ export default function DashboardPage() {
   }
 
   const statCards = [
-    { icon: '\uD83D\uDCC4', value: stats.documents, label: 'Documents', trend: 'Total uploaded', trendUp: true },
-    { icon: '\uD83D\uDCCB', value: stats.matters, label: 'Matters', trend: 'All matters', trendUp: true },
-    { icon: '\u270F\uFE0F', value: stats.drafts, label: 'Drafts', trend: 'Generated drafts', trendUp: false },
-    { icon: '\uD83D\uDCA1', value: stats.meetings, label: 'Meetings', trend: 'Processed', trendUp: true },
+    { icon: '📄', value: stats.documents, label: 'Documents', trend: 'Total uploaded', trendUp: true },
+    { icon: '📋', value: stats.matters, label: 'Matters', trend: 'All matters', trendUp: true },
+    { icon: '✏️', value: stats.drafts, label: 'Drafts', trend: 'Generated drafts', trendUp: false },
+    { icon: '💡', value: stats.meetings, label: 'Meetings', trend: 'Processed', trendUp: true },
   ];
 
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="bg-gradient-to-r from-navy-800 to-navy-900 rounded-xl p-6 text-white">
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 text-white">
         <h1 className="text-xl font-bold">Welcome back, {user?.name || 'Counselor'}</h1>
         {firm && <p className="text-blue-200 text-sm mt-1">{firm.name}</p>}
         <p className="text-blue-300/70 text-xs mt-3">
@@ -110,7 +101,7 @@ export default function DashboardPage() {
               <span className="text-2xl">{stat.icon}</span>
             </div>
             <p className={`text-xs mt-3 ${stat.trendUp ? 'text-green-600' : 'text-amber-600'}`}>
-              {stat.trendUp ? '\u2191' : '\u2022'} {stat.trend}
+              {stat.trendUp ? '↑' : '•'} {stat.trend}
             </p>
           </div>
         ))}
@@ -119,10 +110,10 @@ export default function DashboardPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { href: '/documents', label: 'Upload Document', icon: '\uD83D\uDCC4', color: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-          { href: '/matters', label: 'New Matter', icon: '\uD83D\uDCCB', color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-          { href: '/drafts', label: 'Create Draft', icon: '\u270F\uFE0F', color: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-          { href: '/research', label: 'Research', icon: '\uD83D\uDD0D', color: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
+          { href: '/documents', label: 'Upload Document', icon: '📄', color: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
+          { href: '/matters', label: 'New Matter', icon: '📋', color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
+          { href: '/drafts', label: 'Create Draft', icon: '✏️', color: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
+          { href: '/research', label: 'Research', icon: '🔍', color: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
         ].map(action => (
           <Link
             key={action.href}
@@ -140,7 +131,7 @@ export default function DashboardPage() {
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="font-semibold text-slate-900">Recent Documents</h3>
           <Link href="/documents" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-            View all &rarr;
+            View all →
           </Link>
         </div>
         <div className="overflow-x-auto">
@@ -161,7 +152,7 @@ export default function DashboardPage() {
                   </td>
                 </tr>
               ) : (
-                documents.map((doc) => (
+                documents.map((doc: any) => (
                   <tr
                     key={doc.id}
                     className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
@@ -169,13 +160,13 @@ export default function DashboardPage() {
                   >
                     <td className="px-5 py-3">
                       <p className="text-sm font-medium text-slate-900 truncate max-w-[280px]">
-                        {doc.originalName || 'Unnamed'}
+                        {doc.originalName || doc.name || 'Unnamed'}
                       </p>
-                      <p className="text-xs text-slate-500">{doc.matter?.name || '\u2014'}</p>
+                      <p className="text-xs text-slate-500">{doc.matter?.name || '—'}</p>
                     </td>
                     <td className="px-5 py-3">
                       <span className="text-xs font-mono uppercase text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                        {(doc.mimeType || 'unknown').split('/')[1] || doc.mimeType}
+                        {(doc.mimeType || doc.type || 'unknown').split('/').pop() || doc.type || 'file'}
                       </span>
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={doc.status} /></td>

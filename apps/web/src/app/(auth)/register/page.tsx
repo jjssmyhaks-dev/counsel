@@ -63,7 +63,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-navy-900">Counsel AI</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Counsel AI</h1>
           <p className="text-slate-500 mt-2">Create your account</p>
         </div>
 
@@ -139,7 +139,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-navy-900 text-white py-2.5 rounded-lg font-medium hover:bg-navy-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-slate-900 text-white py-2.5 rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>

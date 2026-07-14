@@ -8,7 +8,7 @@
 import type { WorkOS as WorkOSType } from '@workos-inc/node';
 
 let _workos: WorkOSType | null = null;
-let _workosAvailable: boolean = false;
+let _workosAvailable: boolean | null = null; // null = not yet checked
 let WORKOS_CLIENT_ID = '';
 let WORKOS_REDIRECT_URI = '';
 
@@ -52,7 +52,7 @@ export function getWorkOS(): WorkOSType {
 
 export function isWorkOSAvailable(): boolean {
   initWorkOS();
-  return _workosAvailable;
+  return _workosAvailable === true;
 }
 
 export function getWorkOSClientId() {

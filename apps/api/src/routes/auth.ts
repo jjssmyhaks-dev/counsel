@@ -249,7 +249,35 @@ router.get('/sso/connections', async (_req: Request, res: Response, next: NextFu
   }
 });
 
-// POST /sso/authorize — get WorkOS SSO authorization URL
+// POST /sso/create — create a Mock SAML connection for demo/testing
+router.post('/sso/create', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!isWorkOSAvailable()) {
+      res.status(503).json({ error: 'SSO not configured' });
+      return;
+    }
+    const { name } = req.body;
+    if (!name) {
+      res.status(400).json({ error: 'Connection name is required' });
+      return;
+    }
+
+    const w = getWorkOS();
+    // WorkOS SDK: create a MockSAML connection for testing
+    const connection = await (w.sso as any).createConnection({
+      name,
+      connectionType: 'MockSAML',
+      clientId: getWorkOSClientId(),
+    });
+
+    res.status(201).json({ connection });
+  } catch (err) {
+    console.error('Create SSO connection error:', (err as Error).message);
+    next(err);
+  }
+});
+
+// ─── POST /sso/authorize — get WorkOS SSO authorization URL ─────────────────
 router.post('/sso/authorize', async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!isWorkOSAvailable()) {

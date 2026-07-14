@@ -64,7 +64,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-navy-800 rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-800 rounded-2xl mb-4">
             <svg
               className="w-8 h-8 text-white"
               fill="none"
@@ -208,8 +208,11 @@ export default function LoginPage() {
           )}
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
-          Counsel Platform &copy; {new Date().getFullYear()} &mdash; For demo purposes only
+        <p className="text-center text-sm text-slate-500 mt-6">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+            Create account
+          </Link>
         </p>
       </div>
     </div>
