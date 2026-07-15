@@ -42,10 +42,11 @@ router.post(
         throw new UnauthorizedError('Invalid credentials');
       }
 
-      // If the user has a bcrypt hash, verify it; otherwise accept 'password' (seeded users)
-      const isValid = user.passwordHash
-        ? await bcrypt.compare(password, user.passwordHash)
-        : password === 'password';
+      // Verify password against stored bcrypt hash
+      if (!user.passwordHash) {
+        throw new UnauthorizedError('Account not fully provisioned');
+      }
+      const isValid = await bcrypt.compare(password, user.passwordHash);
 
       if (!isValid) {
         throw new UnauthorizedError('Invalid credentials');

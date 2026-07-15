@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 
-const SECRET = process.env.JWT_SECRET || 'counsel-dev-secret';
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 export interface TokenPayload {
   id: string;

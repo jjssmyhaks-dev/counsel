@@ -1,8 +1,11 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient({
   log: ['info', 'warn', 'error'],
 });
+
+const DEFAULT_PASSWORD = 'password';
 
 async function main() {
   console.log('🌱 Seeding Counsel database...');
@@ -29,6 +32,7 @@ async function main() {
       email: 'admin@sterling.law',
       name: 'James Sterling',
       role: 'ADMIN',
+      passwordHash: await bcrypt.hash(DEFAULT_PASSWORD, 12),
       avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=JS',
     },
   });
@@ -42,6 +46,7 @@ async function main() {
       email: 'emma@sterling.law',
       name: 'Emma Park',
       role: 'ASSOCIATE',
+      passwordHash: await bcrypt.hash(DEFAULT_PASSWORD, 12),
       avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=EP',
     },
   });
@@ -55,6 +60,7 @@ async function main() {
       email: 'robert@sterling.law',
       name: 'Robert Chen',
       role: 'PARTNER',
+      passwordHash: await bcrypt.hash(DEFAULT_PASSWORD, 12),
       avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=RC',
     },
   });
