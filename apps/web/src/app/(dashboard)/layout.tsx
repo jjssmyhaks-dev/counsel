@@ -6,105 +6,41 @@ import Link from 'next/link';
 import { isAuthenticated, getUser, getFirm, logout } from '@/lib/auth';
 import type { User } from '@/lib/types';
 
+const serif = "font-serif";
+
 const navItems = [
-  {
-    href: '/',
-    label: 'Dashboard',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" />
-      </svg>
-    ),
-  },
-  {
-    href: '/documents',
-    label: 'Documents',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/matters',
-    label: 'Matters',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-      </svg>
-    ),
-  },
-  {
-    href: '/drafts',
-    label: 'Drafts',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/research',
-    label: 'Research',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/meetings',
-    label: 'Meetings',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/kb',
-    label: 'Ask the Firm',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-      </svg>
-    ),
-  },
+  { href: '/', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
+  { href: '/documents', label: 'Documents', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+  { href: '/matters', label: 'Matters', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+  { href: '/drafts', label: 'Drafts', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+  { href: '/research', label: 'Research', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+  { href: '/meetings', label: 'Meetings', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+  { href: '/kb', label: 'Ask the Firm', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
 ];
 
 const adminNavItems = [
-  {
-    href: '/admin',
-    label: 'Admin',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/settings',
-    label: 'Settings',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-      </svg>
-    ),
-  },
+  { href: '/admin', label: 'Admin', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+  { href: '/settings', label: 'Settings', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
 ];
+
+function Logo() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden>
+      <path d="M6 16C6 10 10 6 16 6c0 6-4 10-10 10z" fill="#15b881" />
+      <path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#0a8a5f" />
+      <circle cx="16" cy="16" r="2.2" fill="#0c0a09" />
+    </svg>
+  );
+}
 
 function getPageTitle(pathname: string): string {
   if (pathname === '/') return 'Dashboard';
   const segment = pathname.split('/')[1];
-  return segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : 'Dashboard';
+  if (!segment) return 'Dashboard';
+  return segment.charAt(0).toUpperCase() + segment.slice(1);
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
@@ -113,22 +49,13 @@ export default function DashboardLayout({
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.replace('/login');
-      return;
-    }
-
+    if (!isAuthenticated()) { router.replace('/login'); return; }
     const u = getUser();
-    if (!u) {
-      router.replace('/login');
-      return;
-    }
-
+    if (!u) { router.replace('/login'); return; }
     setUser(u);
     setLoading(false);
   }, [router]);
 
-  // Dark mode: read persisted preference and apply on mount
   useEffect(() => {
     const stored = localStorage.getItem('counsel_theme');
     const isDark = stored === 'dark';
@@ -145,8 +72,8 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      <div className="h-screen flex items-center justify-center bg-[#fefdfb]">
+        <div className="animate-spin h-8 w-8 border-[3px] border-[#15b881]/30 border-t-[#15b881] rounded-full" />
       </div>
     );
   }
@@ -155,51 +82,36 @@ export default function DashboardLayout({
   const isAdmin = user?.role === 'admin' || user?.role === 'partner';
 
   return (
-    <div className="h-screen flex overflow-hidden">
+    <div className="h-screen flex overflow-hidden bg-[#fefdfb] dark:bg-slate-950" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-slate-900 flex flex-col transform transition-transform lg:translate-x-0 lg:relative ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-800">
-          <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c-1.2 0-2.4.4-3.3 1.2L3.4 8.5C2.5 9.2 2 10.3 2 11.5V19a2 2 0 002 2h16a2 2 0 002-2v-7.5c0-1.2-.5-2.3-1.4-3L15.3 4.2A4 4 0 0012 3z" />
-            </svg>
+      {/* Sidebar — green-serif themed */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#0c0a09] flex flex-col transform transition-transform lg:translate-x-0 lg:relative ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
+          <div className="w-9 h-9 bg-gradient-to-br from-[#15b881] to-[#0a8a5f] rounded-lg flex items-center justify-center">
+            <Logo />
           </div>
           <div>
-            <h1 className="text-white font-bold text-lg leading-tight">Counsel</h1>
-            <p className="text-slate-500 text-xs">Legal Intelligence</p>
+            <h1 className={`${serif} text-white font-bold text-lg leading-tight tracking-[-0.02em]`}>Counsel</h1>
+            <p className="text-[#7ce3b6]/60 text-[11px]">Legal Intelligence</p>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
-            Main
-          </div>
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
+          <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mb-2">Main</div>
           {navItems.map((item) => {
-            const isActive = item.href === '/'
-              ? pathname === '/'
-              : pathname.startsWith(item.href);
+            const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`sidebar-link ${isActive ? 'active' : ''}`}
-              >
-                {item.icon}
+              <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                  isActive ? 'bg-[#15b881]/15 text-[#7ce3b6] border-l-[3px] border-[#15b881] pl-[9px]' : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
+                }`}>
+                <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                </svg>
                 {item.label}
               </Link>
             );
@@ -207,19 +119,17 @@ export default function DashboardLayout({
 
           {isAdmin && (
             <>
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
-                Administration
-              </div>
+              <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mt-6 mb-2">Administration</div>
               {adminNavItems.map((item) => {
                 const isActive = pathname.startsWith(item.href);
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`sidebar-link ${isActive ? 'active' : ''}`}
-                  >
-                    {item.icon}
+                  <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                      isActive ? 'bg-[#15b881]/15 text-[#7ce3b6] border-l-[3px] border-[#15b881] pl-[9px]' : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
+                    }`}>
+                    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                    </svg>
                     {item.label}
                   </Link>
                 );
@@ -228,22 +138,17 @@ export default function DashboardLayout({
           )}
         </nav>
 
-        {/* User footer */}
         {user && (
-          <div className="border-t border-slate-800 p-4">
+          <div className="border-t border-white/[0.06] p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#15b881] to-[#0a8a5f] rounded-full flex items-center justify-center text-white text-sm font-semibold">
                 {user.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white font-medium truncate">{user.name}</p>
-                <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                <p className="text-[13px] text-white font-medium truncate">{user.name}</p>
+                <p className="text-[11px] text-white/40 truncate">{user.email}</p>
               </div>
-              <button
-                onClick={() => logout()}
-                className="text-slate-500 hover:text-white p-1"
-                title="Sign out"
-              >
+              <button onClick={() => logout()} className="text-white/30 hover:text-white/70 p-1 transition-colors" title="Sign out">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
@@ -256,23 +161,17 @@ export default function DashboardLayout({
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top header */}
-        <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center gap-4">
-          <button
-            className="lg:hidden p-1 text-slate-600 hover:text-slate-900"
-            onClick={() => setSidebarOpen(true)}
-          >
+        <header className="bg-white dark:bg-slate-900 border-b border-black/[0.04] dark:border-slate-800 px-6 py-3 flex items-center gap-4">
+          <button className="lg:hidden p-1 text-[#717d79] hover:text-[#0c0a09]" onClick={() => setSidebarOpen(true)}>
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          <h2 className="text-lg font-semibold text-slate-900">{pageTitle}</h2>
+          <h2 className={`${serif} text-lg font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white`}>{pageTitle}</h2>
           <div className="flex-1" />
-          {/* Dark mode toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
-            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
+          <button onClick={toggleTheme}
+            className="p-2 rounded-lg text-[#717d79] hover:text-[#0c0a09] hover:bg-black/[0.04] dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
             {dark ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
@@ -284,20 +183,14 @@ export default function DashboardLayout({
             )}
           </button>
           {user && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-600 hidden sm:block">{user.name}</span>
-              <button
-                onClick={() => logout()}
-                className="text-xs text-slate-500 hover:text-red-600 transition-colors hidden sm:block"
-              >
-                Sign out
-              </button>
-            </div>
+            <>
+              <span className="text-[13px] text-[#717d79] hidden sm:block">{user.name}</span>
+              <button onClick={() => logout()} className="text-[12px] text-[#969e9b] hover:text-[#c2452e] transition-colors hidden sm:block">Sign out</button>
+            </>
           )}
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-[#fefdfb] dark:bg-slate-950">
           {children}
         </main>
       </div>

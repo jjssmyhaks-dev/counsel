@@ -2,61 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Counsel Design System ──
+   Brand:   #15b881 (mint green) / #0a8a5f (dark green) / #7ce3b6 (light green)
+   Dark:    #0c0a09 (near-black)
+   BG:      #fefdfb (warm white) / #faf8f5 (warm off-white)
+   Muted:   #717d79 (text) / #969e9b (subtle)
+   Font:    font-serif for headings, Inter for body
+*/
+
 @layer base {
   :root {
-    --color-navy-50: #f0f4ff;
-    --color-navy-100: #dbe4ff;
-    --color-navy-500: #4c6ef5;
-    --color-navy-700: #364fc7;
-    --color-navy-800: #1e3a5f;
-    --color-navy-900: #0f2440;
-    --color-navy-950: #0b1830;
+    --brand: #15b881;
+    --brand-dark: #0a8a5f;
+    --brand-light: #7ce3b6;
+    --ink: #0c0a09;
+    --bg: #fefdfb;
+    --bg-alt: #faf8f5;
+    --muted: #717d79;
+    --subtle: #969e9b;
   }
-}
-
-@layer utilities {
-  .bg-navy-800 { background-color: var(--color-navy-800); }
-  .bg-navy-900 { background-color: var(--color-navy-900); }
-  .bg-navy-950 { background-color: var(--color-navy-950); }
-  .text-navy-900 { color: var(--color-navy-900); }
-  .from-navy-800 { --tw-gradient-from: var(--color-navy-800); }
-  .to-navy-900 { --tw-gradient-to: var(--color-navy-900); }
 }
 
 @layer components {
+  /* Sidebar nav links */
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors text-sm font-medium;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.04] transition-all text-[13px] font-medium;
   }
   .sidebar-link.active {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
+    @apply bg-[#15b881]/15 text-[#7ce3b6] border-l-[3px] border-[#15b881] pl-[9px];
   }
-  .page-header {
-    @apply mb-6;
+
+  /* Page headers */
+  .page-header { @apply mb-6; }
+  .page-header h1 { @apply text-2xl font-bold text-[#0c0a09] dark:text-white; }
+  .page-header p { @apply text-[#717d79] dark:text-slate-400 mt-1; }
+
+  /* Stat cards */
+  .stat-card {
+    @apply bg-white dark:bg-slate-900 border border-black/[0.04] dark:border-slate-800 rounded-2xl p-5;
   }
-  .page-header h1 {
-    @apply text-2xl font-bold text-slate-900;
+  .stat-card .stat-value {
+    @apply text-2xl font-semibold text-[#0c0a09] dark:text-white;
   }
-  .page-header p {
-    @apply text-slate-500 mt-1;
+  .stat-card .stat-label {
+    @apply text-[13px] text-[#717d79] dark:text-slate-400;
+  }
+
+  /* Table styles */
+  .table-cell {
+    @apply px-4 py-3 text-[13px] text-[#0c0a09] dark:text-slate-200;
+  }
+  .table-header {
+    @apply px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#969e9b] dark:text-slate-500 text-left;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply bg-[#0c0a09] text-white text-[13px] font-medium px-5 py-2.5 rounded-xl hover:bg-[#0a8a5f] transition-all shadow-[0_6px_20px_-6px_rgba(12,10,9,0.4)] hover:shadow-[0_8px_24px_-6px_rgba(21,184,129,0.3)];
+  }
+  .btn-secondary {
+    @apply bg-white dark:bg-slate-800 text-[#0c0a09] dark:text-white text-[13px] font-medium px-5 py-2.5 rounded-xl border border-black/[0.06] dark:border-slate-700 hover:border-[#15b881]/30 transition-all;
+  }
+  .btn-outline {
+    @apply bg-transparent text-[#0a8a5f] text-[13px] font-medium px-5 py-2.5 rounded-xl border border-[#15b881]/30 hover:bg-[#eaf7f0] transition-all;
   }
 }
 
 /* Risk badge colors */
-.risk-low { @apply bg-green-100 text-green-800; }
-.risk-medium { @apply bg-amber-100 text-amber-800; }
-.risk-high { @apply bg-red-100 text-red-800; }
-.risk-critical { @apply bg-red-200 text-red-900 font-bold; }
+.risk-low { @apply bg-[#eaf7f0] text-[#0a8a5f] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.risk-medium { @apply bg-[#fef8e6] text-[#b45309] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.risk-high { @apply bg-[#fdf0ee] text-[#c2452e] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.risk-critical { @apply bg-[#fdf0ee] border border-[#c2452e]/30 text-[#c2452e] text-[11px] font-bold px-2.5 py-0.5 rounded-full; }
 
 /* Status badges */
-.status-uploaded { @apply bg-slate-100 text-slate-700; }
-.status-processing { @apply bg-blue-100 text-blue-700 animate-pulse; }
-.status-ready { @apply bg-green-100 text-green-700; }
-.status-failed { @apply bg-red-100 text-red-700; }
-.status-draft { @apply bg-slate-100 text-slate-700; }
-.status-finalized { @apply bg-green-100 text-green-700; }
-.status-pending { @apply bg-amber-100 text-amber-700; }
-.status-active { @apply bg-green-100 text-green-700; }
-.status-closed { @apply bg-slate-200 text-slate-600; }
+.status-uploaded { @apply bg-[#f0f0f0] text-[#717d79] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.status-processing { @apply bg-[#eaf7f0] text-[#0a8a5f] text-[11px] font-medium px-2.5 py-0.5 rounded-full animate-pulse; }
+.status-ready { @apply bg-[#eaf7f0] text-[#0a8a5f] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.status-failed { @apply bg-[#fdf0ee] text-[#c2452e] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.status-draft { @apply bg-[#f0f0f0] text-[#717d79] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.status-finalized { @apply bg-[#eaf7f0] text-[#0a8a5f] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.status-pending { @apply bg-[#fef8e6] text-[#b45309] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.status-active { @apply bg-[#eaf7f0] text-[#0a8a5f] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
+.status-closed { @apply bg-[#f0f0f0] text-[#969e9b] text-[11px] font-medium px-2.5 py-0.5 rounded-full; }
 
 /* Skeleton loading */
 @keyframes shimmer {
@@ -64,19 +91,22 @@
   100% { background-position: 200% 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #fafafa 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
 }
 
 /* Dark mode overrides */
 .dark .bg-white { @apply bg-slate-900; }
-.dark .border-slate-200 { @apply border-slate-800; }
-.dark .text-slate-900 { @apply text-slate-100; }
-.dark .text-slate-700 { @apply text-slate-300; }
-.dark .text-slate-500 { @apply text-slate-400; }
-.dark .text-slate-600 { @apply text-slate-400; }
-.dark .border-slate-100 { @apply border-slate-800; }
-.dark .bg-slate-50 { @apply bg-slate-950; }
+.dark .bg-[#fefdfb] { @apply bg-slate-950; }
+.dark .bg-[#faf8f5] { @apply bg-slate-900; }
+.dark .border-black\/\[0\.04\] { @apply border-slate-800; }
+.dark .border-black\/\[0\.06\] { @apply border-slate-800; }
+.dark .border-black\/\[0\.08\] { @apply border-slate-700; }
+.dark .text-\[\#0c0a09\] { @apply text-slate-100; }
+.dark .text-\[\#717d79\] { @apply text-slate-400; }
+.dark .text-\[\#4b5551\] { @apply text-slate-300; }
+.dark .text-\[\#969e9b\] { @apply text-slate-500; }
+.dark .bg-\[\#f0f0f0\] { @apply bg-slate-800; }
 .dark .shadow-sm { @apply shadow-slate-900/50; }

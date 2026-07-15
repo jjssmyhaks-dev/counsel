@@ -4,6 +4,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const serif = "font-serif";
+
+function Logo() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
+      <path d="M6 16C6 10 10 6 16 6c0 6-4 10-10 10z" fill="#15b881" />
+      <path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#0a8a5f" />
+      <circle cx="16" cy="16" r="2.2" fill="#0c0a09" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15b881" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
+  );
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -16,35 +34,18 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (!name || !email || !password) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-
+    if (!name || !email || !password) { setError('Please fill in all required fields.'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const res = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          firmName: firmName || undefined,
-        }),
+        body: JSON.stringify({ email, password, name, firmName: firmName || undefined }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
-
-      // Auto-login after registration
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
       if (typeof window !== 'undefined') {
         localStorage.setItem('counsel_token', data.token);
         localStorage.setItem('counsel_user', JSON.stringify(data.user));
@@ -53,104 +54,94 @@ export default function RegisterPage() {
       router.replace('/');
     } catch (err: any) {
       setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Brand */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Counsel AI</h1>
-          <p className="text-slate-500 mt-2">Create your account</p>
+    <div className="min-h-screen flex bg-[#fefdfb]" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+      {/* Left: Brand */}
+      <div className="hidden lg:flex w-[45%] relative overflow-hidden bg-gradient-to-br from-[#0c0a09] via-[#111c17] to-[#0c0a09] items-center justify-center">
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 70% 50%, rgba(21,184,129,0.5), transparent 50%), radial-gradient(circle at 30% 30%, rgba(21,184,129,0.3), transparent 50%)" }} />
+        <div className="relative max-w-md px-12">
+          <div className="flex items-center gap-3 mb-12">
+            <Logo />
+            <span className={`${serif} text-2xl text-white tracking-[-0.02em]`}>Counsel</span>
+          </div>
+          <h1 className={`${serif} text-[2.5rem] leading-[1.05] tracking-[-0.02em] text-white`}>
+            Start building<br />with AI today
+          </h1>
+          <p className="mt-5 text-[15px] text-white/50 leading-relaxed">
+            Get full access to document analysis, AI drafting, and knowledge management. No credit card required.
+          </p>
+          <div className="mt-10 space-y-3">
+            {[
+              "14-day free trial with full access", "500+ legal teams trust Counsel",
+              "Set up in under 5 minutes", "SOC 2 Type II certified platform"
+            ].map((c) => (
+              <div key={c} className="flex items-center gap-2.5 text-[14px] text-white/60"><CheckIcon /><span>{c}</span></div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+      {/* Right: Form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-lg">
+          <div className="lg:hidden flex items-center gap-2 mb-10">
+            <Logo />
+            <span className={`${serif} text-xl text-[#0c0a09] tracking-[-0.02em]`}>Counsel</span>
+          </div>
+
+          <h2 className={`${serif} text-[2rem] font-normal tracking-[-0.02em] text-[#0c0a09]`}>Create your account</h2>
+          <p className="mt-2 text-[14px] text-[#717d79]">Start your 14-day free trial. No credit card required.</p>
+
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {error}
-            </div>
+            <div className="mt-4 bg-[#fdf0ee] border border-[#f0705b]/20 text-[#c2452e] px-4 py-3 rounded-xl text-[13px]">{error}</div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
-                Full Name *
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Smith"
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                required
-              />
+              <label htmlFor="name" className="block text-[13px] font-medium text-[#0c0a09] mb-1.5">Full Name *</label>
+              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)}
+                placeholder="Jane Smith"
+                className="w-full px-4 py-3 rounded-xl border border-black/[0.08] bg-white text-[14px] text-[#0c0a09] placeholder:text-[#969e9b] focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 transition-all" required />
             </div>
-
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
-                Email *
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@firm.com"
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                required
-              />
+              <label htmlFor="email" className="block text-[13px] font-medium text-[#0c0a09] mb-1.5">Email *</label>
+              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                placeholder="jane@yourfirm.com"
+                className="w-full px-4 py-3 rounded-xl border border-black/[0.08] bg-white text-[14px] text-[#0c0a09] placeholder:text-[#969e9b] focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 transition-all" required />
             </div>
-
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
-                Password *
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+              <label htmlFor="password" className="block text-[13px] font-medium text-[#0c0a09] mb-1.5">Password * <span className="text-[#969e9b] font-normal">(min. 8 characters)</span></label>
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 placeholder="Min. 8 characters"
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                required
-                minLength={8}
-              />
+                className="w-full px-4 py-3 rounded-xl border border-black/[0.08] bg-white text-[14px] text-[#0c0a09] placeholder:text-[#969e9b] focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 transition-all" required minLength={8} />
             </div>
-
             <div>
-              <label htmlFor="firmName" className="block text-sm font-medium text-slate-700 mb-1">
-                Firm Name <span className="text-slate-400 font-normal">(optional)</span>
-              </label>
-              <input
-                id="firmName"
-                type="text"
-                value={firmName}
-                onChange={(e) => setFirmName(e.target.value)}
+              <label htmlFor="firmName" className="block text-[13px] font-medium text-[#0c0a09] mb-1.5">Firm Name <span className="text-[#969e9b] font-normal">(optional)</span></label>
+              <input id="firmName" type="text" value={firmName} onChange={(e) => setFirmName(e.target.value)}
                 placeholder="Sterling & Associates"
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-              />
+                className="w-full px-4 py-3 rounded-xl border border-black/[0.08] bg-white text-[14px] text-[#0c0a09] placeholder:text-[#969e9b] focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 transition-all" />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-slate-900 text-white py-2.5 rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button type="submit" disabled={loading}
+              className="w-full bg-[#0c0a09] text-white py-3 rounded-xl text-[14px] font-medium hover:bg-[#0a8a5f] transition-all disabled:opacity-50 flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(12,10,9,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(21,184,129,0.4)]">
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
-            Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              Sign in
-            </Link>
-          </p>
+          <div className="mt-8 pt-8 border-t border-black/[0.04]">
+            <div className="text-[13px] text-[#969e9b]">
+              Already have an account?{' '}
+              <Link href="/login" className="text-[#0a8a5f] font-medium hover:text-[#15b881] transition-colors">Sign in</Link>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-[#969e9b]">
+              {["14-day free trial", "No credit card", "Cancel anytime"].map((b) => (
+                <span key={b} className="inline-flex items-center gap-1.5"><CheckIcon />{b}</span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
