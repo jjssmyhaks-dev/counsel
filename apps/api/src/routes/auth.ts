@@ -282,25 +282,25 @@ router.post('/sso/create', async (req: Request, res: Response, next: NextFunctio
 router.post('/sso/authorize', async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!isWorkOSAvailable()) {
-      res.status(503).json({ error: 'SSO not configured — set WORKOS_API_KEY and WORKOS_CLIENT_ID' });
+      res.status(503).json({ error: 'SSO not configured — use password login instead' });
       return;
     }
     const { connectionId, email, organizationId } = req.body;
 
-    let result: string;
-
-    if (email) {
-      result = await getAuthorizationUrl(connectionId || '', email);
-    } else if (organizationId) {
-      result = await getAuthorizationUrl(connectionId || '');
-    } else if (connectionId) {
-      result = await getAuthorizationUrl(connectionId);
-    } else {
-      res.status(400).json({ error: 'Must provide connectionId, email, or organizationId' });
-      return;
+    try {
+      const result = await getAuthorizationUrl(
+        connectionId || undefined,
+        { email, organizationId },
+      );
+      res.json({ url: result });
+    } catch (workosErr: any) {
+      const message = workosErr?.message || String(workosErr);
+      console.error('WorkOS SSO error:', message);
+      res.status(400).json({
+        error: 'SSO not available for this email domain. Use password login instead.',
+        detail: process.env.NODE_ENV === 'development' ? message : undefined,
+      });
     }
-
-    res.json({ url: result });
   } catch (err) {
     next(err);
   }

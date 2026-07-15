@@ -78,14 +78,32 @@ export interface WorkOSProfile {
 
 // ── SAML/OIDC SSO ───────────────────────────────────────────────────────────
 
-export async function getAuthorizationUrl(connectionId: string, state?: string): Promise<string> {
+export async function getAuthorizationUrl(
+  connectionId?: string,
+  opts?: { email?: string; organizationId?: string; state?: string },
+): Promise<string> {
   const workos = getWorkOS();
-  const result = await workos.sso.getAuthorizationUrl({
-    connection: connectionId,
+  const params: Record<string, any> = {
     clientId: getWorkOSClientId(),
     redirectUri: getWorkOSRedirectUri(),
-    state: state || undefined,
-  });
+  };
+
+  if (connectionId) {
+    params.connection = connectionId;
+  } else if (opts?.organizationId) {
+    params.organization = opts.organizationId;
+  } else if (opts?.email) {
+    // Extract domain from email for WorkOS domain-based discovery
+    const domain = opts.email.split('@')[1];
+    if (!domain) throw new Error(`Invalid email: ${opts.email}`);
+    params.domain = domain;
+  } else {
+    throw new Error('Must provide connectionId, organizationId, or email');
+  }
+
+  if (opts?.state) params.state = opts.state;
+
+  const result = await workos.sso.getAuthorizationUrl(params);
   return result.url;
 }
 
