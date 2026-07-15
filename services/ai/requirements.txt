@@ -10,3 +10,6 @@ pydantic==2.10.0
 pydantic-settings==2.7.0
 python-multipart==0.0.18
 numpy==2.1.0
+# CrewAI multi-agent framework
+crewai>=1.15.0
+crewai-tools>=1.15.0

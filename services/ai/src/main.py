@@ -53,6 +53,7 @@ from .orchestrator.router import RouterAgent
 from .orchestrator.quality_gate import QualityGateAgent, GateResult
 from .orchestrator.pipeline_orchestrator import PipelineOrchestrator, PipelineJob
 from .orchestrator.audit_agent import audit_trail, AuditAction
+from .routes.agents import router as agents_router
 
 
 # ── Lifespan ────────────────────────────────────────────────────
@@ -103,6 +104,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register multi-agent CrewAI routes
+app.include_router(agents_router)
 
 
 # ── Health ──────────────────────────────────────────────────────
