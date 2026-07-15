@@ -51,7 +51,7 @@ export default function RegisterPage() {
         localStorage.setItem('counsel_user', JSON.stringify(data.user));
         if (data.firm) localStorage.setItem('counsel_firm', JSON.stringify(data.firm));
       }
-      router.replace('/');
+      router.replace('/dashboard');
     } catch (err: any) {
       setError(err.message);
     } finally { setLoading(false); }
