@@ -88,7 +88,7 @@ export default function DocumentsPage() {
  </div>
  <button
  onClick={() => setShowUpload(true)}
- className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0c0a09] text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+ className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0c0a09] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] transition-colors"
  >
  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -100,7 +100,7 @@ export default function DocumentsPage() {
  {/* Filter bar */}
  <div className="flex flex-wrap gap-3">
  <div className="relative flex-1 min-w-[200px]">
- <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#969e9b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
  </svg>
  <input
@@ -108,13 +108,13 @@ export default function DocumentsPage() {
  placeholder="Search documents..."
  value={search}
  onChange={(e) => setSearch(e.target.value)}
- className="w-full pl-10 pr-4 py-2 border border-black/[0.08] dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
+ className="w-full pl-10 pr-4 py-2 border border-black/[0.08] dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
  />
  </div>
  <select
  value={statusFilter}
  onChange={(e) => setStatusFilter(e.target.value)}
- className="px-3 py-2 border border-black/[0.08] dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
+ className="px-3 py-2 border border-black/[0.08] dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
  >
  <option value="">All Statuses</option>
  <option value="uploaded">Uploaded</option>
@@ -126,7 +126,7 @@ export default function DocumentsPage() {
 
  {/* Error */}
  {error && (
- <div className="bg-[#fdf0ee] border border-red-200 text-[#c2452e] px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+ <div className="bg-[#fdf0ee] border border-red-200 text-[#c2452e] px-4 py-3 rounded-xl text-sm flex items-center justify-between">
  <span>{error}</span>
  <button onClick={loadDocuments} className="font-medium underline">Retry</button>
  </div>
@@ -157,46 +157,46 @@ export default function DocumentsPage() {
  <table className="w-full">
  <thead>
  <tr className="border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fefdfb]/50">
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Name</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Type</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Status</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden md:table-cell">Matter</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden md:table-cell">Uploaded</th>
- <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Actions</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Name</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Type</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Status</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden md:table-cell">Matter</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden md:table-cell">Uploaded</th>
+ <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Actions</th>
  </tr>
  </thead>
  <tbody>
  {filtered.map((doc) => (
  <tr
  key={doc.id}
- className="border-b border-slate-100 hover:bg-[#fefdfb] transition-colors"
+ className="border-b border-black/[0.04] hover:bg-[#fefdfb] transition-colors"
  >
  <td
  className="px-5 py-3 cursor-pointer"
  onClick={() => router.push(`/documents/${doc.id}`)}
  >
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+ <div className="w-8 h-8 bg-[#eaf7f0] rounded flex items-center justify-center">
  <svg className="w-4 h-4 text-[#0a8a5f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
  </svg>
  </div>
  <div>
  <p className="text-sm font-medium text-[#0c0a09] dark:text-white truncate max-w-[220px]">{doc.name}</p>
- <p className="text-xs text-[#969e9b] dark:text-slate-500">{formatSize(doc.size)} · {doc.pageCount || 0} pages</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79]">{formatSize(doc.size)} · {doc.pageCount || 0} pages</p>
  </div>
  </div>
  </td>
  <td className="px-5 py-3">
- <span className="text-xs font-mono uppercase text-[#969e9b] dark:text-slate-500 bg-black/[0.03] px-2 py-0.5 rounded">
+ <span className="text-xs font-mono uppercase text-[#969e9b] dark:text-[#717d79] bg-black/[0.03] px-2 py-0.5 rounded">
  {doc.type}
  </span>
  </td>
  <td className="px-5 py-3"><StatusBadge status={doc.status} /></td>
- <td className="px-5 py-3 text-sm text-[#717d79] dark:text-slate-400 hidden md:table-cell max-w-[180px] truncate">
+ <td className="px-5 py-3 text-sm text-[#717d79] dark:text-[#969e9b] hidden md:table-cell max-w-[180px] truncate">
  {doc.matterName}
  </td>
- <td className="px-5 py-3 text-sm text-[#969e9b] dark:text-slate-500 hidden md:table-cell">
+ <td className="px-5 py-3 text-sm text-[#969e9b] dark:text-[#717d79] hidden md:table-cell">
  {formatDate(doc.createdAt)}
  </td>
  <td className="px-5 py-3 text-right">
@@ -227,21 +227,21 @@ export default function DocumentsPage() {
  {!loading && !error && filtered.length === 0 && (
  <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-black/[0.04] dark:border-white/[0.06] p-12 text-center">
  <div className="w-16 h-16 bg-black/[0.03] rounded-2xl flex items-center justify-center mx-auto mb-4">
- <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <svg className="w-8 h-8 text-[#969e9b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
  </svg>
  </div>
  <h3 className="text-lg font-semibold text-[#0c0a09] dark:text-white mb-1">
  {search || statusFilter ? 'No matching documents' : 'No documents yet'}
  </h3>
- <p className="text-[#969e9b] dark:text-slate-500 text-sm mb-4">
+ <p className="text-[#969e9b] dark:text-[#717d79] text-sm mb-4">
  {search || statusFilter
  ? 'Try adjusting your search or filters.'
  : 'Upload your first document to get started with analysis.'}
  </p>
  <button
  onClick={() => setShowUpload(true)}
- className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0c0a09] text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+ className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0c0a09] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] transition-colors"
  >
  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -257,7 +257,7 @@ export default function DocumentsPage() {
  <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" onClick={(e) => e.stopPropagation()}>
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-[#0c0a09] dark:text-white">Upload Document</h3>
- <button onClick={() => setShowUpload(false)} className="text-slate-400 hover:text-[#717d79] dark:text-slate-400">
+ <button onClick={() => setShowUpload(false)} className="text-[#969e9b] hover:text-[#717d79] dark:text-[#969e9b]">
  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
  </svg>
@@ -266,28 +266,28 @@ export default function DocumentsPage() {
  <form onSubmit={handleUpload}>
  <div
  className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
- dragOver ? 'border-blue-500 bg-[#eaf7f0]' : 'border-black/[0.08] dark:border-slate-700'
+ dragOver ? 'border-[#15b881]/50 bg-[#eaf7f0]' : 'border-black/[0.08] dark:border-slate-700'
  }`}
  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
  onDragLeave={() => setDragOver(false)}
  onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
  >
- <svg className="w-10 h-10 text-slate-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <svg className="w-10 h-10 text-[#969e9b] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
  </svg>
- <p className="text-sm text-[#717d79] dark:text-slate-400 font-medium">Drag & drop files here</p>
- <p className="text-xs text-slate-400 mt-1">PDF, DOCX, TXT up to 50MB</p>
+ <p className="text-sm text-[#717d79] dark:text-[#969e9b] font-medium">Drag & drop files here</p>
+ <p className="text-xs text-[#969e9b] mt-1">PDF, DOCX, TXT up to 50MB</p>
  <input
  type="file"
- className="mt-4 text-sm text-[#717d79] dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#eaf7f0] file:text-blue-700 hover:file:bg-blue-100"
+ className="mt-4 text-sm text-[#717d79] dark:text-[#969e9b] file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-[#eaf7f0] file:text-[#0a8a5f] hover:file:bg-[#eaf7f0]"
  accept=".pdf,.docx,.txt"
  />
  </div>
  <div className="flex gap-3 mt-4">
- <button type="button" onClick={() => setShowUpload(false)} className="flex-1 px-4 py-2 border border-black/[0.08] dark:border-slate-700 text-[#717d79] dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-[#fefdfb]">
+ <button type="button" onClick={() => setShowUpload(false)} className="flex-1 px-4 py-2 border border-black/[0.08] dark:border-slate-700 text-[#717d79] dark:text-black/[0.08] rounded-xl text-sm font-medium hover:bg-[#fefdfb]">
  Cancel
  </button>
- <button type="submit" className="flex-1 px-4 py-2 bg-[#0c0a09] text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+ <button type="submit" className="flex-1 px-4 py-2 bg-[#0c0a09] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] transition-colors">
  Upload
  </button>
  </div>

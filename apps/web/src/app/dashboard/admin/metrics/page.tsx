@@ -8,9 +8,9 @@ export default function MetricsPage() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-6">
-        <div className="h-8 bg-slate-200 rounded w-48" />
-        <div className="grid grid-cols-4 gap-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-28 bg-slate-200 rounded-xl" />)}</div>
-        <div className="h-64 bg-slate-200 rounded-xl" />
+        <div className="h-8 bg-black/[0.06] rounded w-48" />
+        <div className="grid grid-cols-4 gap-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-28 bg-black/[0.06] rounded-xl" />)}</div>
+        <div className="h-64 bg-black/[0.06] rounded-xl" />
       </div>
     );
   }
@@ -34,7 +34,7 @@ export default function MetricsPage() {
       <Card title="Adoption Funnel">
         <div className="space-y-4">
           <FunnelBar label="Users Invited" value={20} max={20} color="bg-slate-600" />
-          <FunnelBar label="Users Activated" value={18} max={20} color="bg-blue-600" />
+          <FunnelBar label="Users Activated" value={18} max={20} color="bg-[#0a8a5f]" />
           <FunnelBar label="Weekly Active (W4)" value={14} max={20} color="bg-emerald-600" />
           <FunnelBar label="Power Users (≥10 actions/week)" value={6} max={20} color="bg-amber-600" />
         </div>
@@ -44,7 +44,7 @@ export default function MetricsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Module Usage (Weekly Avg)">
           <div className="space-y-4">
-            <ModuleBar label="KB Queries" value={52} max={60} color="bg-blue-600" />
+            <ModuleBar label="KB Queries" value={52} max={60} color="bg-[#0a8a5f]" />
             <ModuleBar label="Documents Analyzed" value={18} max={30} color="bg-emerald-600" />
             <ModuleBar label="Drafts Generated" value={14} max={25} color="bg-purple-600" />
             <ModuleBar label="Meetings Processed" value={8} max={15} color="bg-orange-600" />
@@ -95,13 +95,13 @@ export default function MetricsPage() {
             { week: 'W4', actions: 210, users: 14 },
           ].map((w) => (
             <div key={w.week} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-xs font-medium text-slate-600">{w.actions}</span>
-              <div className="w-full bg-blue-600 rounded-t-lg" style={{ height: `${(w.actions / 210) * 100}%` }} />
-              <span className="text-xs text-slate-400">{w.week}</span>
+              <span className="text-xs font-medium text-[#717d79]">{w.actions}</span>
+              <div className="w-full bg-[#0a8a5f] rounded-t-lg" style={{ height: `${(w.actions / 210) * 100}%` }} />
+              <span className="text-xs text-[#969e9b]">{w.week}</span>
             </div>
           ))}
         </div>
-        <p className="text-xs text-slate-400 mt-3 text-center">Total AI actions per week (documents + KB + drafts + meetings)</p>
+        <p className="text-xs text-[#969e9b] mt-3 text-center">Total AI actions per week (documents + KB + drafts + meetings)</p>
       </Card>
 
       {/* Recent Activity Feed */}
@@ -120,13 +120,13 @@ export default function MetricsPage() {
             <div key={i} className="flex items-start gap-3 text-sm">
               <span className="text-lg">{entry.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">{entry.user}</span>
+                <p className="text-[#4b5551]">
+                  <span className="font-medium text-[#0c0a09]">{entry.user}</span>
                   {' '}{entry.action}
                 </p>
-                <p className="text-slate-400 truncate">{entry.resource}</p>
+                <p className="text-[#969e9b] truncate">{entry.resource}</p>
               </div>
-              <span className="text-xs text-slate-400 whitespace-nowrap">{entry.time}</span>
+              <span className="text-xs text-[#969e9b] whitespace-nowrap">{entry.time}</span>
             </div>
           ))}
         </div>
@@ -137,11 +137,11 @@ export default function MetricsPage() {
 
 function StatCard({ label, value, sub, good }: { label: string; value: string | number; sub?: string; good?: boolean }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
-      <p className="text-sm text-slate-500">{label}</p>
+    <div className="bg-white rounded-xl border border-black/[0.06] p-5">
+      <p className="text-2xl font-bold text-[#0c0a09]">{value}</p>
+      <p className="text-sm text-[#717d79]">{label}</p>
       {sub && (
-        <p className={`text-xs mt-1 ${good ? 'text-green-600' : 'text-slate-400'}`}>
+        <p className={`text-xs mt-1 ${good ? 'text-green-600' : 'text-[#969e9b]'}`}>
           {good ? '↑ ' : ''}{sub}
         </p>
       )}
@@ -151,8 +151,8 @@ function StatCard({ label, value, sub, good }: { label: string; value: string | 
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>
+    <div className="bg-white rounded-xl border border-black/[0.06] p-6">
+      <h3 className="text-lg font-semibold text-[#0c0a09] mb-4">{title}</h3>
       {children}
     </div>
   );
@@ -163,10 +163,10 @@ function FunnelBar({ label, value, max, color }: { label: string; value: number;
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
-        <span className="text-slate-600">{label}</span>
-        <span className="font-medium text-slate-900">{value}</span>
+        <span className="text-[#717d79]">{label}</span>
+        <span className="font-medium text-[#0c0a09]">{value}</span>
       </div>
-      <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-3 bg-black/[0.04] rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -178,10 +178,10 @@ function ModuleBar({ label, value, max, color }: { label: string; value: number;
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
-        <span className="text-slate-600">{label}</span>
-        <span className="font-medium text-slate-900">{value}</span>
+        <span className="text-[#717d79]">{label}</span>
+        <span className="font-medium text-[#0c0a09]">{value}</span>
       </div>
-      <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-2.5 bg-black/[0.04] rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -191,11 +191,11 @@ function ModuleBar({ label, value, max, color }: { label: string; value: number;
 function MetricRow({ label, before, after, delta, good }: { label: string; before: string; after: string; delta: string; good?: boolean }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-slate-600">{label}</span>
+      <span className="text-[#717d79]">{label}</span>
       <div className="flex items-center gap-3">
-        {before !== '—' && <span className="text-slate-400 line-through">{before}</span>}
-        <span className="font-medium text-slate-900">{after}</span>
-        <span className={`text-xs font-medium ${good ? 'text-green-600' : 'text-slate-500'}`}>{delta}</span>
+        {before !== '—' && <span className="text-[#969e9b] line-through">{before}</span>}
+        <span className="font-medium text-[#0c0a09]">{after}</span>
+        <span className={`text-xs font-medium ${good ? 'text-green-600' : 'text-[#717d79]'}`}>{delta}</span>
       </div>
     </div>
   );

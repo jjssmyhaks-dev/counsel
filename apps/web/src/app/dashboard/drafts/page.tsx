@@ -132,26 +132,26 @@ export default function DraftsPage() {
  <table className="w-full">
  <thead>
  <tr className="border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fefdfb]/50">
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Title</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Type</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Status</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden md:table-cell">Matter</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden lg:table-cell">Created</th>
- <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Actions</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Title</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Type</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Status</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden md:table-cell">Matter</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden lg:table-cell">Created</th>
+ <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Actions</th>
  </tr>
  </thead>
  <tbody>
  {drafts.map((draft) => (
- <tr key={draft.id} className="border-b border-slate-100 hover:bg-[#fefdfb] transition-colors">
+ <tr key={draft.id} className="border-b border-black/[0.04] hover:bg-[#fefdfb] transition-colors">
  <td className="px-5 py-3.5">
  <p className="text-sm font-medium text-[#0c0a09] dark:text-white">{draft.title}</p>
  </td>
  <td className="px-5 py-3.5"><TypeBadge type={draft.type} /></td>
  <td className="px-5 py-3.5"><StatusBadgeUI status={draft.status} /></td>
- <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-slate-400 hidden md:table-cell max-w-[200px] truncate">
+ <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-[#969e9b] hidden md:table-cell max-w-[200px] truncate">
  {draft.matterName}
  </td>
- <td className="px-5 py-3.5 text-sm text-[#969e9b] dark:text-slate-500 hidden lg:table-cell">
+ <td className="px-5 py-3.5 text-sm text-[#969e9b] dark:text-[#717d79] hidden lg:table-cell">
  {formatDate(draft.createdAt)}
  </td>
  <td className="px-5 py-3.5 text-right">
@@ -183,7 +183,7 @@ export default function DraftsPage() {
  actionLabel="Create Draft"
  onAction={() => setShowNewDraft(true)}
  icon={
- <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <svg className="w-16 h-16 text-black/[0.08] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
  </svg>
  }
@@ -201,16 +201,16 @@ export default function DraftsPage() {
  onChange={(e) => setNewTitle(e.target.value)}
  />
  <div>
- <label className="block text-sm font-medium text-[#717d79] dark:text-slate-300 mb-1.5">Type</label>
+ <label className="block text-sm font-medium text-[#717d79] dark:text-black/[0.08] mb-1.5">Type</label>
  <div className="flex gap-2 flex-wrap">
  {(['email', 'memo', 'report', 'letter', 'brief'] as const).map((t) => (
  <button
  key={t}
  onClick={() => setNewType(t)}
- className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+ className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors ${
  newType === t
  ? 'bg-[#0c0a09] text-white border-blue-600'
- : 'bg-white dark:bg-slate-900 text-[#717d79] dark:text-slate-300 border-black/[0.08] dark:border-slate-700 hover:bg-[#fefdfb]'
+ : 'bg-white dark:bg-slate-900 text-[#717d79] dark:text-black/[0.08] border-black/[0.08] dark:border-slate-700 hover:bg-[#fefdfb]'
  }`}
  >
  {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -244,7 +244,7 @@ export default function DraftsPage() {
 
  {/* Delete Confirmation Modal */}
  <Modal open={!!deleteConfirmId} onClose={() => setDeleteConfirmId(null)} title="Delete Draft" size="sm">
- <p className="text-sm text-[#717d79] dark:text-slate-400">
+ <p className="text-sm text-[#717d79] dark:text-[#969e9b]">
  Are you sure you want to delete this draft? This action cannot be undone.
  </p>
  <div className="flex justify-end gap-3 mt-6">

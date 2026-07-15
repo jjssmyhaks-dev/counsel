@@ -118,7 +118,7 @@ export default function PlaybookPage() {
 
       {/* Save feedback */}
       {saveMessage && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
@@ -133,13 +133,13 @@ export default function PlaybookPage() {
       {loading && (
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-6 animate-pulse">
-              <div className="h-5 bg-slate-200 rounded w-1/3 mb-3" />
-              <div className="h-4 bg-slate-100 rounded w-2/3 mb-2" />
-              <div className="h-4 bg-slate-100 rounded w-1/2 mb-4" />
+            <div key={i} className="bg-white rounded-xl border border-black/[0.06] p-6 animate-pulse">
+              <div className="h-5 bg-black/[0.06] rounded w-1/3 mb-3" />
+              <div className="h-4 bg-black/[0.04] rounded w-2/3 mb-2" />
+              <div className="h-4 bg-black/[0.04] rounded w-1/2 mb-4" />
               <div className="flex gap-2">
-                <div className="h-6 bg-slate-200 rounded-full w-16" />
-                <div className="h-6 bg-slate-200 rounded-full w-20" />
+                <div className="h-6 bg-black/[0.06] rounded-full w-16" />
+                <div className="h-6 bg-black/[0.06] rounded-full w-20" />
               </div>
             </div>
           ))}
@@ -157,7 +157,7 @@ export default function PlaybookPage() {
                   <Input
                     value={rule.name}
                     onChange={(e) => handleUpdateRule(rule.id, 'name', e.target.value)}
-                    className="text-base font-semibold !border-transparent !shadow-none !px-0 !py-0 hover:!border-slate-200 focus:!border-blue-500 focus:!px-3 focus:!py-2"
+                    className="text-base font-semibold !border-transparent !shadow-none !px-0 !py-0 hover:!border-black/[0.06] focus:!border-[#15b881]/50 focus:!px-3 focus:!py-2"
                     placeholder="Rule name..."
                   />
                 </div>
@@ -171,8 +171,8 @@ export default function PlaybookPage() {
                       onChange={() => handleToggleRule(rule.id)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    <span className="ml-2 text-xs text-slate-500">
+                    <div className="w-9 h-5 bg-black/[0.06] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-black/[0.08] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0a8a5f]"></div>
+                    <span className="ml-2 text-xs text-[#717d79]">
                       {rule.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </label>
@@ -237,14 +237,14 @@ export default function PlaybookPage() {
 
       {/* Empty state */}
       {!loading && !error && rules.length === 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl border border-black/[0.06] shadow-sm">
           <EmptyState
             title="No playbook rules configured"
             description="Create rules that define how the AI analyzes documents, flags risks, and makes recommendations."
             actionLabel="Add First Rule"
             onAction={handleAddRule}
             icon={
-              <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-16 h-16 text-black/[0.08] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             }

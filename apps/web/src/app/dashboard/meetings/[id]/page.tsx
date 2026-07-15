@@ -152,17 +152,17 @@ export default function MeetingDetailPage() {
         <div className="page-header !mb-0">
           <h1>{meeting.title}</h1>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-[#717d79]">
               {formatDate(meeting.date)} · {formatTime(meeting.date)}
             </span>
-            <span className="text-slate-300">·</span>
-            <span className="text-sm text-slate-500">{formatDuration(meeting.duration)}</span>
-            <span className="text-slate-300">·</span>
+            <span className="text-black/[0.08]">·</span>
+            <span className="text-sm text-[#717d79]">{formatDuration(meeting.duration)}</span>
+            <span className="text-black/[0.08]">·</span>
             <StatusBadgeUI status={meeting.status} />
             {meeting.matterName && (
               <>
-                <span className="text-slate-300">·</span>
-                <span className="text-sm text-slate-500">{meeting.matterName}</span>
+                <span className="text-black/[0.08]">·</span>
+                <span className="text-sm text-[#717d79]">{meeting.matterName}</span>
               </>
             )}
           </div>
@@ -182,8 +182,8 @@ export default function MeetingDetailPage() {
       {/* Participants */}
       <div className="flex flex-wrap gap-2">
         {meeting.participants.map((p, i) => (
-          <span key={i} className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm">
-            <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-semibold">
+          <span key={i} className="inline-flex items-center gap-1.5 bg-black/[0.04] text-[#4b5551] px-3 py-1 rounded-full text-sm">
+            <span className="w-5 h-5 rounded-full bg-[#15b881] text-white text-xs flex items-center justify-center font-semibold">
               {p.charAt(0)}
             </span>
             {p}
@@ -200,37 +200,37 @@ export default function MeetingDetailPage() {
           {/* Summary */}
           {meeting.summary && (
             <Card>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">Meeting Summary</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">{meeting.summary}</p>
+              <h3 className="text-sm font-semibold text-[#4b5551] mb-3">Meeting Summary</h3>
+              <p className="text-sm text-[#717d79] leading-relaxed">{meeting.summary}</p>
             </Card>
           )}
 
           {!meeting.summary && (
             <Card className="text-center py-12">
-              <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-12 h-12 text-black/[0.08] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <p className="text-sm text-slate-500 mb-1">No summary available</p>
-              <p className="text-xs text-slate-400">Click &quot;Process Meeting&quot; to generate an AI summary</p>
+              <p className="text-sm text-[#717d79] mb-1">No summary available</p>
+              <p className="text-xs text-[#969e9b]">Click &quot;Process Meeting&quot; to generate an AI summary</p>
             </Card>
           )}
 
           {/* Decisions */}
           {decisions.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">Decisions Made</h3>
+              <h3 className="text-lg font-semibold text-[#0c0a09] mb-3">Decisions Made</h3>
               <Card>
                 <ol className="list-decimal list-inside space-y-3">
                   {decisions.map((dec, i) => (
                     <li key={dec.id} className="pl-1">
-                      <p className="text-sm text-slate-800 inline">{dec.description}</p>
+                      <p className="text-sm text-[#4b5551] inline">{dec.description}</p>
                       <div className="ml-6 mt-1 space-y-0.5">
                         {dec.rationale && (
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-[#717d79]">
                             <span className="font-medium">Rationale:</span> {dec.rationale}
                           </p>
                         )}
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-[#969e9b]">
                           Decided by: {dec.decidedBy}
                         </p>
                       </div>
@@ -243,16 +243,16 @@ export default function MeetingDetailPage() {
 
           {/* Open Questions */}
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">Open Questions</h3>
+            <h3 className="text-lg font-semibold text-[#0c0a09] mb-3">Open Questions</h3>
             <Card>
               {meeting.summary ? (
                 <ul className="space-y-2">
-                  <li className="text-sm text-slate-700">• Are there any pending regulatory approvals that could delay closing?</li>
-                  <li className="text-sm text-slate-700">• Should we engage a tax specialist for the cross-border restructuring component?</li>
-                  <li className="text-sm text-slate-700">• What is the client's timeline expectation for closing?</li>
+                  <li className="text-sm text-[#4b5551]">• Are there any pending regulatory approvals that could delay closing?</li>
+                  <li className="text-sm text-[#4b5551]">• Should we engage a tax specialist for the cross-border restructuring component?</li>
+                  <li className="text-sm text-[#4b5551]">• What is the client's timeline expectation for closing?</li>
                 </ul>
               ) : (
-                <p className="text-sm text-slate-400 italic text-center py-4">Process the meeting to generate open questions</p>
+                <p className="text-sm text-[#969e9b] italic text-center py-4">Process the meeting to generate open questions</p>
               )}
             </Card>
           </div>
@@ -266,29 +266,29 @@ export default function MeetingDetailPage() {
             <Card padding="none">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/50">
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Description</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Owner</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase hidden lg:table-cell">Due Date</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
-                    <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Toggle</th>
+                  <tr className="border-b border-black/[0.06] bg-[#fefdfb]/50">
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase">Description</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase hidden md:table-cell">Owner</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase hidden lg:table-cell">Due Date</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase">Status</th>
+                    <th className="text-right px-5 py-3 text-xs font-semibold text-[#717d79] uppercase">Toggle</th>
                   </tr>
                 </thead>
                 <tbody>
                   {actionItems.map((item) => (
                     <tr
                       key={item.id}
-                      className={`border-b border-slate-100 transition-colors ${
-                        item.status === 'completed' ? 'bg-green-50/30' : 'hover:bg-slate-50'
+                      className={`border-b border-black/[0.04] transition-colors ${
+                        item.status === 'completed' ? 'bg-green-50/30' : 'hover:bg-[#fefdfb]'
                       }`}
                     >
                       <td className="px-5 py-3">
-                        <p className={`text-sm ${item.status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                        <p className={`text-sm ${item.status === 'completed' ? 'text-[#717d79] line-through' : 'text-slate-800'}`}>
                           {item.description}
                         </p>
                       </td>
-                      <td className="px-5 py-3 text-sm text-slate-600 hidden md:table-cell">{item.owner}</td>
-                      <td className="px-5 py-3 text-sm text-slate-500 hidden lg:table-cell">
+                      <td className="px-5 py-3 text-sm text-[#717d79] hidden md:table-cell">{item.owner}</td>
+                      <td className="px-5 py-3 text-sm text-[#717d79] hidden lg:table-cell">
                         {new Date(item.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </td>
                       <td className="px-5 py-3"><StatusBadgeUI status={item.status} /></td>
@@ -298,7 +298,7 @@ export default function MeetingDetailPage() {
                           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                             item.status === 'completed'
                               ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-slate-300 hover:border-green-500'
+                              : 'border-black/[0.08] hover:border-green-500'
                           }`}
                         >
                           {item.status === 'completed' && (
@@ -316,11 +316,11 @@ export default function MeetingDetailPage() {
           ) : (
             <Card>
               <div className="text-center py-12">
-                <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-12 h-12 text-black/[0.08] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                <p className="text-sm text-slate-500 mb-1">No action items yet</p>
-                <p className="text-xs text-slate-400">Process this meeting to extract action items</p>
+                <p className="text-sm text-[#717d79] mb-1">No action items yet</p>
+                <p className="text-xs text-[#969e9b]">Process this meeting to extract action items</p>
               </div>
             </Card>
           )}
@@ -331,9 +331,9 @@ export default function MeetingDetailPage() {
       {activeTab === 'transcript' && (
         <div>
           {meeting.transcript || mockTranscriptText ? (
-            <Card className="bg-slate-50">
-              <div className="bg-white border border-slate-200 rounded-lg p-4 max-h-[500px] overflow-y-auto">
-                <pre className="text-sm text-slate-700 font-mono whitespace-pre-wrap leading-relaxed">
+            <Card className="bg-[#fefdfb]">
+              <div className="bg-white border border-black/[0.06] rounded-xl p-4 max-h-[500px] overflow-y-auto">
+                <pre className="text-sm text-[#4b5551] font-mono whitespace-pre-wrap leading-relaxed">
                   {meeting.transcript || mockTranscriptText}
                 </pre>
               </div>
@@ -341,11 +341,11 @@ export default function MeetingDetailPage() {
           ) : (
             <Card>
               <div className="text-center py-12">
-                <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-12 h-12 text-black/[0.08] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15" />
                 </svg>
-                <p className="text-sm text-slate-500 mb-1">No transcript available</p>
-                <p className="text-xs text-slate-400">Upload a transcript to view it here</p>
+                <p className="text-sm text-[#717d79] mb-1">No transcript available</p>
+                <p className="text-xs text-[#969e9b]">Upload a transcript to view it here</p>
               </div>
             </Card>
           )}

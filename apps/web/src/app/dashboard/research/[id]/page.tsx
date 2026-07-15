@@ -165,10 +165,10 @@ function ConfidenceBar({ value }: { value: number }) {
   const color = value >= 80 ? 'bg-emerald-500' : value >= 60 ? 'bg-amber-500' : value >= 40 ? 'bg-orange-500' : 'bg-red-500';
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-black/[0.04] rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${value}%` }} />
       </div>
-      <span className="text-xs font-mono text-slate-500 w-8 text-right">{value}%</span>
+      <span className="text-xs font-mono text-[#717d79] w-8 text-right">{value}%</span>
     </div>
   );
 }
@@ -216,14 +216,14 @@ export default function ResearchDetailPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <button onClick={() => router.push('/research')} className="hover:text-blue-600 transition-colors">
+      <div className="flex items-center gap-2 text-sm text-[#717d79]">
+        <button onClick={() => router.push('/research')} className="hover:text-[#15b881] transition-colors">
           Research
         </button>
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
-        <span className="text-slate-700 font-medium truncate">{brief.title}</span>
+        <span className="text-[#4b5551] font-medium truncate">{brief.title}</span>
       </div>
 
       {/* Header */}
@@ -231,11 +231,11 @@ export default function ResearchDetailPage() {
         <div className="page-header !mb-0">
           <h1>{brief.title}</h1>
           <div className="flex items-center gap-3 mt-2">
-            <p className="text-sm text-slate-500">{brief.matterName}</p>
-            <span className="text-slate-300">·</span>
+            <p className="text-sm text-[#717d79]">{brief.matterName}</p>
+            <span className="text-black/[0.08]">·</span>
             <StatusBadgeUI status={brief.status} />
-            <span className="text-slate-300">·</span>
-            <span className="text-xs text-slate-400">{formatDate(brief.createdAt)}</span>
+            <span className="text-black/[0.08]">·</span>
+            <span className="text-xs text-[#969e9b]">{formatDate(brief.createdAt)}</span>
           </div>
         </div>
         <Button variant="secondary" onClick={() => router.push('/research')}>
@@ -244,14 +244,14 @@ export default function ResearchDetailPage() {
       </div>
 
       {/* Research Query Card */}
-      <Card className="bg-blue-50/50 border-blue-200">
-        <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Research Query</h3>
-        <p className="text-sm text-slate-800">{brief.query}</p>
+      <Card className="bg-[#eaf7f0]/40/50 border-[#15b881]/20">
+        <h3 className="text-xs font-semibold text-[#15b881] uppercase tracking-wider mb-2">Research Query</h3>
+        <p className="text-sm text-[#4b5551]">{brief.query}</p>
       </Card>
 
       {/* Findings */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Findings</h2>
+        <h2 className="text-lg font-semibold text-[#0c0a09] mb-4">Findings</h2>
         {brief.findingsList && brief.findingsList.length > 0 ? (
           <div className="space-y-4">
             {brief.findingsList.map((finding, i) => (
@@ -259,11 +259,11 @@ export default function ResearchDetailPage() {
                 <div className="space-y-3">
                   {/* Statement */}
                   <div className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#eaf7f0] text-[#0a8a5f] flex items-center justify-center text-xs font-bold">
                       {i + 1}
                     </span>
                     <div className="flex-1 space-y-2">
-                      <p className="text-sm text-slate-800 leading-relaxed">{finding.statement}</p>
+                      <p className="text-sm text-[#4b5551] leading-relaxed">{finding.statement}</p>
                       <ConfidenceBar value={finding.confidence} />
                     </div>
                   </div>
@@ -271,12 +271,12 @@ export default function ResearchDetailPage() {
                   {/* Citations */}
                   {finding.citations.length > 0 && (
                     <div className="ml-10 space-y-2 mt-2">
-                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sources</h4>
+                      <h4 className="text-xs font-semibold text-[#717d79] uppercase tracking-wider">Sources</h4>
                       {finding.citations.map((cite, j) => (
-                        <div key={j} className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
-                          <p className="text-xs font-medium text-slate-700">{cite.documentTitle}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{cite.section}</p>
-                          <p className="text-xs text-slate-500 italic mt-1 line-clamp-2">&ldquo;{cite.excerpt}&rdquo;</p>
+                        <div key={j} className="bg-[#fefdfb] rounded-xl px-3 py-2 border border-black/[0.04]">
+                          <p className="text-xs font-medium text-[#4b5551]">{cite.documentTitle}</p>
+                          <p className="text-xs text-[#717d79] mt-0.5">{cite.section}</p>
+                          <p className="text-xs text-[#717d79] italic mt-1 line-clamp-2">&ldquo;{cite.excerpt}&rdquo;</p>
                         </div>
                       ))}
                     </div>
@@ -287,7 +287,7 @@ export default function ResearchDetailPage() {
           </div>
         ) : (
           <Card className="text-center py-12">
-            <p className="text-sm text-slate-500">No findings available yet. Research may still be in progress.</p>
+            <p className="text-sm text-[#717d79]">No findings available yet. Research may still be in progress.</p>
           </Card>
         )}
       </div>
@@ -295,11 +295,11 @@ export default function ResearchDetailPage() {
       {/* Open Questions */}
       {brief.openQuestions && brief.openQuestions.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Open Questions</h2>
+          <h2 className="text-lg font-semibold text-[#0c0a09] mb-4">Open Questions</h2>
           <Card>
             <ol className="list-decimal list-inside space-y-2">
               {brief.openQuestions.map((q, i) => (
-                <li key={i} className="text-sm text-slate-700 leading-relaxed pl-2">{q}</li>
+                <li key={i} className="text-sm text-[#4b5551] leading-relaxed pl-2">{q}</li>
               ))}
             </ol>
           </Card>
@@ -309,18 +309,18 @@ export default function ResearchDetailPage() {
       {/* Source Documents */}
       {brief.sourceDocuments && brief.sourceDocuments.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Source Documents</h2>
+          <h2 className="text-lg font-semibold text-[#0c0a09] mb-4">Source Documents</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {brief.sourceDocuments.map((doc, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white rounded-lg border border-slate-200 p-3">
-                <div className="w-8 h-8 bg-slate-100 rounded flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div key={i} className="flex items-center gap-3 bg-white rounded-xl border border-black/[0.06] p-3">
+                <div className="w-8 h-8 bg-black/[0.04] rounded flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-[#717d79]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{doc.title}</p>
-                  <p className="text-xs text-slate-500">{doc.type}</p>
+                  <p className="text-sm font-medium text-[#4b5551] truncate">{doc.title}</p>
+                  <p className="text-xs text-[#717d79]">{doc.type}</p>
                 </div>
               </div>
             ))}
@@ -331,13 +331,13 @@ export default function ResearchDetailPage() {
       {/* No findings empty state */}
       {!brief.findingsList && !brief.findings && (
         <Card className="text-center py-16">
-          <svg className="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <svg className="w-16 h-16 text-black/[0.08] mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">
+          <h3 className="text-lg font-semibold text-[#0c0a09] mb-1">
             {brief.status === 'researching' ? 'Research in Progress' : 'No Findings Yet'}
           </h3>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-[#717d79]">
             {brief.status === 'researching'
               ? 'The AI is currently analyzing your query and searching through firm documents.'
               : brief.status === 'failed'

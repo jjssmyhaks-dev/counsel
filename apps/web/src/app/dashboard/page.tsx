@@ -90,9 +90,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((s) => (
           <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-black/[0.04] dark:border-slate-800 p-5">
-            <p className="text-[13px] text-[#717d79] dark:text-slate-400 font-medium">{s.label}</p>
+            <p className="text-[13px] text-[#717d79] dark:text-[#969e9b] font-medium">{s.label}</p>
             <p className={`${serif} text-[2rem] font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white mt-1 tabular-nums`}>{s.value}</p>
-            <p className="text-[12px] text-[#969e9b] dark:text-slate-500 mt-1">{s.sub}</p>
+            <p className="text-[12px] text-[#969e9b] dark:text-[#717d79] mt-1">{s.sub}</p>
           </div>
         ))}
       </div>
@@ -100,10 +100,10 @@ export default function DashboardPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { href: '/documents', label: 'Upload Document', color: 'bg-[#eaf7f0] text-[#0a8a5f] hover:bg-[#15b881]/15' },
-          { href: '/matters', label: 'New Matter', color: 'bg-[#f0f0f0] text-[#0c0a09] hover:bg-[#f0f0f0]/80' },
-          { href: '/drafts', label: 'Create Draft', color: 'bg-[#eaf7f0] text-[#0a8a5f] hover:bg-[#15b881]/15' },
-          { href: '/research', label: 'Research', color: 'bg-[#f0f0f0] text-[#0c0a09] hover:bg-[#f0f0f0]/80' },
+          { href: '/dashboard/documents', label: 'Upload Document', color: 'bg-[#eaf7f0] text-[#0a8a5f] hover:bg-[#15b881]/15' },
+          { href: '/dashboard/matters', label: 'New Matter', color: 'bg-[#f0f0f0] text-[#0c0a09] hover:bg-[#f0f0f0]/80' },
+          { href: '/dashboard/drafts', label: 'Create Draft', color: 'bg-[#eaf7f0] text-[#0a8a5f] hover:bg-[#15b881]/15' },
+          { href: '/dashboard/research', label: 'Research', color: 'bg-[#f0f0f0] text-[#0c0a09] hover:bg-[#f0f0f0]/80' },
         ].map(a => (
           <Link key={a.href} href={a.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-[13px] transition-colors ${a.color}`}>
             {a.label}
@@ -115,14 +115,14 @@ export default function DashboardPage() {
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-black/[0.04] dark:border-slate-800">
         <div className="px-5 py-4 border-b border-black/[0.04] dark:border-slate-800 flex items-center justify-between">
           <h3 className={`${serif} text-lg font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white`}>Recent Documents</h3>
-          <Link href="/documents" className="text-[13px] text-[#0a8a5f] hover:text-[#15b881] font-medium transition-colors">View all →</Link>
+          <Link href="/dashboard/documents" className="text-[13px] text-[#0a8a5f] hover:text-[#15b881] font-medium transition-colors">View all →</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-black/[0.04] dark:border-slate-800">
                 {['Name','Type','Status','Date'].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#969e9b] dark:text-slate-500">{h}</th>
+                  <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#969e9b] dark:text-[#717d79]">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -131,16 +131,16 @@ export default function DashboardPage() {
                 <tr><td colSpan={4} className="px-5 py-8 text-center text-[#969e9b] text-[13px]">No documents yet. Upload your first document to get started.</td></tr>
               ) : (
                 documents.map((doc: any) => (
-                  <tr key={doc.id} className="border-b border-black/[0.02] dark:border-slate-800 hover:bg-black/[0.02] dark:hover:bg-slate-800/50 cursor-pointer transition-colors" onClick={() => router.push(`/documents/${doc.id}`)}>
+                  <tr key={doc.id} className="border-b border-black/[0.02] dark:border-slate-800 hover:bg-black/[0.02] dark:hover:bg-slate-800/50 cursor-pointer transition-colors" onClick={() => router.push(`/dashboard/documents/${doc.id}`)}>
                     <td className="px-5 py-3">
                       <p className="text-[13px] font-medium text-[#0c0a09] dark:text-white truncate max-w-[280px]">{doc.originalName || doc.name || 'Unnamed'}</p>
-                      <p className="text-[11px] text-[#969e9b] dark:text-slate-500">{doc.matter?.name || '—'}</p>
+                      <p className="text-[11px] text-[#969e9b] dark:text-[#717d79]">{doc.matter?.name || '—'}</p>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="text-[11px] font-mono uppercase text-[#717d79] dark:text-slate-400 bg-[#f0f0f0] dark:bg-slate-800 px-2 py-0.5 rounded">{((doc.mimeType || doc.type || 'unknown').split('/').pop() || doc.type || 'file')}</span>
+                      <span className="text-[11px] font-mono uppercase text-[#717d79] dark:text-[#969e9b] bg-[#f0f0f0] dark:bg-slate-800 px-2 py-0.5 rounded">{((doc.mimeType || doc.type || 'unknown').split('/').pop() || doc.type || 'file')}</span>
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={doc.status} /></td>
-                    <td className="px-5 py-3 text-[13px] text-[#717d79] dark:text-slate-400">{formatDate(doc.createdAt)}</td>
+                    <td className="px-5 py-3 text-[13px] text-[#717d79] dark:text-[#969e9b]">{formatDate(doc.createdAt)}</td>
                   </tr>
                 ))
               )}

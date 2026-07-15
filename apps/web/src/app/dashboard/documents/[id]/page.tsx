@@ -34,31 +34,31 @@ function ClauseCardRow({ clause }: { clause: ClauseCard }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+    <div className="border border-black/[0.06] rounded-xl p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-900">{clause.type}</span>
+          <span className="text-sm font-semibold text-[#0c0a09]">{clause.type}</span>
           <RiskBadge level={clause.riskLevel} />
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+          className="text-xs text-[#15b881] hover:text-[#0a8a5f] font-medium"
         >
           {expanded ? 'Collapse' : 'View Details'}
         </button>
       </div>
-      <p className="text-sm text-slate-600 mt-2 line-clamp-2 font-mono text-xs bg-slate-50 p-2 rounded">
+      <p className="text-sm text-[#717d79] mt-2 line-clamp-2 font-mono text-xs bg-[#fefdfb] p-2 rounded">
         &ldquo;{clause.excerpt}&rdquo;
       </p>
       {expanded && (
-        <div className="mt-3 space-y-3 pt-3 border-t border-slate-100">
+        <div className="mt-3 space-y-3 pt-3 border-t border-black/[0.04]">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Rationale</p>
-            <p className="text-sm text-slate-700">{clause.rationale}</p>
+            <p className="text-xs font-semibold text-[#717d79] uppercase mb-1">Rationale</p>
+            <p className="text-sm text-[#4b5551]">{clause.rationale}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Suggested Edit</p>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-xs font-semibold text-[#717d79] uppercase mb-1">Suggested Edit</p>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3">
               <p className="text-sm text-green-800">{clause.suggestedEdit}</p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function DocumentDetailPage() {
         <div className="skeleton h-12 w-full rounded-xl" />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="skeleton h-32 rounded-lg" />
+            <div key={i} className="skeleton h-32 rounded-xl" />
           ))}
         </div>
       </div>
@@ -170,12 +170,12 @@ export default function DocumentDetailPage() {
 
   if (error || !doc) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Document Not Found</h3>
-        <p className="text-slate-500 text-sm mb-4">{error || 'The requested document could not be loaded.'}</p>
+      <div className="bg-white rounded-xl shadow-sm border border-black/[0.06] p-12 text-center">
+        <h3 className="text-lg font-semibold text-[#0c0a09] mb-2">Document Not Found</h3>
+        <p className="text-[#717d79] text-sm mb-4">{error || 'The requested document could not be loaded.'}</p>
         <button
           onClick={() => router.push('/documents')}
-          className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+          className="text-[#15b881] hover:text-[#0a8a5f] font-medium text-sm"
         >
           ← Back to Documents
         </button>
@@ -195,32 +195,32 @@ export default function DocumentDetailPage() {
       <div>
         <button
           onClick={() => router.push('/documents')}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium mb-2 inline-flex items-center gap-1"
+          className="text-sm text-[#15b881] hover:text-[#0a8a5f] font-medium mb-2 inline-flex items-center gap-1"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           Back to Documents
         </button>
-        <h1 className="text-2xl font-bold text-slate-900">{doc.name}</h1>
+        <h1 className="text-2xl font-bold text-[#0c0a09]">{doc.name}</h1>
       </div>
 
       {/* Metadata bar */}
-      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+      <div className="flex flex-wrap items-center gap-4 text-sm text-[#717d79]">
         <span className="flex items-center gap-1">
-          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <svg className="w-4 h-4 text-[#969e9b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           {formatSize(doc.size)}
         </span>
-        <span className="text-xs font-mono uppercase text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{doc.type}</span>
+        <span className="text-xs font-mono uppercase text-[#717d79] bg-black/[0.04] px-2 py-0.5 rounded">{doc.type}</span>
         <StatusBadge status={doc.status} />
         <span>{doc.uploaderName}</span>
         <span>{formatDate(doc.createdAt)}</span>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-black/[0.06]">
         <nav className="flex gap-6">
           {tabs.map((tab) => (
             <button
@@ -228,8 +228,8 @@ export default function DocumentDetailPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'border-blue-600 text-[#15b881]'
+                  : 'border-transparent text-[#717d79] hover:text-[#4b5551]'
               }`}
             >
               {tab.label}
@@ -244,29 +244,29 @@ export default function DocumentDetailPage() {
           {analysis ? (
             <>
               {/* Overall risk */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+              <div className="bg-white rounded-xl shadow-sm border border-black/[0.06] p-5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-slate-900">Risk Assessment</h3>
+                    <h3 className="font-semibold text-[#0c0a09]">Risk Assessment</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm text-slate-500">Overall Risk:</span>
+                      <span className="text-sm text-[#717d79]">Overall Risk:</span>
                       <RiskBadge level={analysis.overallRisk} />
                     </div>
                   </div>
                   <button
                     onClick={handleRunAnalysis}
                     disabled={runningAnalysis}
-                    className="text-xs px-3 py-1.5 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-50 disabled:opacity-50"
+                    className="text-xs px-3 py-1.5 border border-[#15b881]/20 text-[#0a8a5f] rounded-xl hover:bg-[#eaf7f0]/40 disabled:opacity-50"
                   >
                     {runningAnalysis ? 'Running...' : 'Re-run Analysis'}
                   </button>
                 </div>
-                <p className="text-sm text-slate-600 mt-3 leading-relaxed">{analysis.summary}</p>
+                <p className="text-sm text-[#717d79] mt-3 leading-relaxed">{analysis.summary}</p>
               </div>
 
               {/* Clause cards */}
               <div>
-                <h3 className="font-semibold text-slate-900 mb-3">
+                <h3 className="font-semibold text-[#0c0a09] mb-3">
                   Clauses ({analysis.clauses.length})
                 </h3>
                 <div className="space-y-3">
@@ -278,20 +278,20 @@ export default function DocumentDetailPage() {
             </>
           ) : (
             /* No analysis yet */
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="bg-white rounded-xl shadow-sm border border-black/[0.06] p-12 text-center">
+              <div className="w-16 h-16 bg-[#eaf7f0] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-[#15b881]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">No Analysis Yet</h3>
-              <p className="text-slate-500 text-sm mb-4">
+              <h3 className="text-lg font-semibold text-[#0c0a09] mb-2">No Analysis Yet</h3>
+              <p className="text-[#717d79] text-sm mb-4">
                 Run an analysis to identify risks, obligations, and suggested edits across all clauses.
               </p>
               <button
                 onClick={handleRunAnalysis}
                 disabled={runningAnalysis}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0a8a5f] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] transition-colors disabled:opacity-50"
               >
                 {runningAnalysis ? (
                   <>
@@ -312,14 +312,14 @@ export default function DocumentDetailPage() {
 
       {/* Tab: Compare */}
       {activeTab === 'compare' && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
-          <h3 className="font-semibold text-slate-900">Compare with Another Document</h3>
+        <div className="bg-white rounded-xl shadow-sm border border-black/[0.06] p-5 space-y-4">
+          <h3 className="font-semibold text-[#0c0a09]">Compare with Another Document</h3>
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <p className="text-xs font-medium text-slate-500 mb-1">Current Document</p>
-              <p className="text-sm font-semibold text-slate-900 truncate">{doc.name}</p>
+            <div className="flex-1 p-3 bg-[#fefdfb] rounded-xl border border-black/[0.06]">
+              <p className="text-xs font-medium text-[#717d79] mb-1">Current Document</p>
+              <p className="text-sm font-semibold text-[#0c0a09] truncate">{doc.name}</p>
             </div>
-            <div className="flex items-center justify-center text-slate-400">
+            <div className="flex items-center justify-center text-[#969e9b]">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
@@ -328,7 +328,7 @@ export default function DocumentDetailPage() {
               <select
                 value={compareDoc}
                 onChange={(e) => setCompareDoc(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-black/[0.08] rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
               >
                 <option value="">Select document to compare...</option>
                 {COMPARE_DOCS.filter((d) => d.id !== doc.id).map((d) => (
@@ -341,7 +341,7 @@ export default function DocumentDetailPage() {
           <button
             onClick={handleCompare}
             disabled={!compareDoc || comparing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
+            className="px-4 py-2 bg-[#0a8a5f] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] transition-colors disabled:opacity-50 inline-flex items-center gap-2"
           >
             {comparing ? (
               <>
@@ -357,7 +357,7 @@ export default function DocumentDetailPage() {
           </button>
 
           {compareResult && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-black/[0.06]">
               <div>
                 <h4 className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -367,7 +367,7 @@ export default function DocumentDetailPage() {
                 </h4>
                 <ul className="space-y-1.5">
                   {compareResult.similarities.map((s, i) => (
-                    <li key={i} className="text-sm text-slate-600 pl-5 relative">
+                    <li key={i} className="text-sm text-[#717d79] pl-5 relative">
                       <span className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-green-400 rounded-full" />
                       {s}
                     </li>
@@ -383,7 +383,7 @@ export default function DocumentDetailPage() {
                 </h4>
                 <ul className="space-y-1.5">
                   {compareResult.differences.map((d, i) => (
-                    <li key={i} className="text-sm text-slate-600 pl-5 relative">
+                    <li key={i} className="text-sm text-[#717d79] pl-5 relative">
                       <span className="absolute left-0 top-1.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
                       {d}
                     </li>
@@ -397,48 +397,48 @@ export default function DocumentDetailPage() {
 
       {/* Tab: Info */}
       {activeTab === 'info' && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h3 className="font-semibold text-slate-900 mb-4">Document Information</h3>
+        <div className="bg-white rounded-xl shadow-sm border border-black/[0.06] p-5">
+          <h3 className="font-semibold text-[#0c0a09] mb-4">Document Information</h3>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Document ID</dt>
-              <dd className="text-sm text-slate-900 mt-1 font-mono">{doc.id}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Document ID</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1 font-mono">{doc.id}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">File Name</dt>
-              <dd className="text-sm text-slate-900 mt-1">{doc.name}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">File Name</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1">{doc.name}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Type</dt>
-              <dd className="text-sm text-slate-900 mt-1 uppercase">{doc.type}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Type</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1 uppercase">{doc.type}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Size</dt>
-              <dd className="text-sm text-slate-900 mt-1">{formatSize(doc.size)}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Size</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1">{formatSize(doc.size)}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Pages</dt>
-              <dd className="text-sm text-slate-900 mt-1">{doc.pageCount || 'N/A'}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Pages</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1">{doc.pageCount || 'N/A'}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Status</dt>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Status</dt>
               <dd className="mt-1"><StatusBadge status={doc.status} /></dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Uploaded By</dt>
-              <dd className="text-sm text-slate-900 mt-1">{doc.uploaderName}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Uploaded By</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1">{doc.uploaderName}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Matter</dt>
-              <dd className="text-sm text-slate-900 mt-1">{doc.matterName}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Matter</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1">{doc.matterName}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Created</dt>
-              <dd className="text-sm text-slate-900 mt-1">{formatDate(doc.createdAt)}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Created</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1">{formatDate(doc.createdAt)}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-slate-500 uppercase">Updated</dt>
-              <dd className="text-sm text-slate-900 mt-1">{formatDate(doc.updatedAt)}</dd>
+              <dt className="text-xs font-medium text-[#717d79] uppercase">Updated</dt>
+              <dd className="text-sm text-[#0c0a09] mt-1">{formatDate(doc.updatedAt)}</dd>
             </div>
           </dl>
         </div>

@@ -27,7 +27,7 @@ export default function AdminDashboardPage() {
   const router = useRouter();
 
   const stats = [
-    { label: 'Total Users', value: '12', icon: '👥', color: 'bg-blue-50 text-blue-600' },
+    { label: 'Total Users', value: '12', icon: '👥', color: 'bg-[#eaf7f0]/40 text-[#15b881]' },
     { label: 'Total Documents', value: '247', icon: '📄', color: 'bg-green-50 text-green-600' },
     { label: 'Queries This Month', value: '1,204', icon: '💡', color: 'bg-purple-50 text-purple-600' },
     { label: 'Active Matters', value: '12', icon: '📋', color: 'bg-amber-50 text-amber-600' },
@@ -89,8 +89,8 @@ export default function AdminDashboardPage() {
           <Card key={stat.label}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
+                <p className="text-sm text-[#717d79] font-medium">{stat.label}</p>
+                <p className="text-2xl font-bold text-[#0c0a09] mt-1">{stat.value}</p>
               </div>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${stat.color}`}>
                 {stat.icon}
@@ -110,10 +110,10 @@ export default function AdminDashboardPage() {
             className="cursor-pointer"
           >
             <div className="flex items-start gap-4">
-              <div className="text-slate-400">{action.icon}</div>
+              <div className="text-[#969e9b]">{action.icon}</div>
               <div>
-                <h3 className="font-semibold text-slate-900">{action.title}</h3>
-                <p className="text-sm text-slate-500 mt-1">{action.description}</p>
+                <h3 className="font-semibold text-[#0c0a09]">{action.title}</h3>
+                <p className="text-sm text-[#717d79] mt-1">{action.description}</p>
               </div>
             </div>
           </Card>
@@ -122,29 +122,29 @@ export default function AdminDashboardPage() {
 
       {/* Recent Activity */}
       <div>
-        <h3 className="font-semibold text-slate-900 mb-3">Recent Activity</h3>
+        <h3 className="font-semibold text-[#0c0a09] mb-3">Recent Activity</h3>
         <Card padding="none">
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-black/[0.04]">
             {mockActivity.map((entry) => (
-              <div key={entry.id} className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition-colors">
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+              <div key={entry.id} className="flex items-center gap-4 px-5 py-3 hover:bg-[#fefdfb] transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#eaf7f0] text-[#0a8a5f] flex items-center justify-center text-xs font-bold flex-shrink-0">
                   {entry.user.split(' ').map((n) => n[0]).join('')}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-slate-800">
+                  <p className="text-sm text-[#4b5551]">
                     <span className="font-medium">{entry.user}</span>{' '}
-                    <span className="text-slate-600">{entry.action}</span>
+                    <span className="text-[#717d79]">{entry.action}</span>
                   </p>
-                  <p className="text-xs text-slate-500 truncate">{entry.detail}</p>
+                  <p className="text-xs text-[#717d79] truncate">{entry.detail}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {getActionBadge(entry.action)}
-                  <span className="text-xs text-slate-400 whitespace-nowrap">{formatDate(entry.time)}</span>
+                  <span className="text-xs text-[#969e9b] whitespace-nowrap">{formatDate(entry.time)}</span>
                 </div>
               </div>
             ))}
           </div>
-          <div className="px-5 py-3 border-t border-slate-100">
+          <div className="px-5 py-3 border-t border-black/[0.04]">
             <Button variant="ghost" size="sm" onClick={() => router.push('/admin/audit')} className="text-sm">
               View Full Audit Log →
             </Button>

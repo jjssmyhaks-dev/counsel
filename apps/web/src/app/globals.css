@@ -26,7 +26,7 @@
 @layer components {
   /* Sidebar nav links */
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.04] transition-all text-[13px] font-medium;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.04] transition-all text-[13px] font-medium;
   }
   .sidebar-link.active {
     @apply bg-[#15b881]/15 text-[#7ce3b6] border-l-[3px] border-[#15b881] pl-[9px];
@@ -35,7 +35,7 @@
   /* Page headers */
   .page-header { @apply mb-6; }
   .page-header h1 { @apply text-2xl font-bold text-[#0c0a09] dark:text-white; }
-  .page-header p { @apply text-[#717d79] dark:text-slate-400 mt-1; }
+  .page-header p { @apply text-[#717d79] dark:text-[#969e9b] mt-1; }
 
   /* Stat cards */
   .stat-card {
@@ -45,15 +45,15 @@
     @apply text-2xl font-semibold text-[#0c0a09] dark:text-white;
   }
   .stat-card .stat-label {
-    @apply text-[13px] text-[#717d79] dark:text-slate-400;
+    @apply text-[13px] text-[#717d79] dark:text-[#969e9b];
   }
 
   /* Table styles */
   .table-cell {
-    @apply px-4 py-3 text-[13px] text-[#0c0a09] dark:text-slate-200;
+    @apply px-4 py-3 text-[13px] text-[#0c0a09] dark:text-black/[0.06];
   }
   .table-header {
-    @apply px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#969e9b] dark:text-slate-500 text-left;
+    @apply px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#969e9b] dark:text-[#717d79] text-left;
   }
 
   /* Button variants */
@@ -104,9 +104,9 @@
 .dark .border-black\/\[0\.04\] { @apply border-slate-800; }
 .dark .border-black\/\[0\.06\] { @apply border-slate-800; }
 .dark .border-black\/\[0\.08\] { @apply border-slate-700; }
-.dark .text-\[\#0c0a09\] { @apply text-slate-100; }
-.dark .text-\[\#717d79\] { @apply text-slate-400; }
-.dark .text-\[\#4b5551\] { @apply text-slate-300; }
-.dark .text-\[\#969e9b\] { @apply text-slate-500; }
+.dark .text-\[\#0c0a09\] { color: rgb(241 245 249 / 0.96); }
+.dark .text-\[\#717d79\] { color: #94a3b8; }
+.dark .text-\[\#4b5551\] { color: #cbd5e1; }
+.dark .text-\[\#969e9b\] { color: #64748b; }
 .dark .bg-\[\#f0f0f0\] { @apply bg-slate-800; }
 .dark .shadow-sm { @apply shadow-slate-900/50; }

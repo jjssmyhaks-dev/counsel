@@ -131,7 +131,7 @@ export default function KbPage() {
  <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
  <div className="relative">
  <svg
- className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
+ className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#969e9b]"
  fill="none"
  viewBox="0 0 24 24"
  stroke="currentColor"
@@ -144,7 +144,7 @@ export default function KbPage() {
  value={question}
  onChange={(e) => setQuestion(e.target.value)}
  placeholder="Ask anything about your firm's documents, precedents, and policies..."
- className="block w-full pl-12 pr-24 py-3.5 text-base border border-black/[0.08] dark:border-slate-700 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 placeholder:text-slate-400"
+ className="block w-full pl-12 pr-24 py-3.5 text-base border border-black/[0.08] dark:border-slate-700 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 placeholder:text-[#969e9b]"
  />
  <Button
  type="submit"
@@ -156,14 +156,14 @@ export default function KbPage() {
  {searching ? 'Searching' : 'Search'}
  </Button>
  </div>
- <p className="text-xs text-slate-400 mt-3 text-center">
+ <p className="text-xs text-[#969e9b] mt-3 text-center">
  Try: &ldquo;What is our standard indemnification language?&rdquo; · &ldquo;How do we handle force majeure in leases?&rdquo; · &ldquo;What are our 2026 billing rates?&rdquo;
  </p>
  </form>
 
  {/* Error */}
  {error && (
- <div className="max-w-2xl mx-auto bg-[#fdf0ee] border border-red-200 text-[#c2452e] px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+ <div className="max-w-2xl mx-auto bg-[#fdf0ee] border border-red-200 text-[#c2452e] px-4 py-3 rounded-xl text-sm flex items-center justify-between">
  <span>{error}</span>
  <button onClick={() => setError('')} className="text-red-500 hover:text-[#c2452e] ml-2">
  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -178,7 +178,7 @@ export default function KbPage() {
  <div className="max-w-2xl mx-auto">
  <Card className="text-center py-12">
  <Spinner size="md" label="Searching firm knowledge base..." />
- <p className="text-xs text-slate-400 mt-4">Scanning documents, playbooks, and precedents...</p>
+ <p className="text-xs text-[#969e9b] mt-4">Scanning documents, playbooks, and precedents...</p>
  </Card>
  </div>
  )}
@@ -188,7 +188,7 @@ export default function KbPage() {
  <div className="max-w-3xl mx-auto space-y-4">
  {/* Low confidence warning */}
  {result.confidence === 'low' && (
- <div className="bg-[#fef8e6] border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-3">
+ <div className="bg-[#fef8e6] border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
  <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
  </svg>
@@ -206,18 +206,18 @@ export default function KbPage() {
  ? 'border-l-4 border-l-emerald-500'
  : result.confidence === 'medium'
  ? 'border-l-4 border-l-amber-500'
- : 'border-l-4 border-l-slate-300'
+ : 'border-l-4 border-l-black/[0.08]'
  }
  >
  <div className="flex items-center justify-between mb-4">
  <h3 className="font-semibold text-[#0c0a09] dark:text-white text-sm">Answer</h3>
  <ConfidenceBadge confidence={result.confidence} />
  </div>
- <p className="text-sm text-[#717d79] dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{result.answer}</p>
+ <p className="text-sm text-[#717d79] dark:text-black/[0.08] leading-relaxed whitespace-pre-wrap">{result.answer}</p>
  </Card>
  ) : (
  <Card className="text-center py-8 border-l-4 border-l-red-400">
- <p className="text-sm text-[#969e9b] dark:text-slate-500">
+ <p className="text-sm text-[#969e9b] dark:text-[#717d79]">
  {result.metadata && typeof result.metadata.message === 'string'
  ? result.metadata.message
  : 'No answer found. Try rephrasing your question.'}
@@ -228,20 +228,20 @@ export default function KbPage() {
  {/* Sources */}
  {result.sources.length > 0 && (
  <div>
- <h3 className="text-sm font-semibold text-[#717d79] dark:text-slate-300 mb-3 flex items-center gap-2">
- <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <h3 className="text-sm font-semibold text-[#717d79] dark:text-black/[0.08] mb-3 flex items-center gap-2">
+ <svg className="w-4 h-4 text-[#969e9b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
  </svg>
  Sources
  </h3>
  <div className="space-y-2">
  {result.sources.map((source) => (
- <div key={source.id} className="bg-[#fefdfb] rounded-lg px-3 py-2.5 border border-slate-100">
- <p className="text-xs font-medium text-[#717d79] dark:text-slate-300">{source.title}</p>
- <p className="text-xs text-[#969e9b] dark:text-slate-500 mt-0.5">
+ <div key={source.id} className="bg-[#fefdfb] rounded-xl px-3 py-2.5 border border-black/[0.04]">
+ <p className="text-xs font-medium text-[#717d79] dark:text-black/[0.08]">{source.title}</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79] mt-0.5">
  Page {source.pageNumber}
  </p>
- <p className="text-xs text-[#969e9b] dark:text-slate-500 italic mt-1 line-clamp-2">
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79] italic mt-1 line-clamp-2">
  &ldquo;{source.excerpt}&rdquo;
  </p>
  </div>
@@ -262,7 +262,7 @@ export default function KbPage() {
  </svg>
  </div>
  <h3 className="text-lg font-semibold text-[#0c0a09] dark:text-white mb-1">Ask your firm anything</h3>
- <p className="text-sm text-[#969e9b] dark:text-slate-500 max-w-md mx-auto">
+ <p className="text-sm text-[#969e9b] dark:text-[#717d79] max-w-md mx-auto">
  Search across all your firm&apos;s documents, precedent clauses, playbook rules, and firm policies using natural language.
  </p>
  </Card>
@@ -272,21 +272,21 @@ export default function KbPage() {
  {/* Recent Queries */}
  {history.length > 0 && (
  <div className="max-w-3xl mx-auto">
- <h3 className="text-sm font-semibold text-[#717d79] dark:text-slate-300 mb-3">Recent Queries</h3>
+ <h3 className="text-sm font-semibold text-[#717d79] dark:text-black/[0.08] mb-3">Recent Queries</h3>
  <div className="space-y-2">
  {history.slice(0, 5).map((item) => (
  <button
  key={item.id}
  onClick={() => { setQuestion(item.question); }}
- className="w-full text-left bg-white dark:bg-slate-900 rounded-lg border border-black/[0.04] dark:border-white/[0.06] px-4 py-3 hover:bg-[#fefdfb] transition-colors flex items-center justify-between group"
+ className="w-full text-left bg-white dark:bg-slate-900 rounded-xl border border-black/[0.04] dark:border-white/[0.06] px-4 py-3 hover:bg-[#fefdfb] transition-colors flex items-center justify-between group"
  >
  <div className="min-w-0 flex-1">
- <p className="text-sm text-slate-800 truncate">{item.question}</p>
- <p className="text-xs text-slate-400 mt-0.5">{formatDate(item.createdAt)}</p>
+ <p className="text-sm text-[#4b5551] truncate">{item.question}</p>
+ <p className="text-xs text-[#969e9b] mt-0.5">{formatDate(item.createdAt)}</p>
  </div>
  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
  <ConfidenceBadge confidence={item.answer.confidence} />
- <svg className="w-4 h-4 text-slate-300 group-hover:text-[#15b881] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <svg className="w-4 h-4 text-black/[0.08] group-hover:text-[#15b881] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
  </svg>
  </div>

@@ -129,17 +129,17 @@ export default function UsersPage() {
  <table className="w-full">
  <thead>
  <tr className="border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fefdfb]/50">
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Name</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden md:table-cell">Email</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Role</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden lg:table-cell">Last Login</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Status</th>
- <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Actions</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Name</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden md:table-cell">Email</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Role</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden lg:table-cell">Last Login</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Status</th>
+ <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Actions</th>
  </tr>
  </thead>
  <tbody>
  {users.map((user) => (
- <tr key={user.id} className="border-b border-slate-100 hover:bg-[#fefdfb] transition-colors">
+ <tr key={user.id} className="border-b border-black/[0.04] hover:bg-[#fefdfb] transition-colors">
  <td className="px-5 py-3.5">
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-full bg-[#eaf7f0] text-[#0a8a5f] flex items-center justify-center text-sm font-bold">
@@ -148,9 +148,9 @@ export default function UsersPage() {
  <p className="text-sm font-medium text-[#0c0a09] dark:text-white">{user.name}</p>
  </div>
  </td>
- <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-slate-400 hidden md:table-cell">{user.email}</td>
+ <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-[#969e9b] hidden md:table-cell">{user.email}</td>
  <td className="px-5 py-3.5"><RoleBadge role={user.role} /></td>
- <td className="px-5 py-3.5 text-sm text-[#969e9b] dark:text-slate-500 hidden lg:table-cell">
+ <td className="px-5 py-3.5 text-sm text-[#969e9b] dark:text-[#717d79] hidden lg:table-cell">
  {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
  </td>
  <td className="px-5 py-3.5">
@@ -163,16 +163,16 @@ export default function UsersPage() {
  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
  </svg>
  </Button>
- <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-black/[0.04] dark:border-white/[0.06] rounded-lg shadow-lg py-1 w-40 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+ <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-black/[0.04] dark:border-white/[0.06] rounded-xl shadow-lg py-1 w-40 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
  <button
  onClick={() => setEditRoleId(user.id)}
- className="w-full text-left px-3 py-2 text-sm text-[#717d79] dark:text-slate-300 hover:bg-[#fefdfb]"
+ className="w-full text-left px-3 py-2 text-sm text-[#717d79] dark:text-black/[0.08] hover:bg-[#fefdfb]"
  >
  Edit Role
  </button>
  <button
  onClick={() => setDeactivateId(user.id)}
- className="w-full text-left px-3 py-2 text-sm text-[#717d79] dark:text-slate-300 hover:bg-[#fefdfb]"
+ className="w-full text-left px-3 py-2 text-sm text-[#717d79] dark:text-black/[0.08] hover:bg-[#fefdfb]"
  >
  Deactivate
  </button>
@@ -273,7 +273,7 @@ export default function UsersPage() {
 
  {/* Deactivate Confirmation */}
  <Modal open={!!deactivateId} onClose={() => setDeactivateId(null)} title="Deactivate User" size="sm">
- <p className="text-sm text-[#717d79] dark:text-slate-400">
+ <p className="text-sm text-[#717d79] dark:text-[#969e9b]">
  Are you sure you want to deactivate this user? They will lose access to the platform immediately.
  </p>
  <div className="flex justify-end gap-3 mt-6">
@@ -284,7 +284,7 @@ export default function UsersPage() {
 
  {/* Remove Confirmation */}
  <Modal open={!!removeId} onClose={() => setRemoveId(null)} title="Remove User" size="sm">
- <p className="text-sm text-[#717d79] dark:text-slate-400">
+ <p className="text-sm text-[#717d79] dark:text-[#969e9b]">
  This will permanently remove the user and all their associations. This action cannot be undone.
  </p>
  <div className="flex justify-end gap-3 mt-6">

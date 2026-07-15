@@ -133,34 +133,34 @@ export default function MeetingsPage() {
  <table className="w-full">
  <thead>
  <tr className="border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fefdfb]/50">
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Title</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden md:table-cell">Date</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden lg:table-cell">Duration</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase hidden md:table-cell">Participants</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Actions</th>
- <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">Status</th>
- <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-slate-500 uppercase">View</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Title</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden md:table-cell">Date</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden lg:table-cell">Duration</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase hidden md:table-cell">Participants</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Actions</th>
+ <th className="text-left px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">Status</th>
+ <th className="text-right px-5 py-3 text-xs font-semibold text-[#969e9b] dark:text-[#717d79] uppercase">View</th>
  </tr>
  </thead>
  <tbody>
  {meetings.map((meeting) => (
- <tr key={meeting.id} className="border-b border-slate-100 hover:bg-[#fefdfb] transition-colors">
+ <tr key={meeting.id} className="border-b border-black/[0.04] hover:bg-[#fefdfb] transition-colors">
  <td className="px-5 py-3.5">
  <p className="text-sm font-medium text-[#0c0a09] dark:text-white">{meeting.title}</p>
  {meeting.matterName && (
- <p className="text-xs text-[#969e9b] dark:text-slate-500 mt-0.5">{meeting.matterName}</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79] mt-0.5">{meeting.matterName}</p>
  )}
  </td>
- <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-slate-400 hidden md:table-cell">
+ <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-[#969e9b] hidden md:table-cell">
  <div>{formatDate(meeting.date)}</div>
- <div className="text-xs text-slate-400">{formatTime(meeting.date)}</div>
+ <div className="text-xs text-[#969e9b]">{formatTime(meeting.date)}</div>
  </td>
- <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-slate-400 hidden lg:table-cell">
+ <td className="px-5 py-3.5 text-sm text-[#717d79] dark:text-[#969e9b] hidden lg:table-cell">
  {formatDuration(meeting.duration)}
  </td>
  <td className="px-5 py-3.5 hidden md:table-cell">
  <div className="flex items-center gap-2">
- <span className="text-xs bg-black/[0.03] text-[#717d79] dark:text-slate-400 px-2 py-0.5 rounded-full font-medium">
+ <span className="text-xs bg-black/[0.03] text-[#717d79] dark:text-[#969e9b] px-2 py-0.5 rounded-full font-medium">
  {meeting.participants.length} participants
  </span>
  {meeting.actionItemsCount > 0 && (
@@ -195,7 +195,7 @@ export default function MeetingsPage() {
  actionLabel="Upload Transcript"
  onAction={() => setShowUpload(true)}
  icon={
- <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <svg className="w-16 h-16 text-black/[0.08] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
  </svg>
  }
@@ -213,12 +213,12 @@ export default function MeetingsPage() {
  onChange={(e) => setUploadTitle(e.target.value)}
  />
  <div>
- <label className="block text-sm font-medium text-[#717d79] dark:text-slate-300 mb-1.5">Date &amp; Time</label>
+ <label className="block text-sm font-medium text-[#717d79] dark:text-black/[0.08] mb-1.5">Date &amp; Time</label>
  <input
  type="datetime-local"
  value={uploadDate}
  onChange={(e) => setUploadDate(e.target.value)}
- className="block w-full rounded-lg border border-black/[0.08] dark:border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40"
+ className="block w-full rounded-xl border border-black/[0.08] dark:border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40"
  />
  </div>
  <Select

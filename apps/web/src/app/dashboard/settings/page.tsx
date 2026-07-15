@@ -92,7 +92,7 @@ export default function SettingsPage() {
 
  {/* Save feedback */}
  {saveMessage && (
- <div className="bg-[#eaf7f0] border border-emerald-200 text-[#0a8a5f] px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+ <div className="bg-[#eaf7f0] border border-emerald-200 text-[#0a8a5f] px-4 py-3 rounded-xl text-sm flex items-center gap-2">
  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
  </svg>
@@ -119,7 +119,7 @@ export default function SettingsPage() {
  <div className="space-y-4">
  {/* Name */}
  <div>
- <label className="block text-sm font-medium text-[#717d79] dark:text-slate-300 mb-1">Firm Name</label>
+ <label className="block text-sm font-medium text-[#717d79] dark:text-black/[0.08] mb-1">Firm Name</label>
  {editing ? (
  <Input
  value={firmName}
@@ -133,7 +133,7 @@ export default function SettingsPage() {
 
  {/* Domain */}
  <div>
- <label className="block text-sm font-medium text-[#717d79] dark:text-slate-300 mb-1">Domain</label>
+ <label className="block text-sm font-medium text-[#717d79] dark:text-black/[0.08] mb-1">Domain</label>
  {editing ? (
  <Input
  value={firmDomain}
@@ -141,38 +141,38 @@ export default function SettingsPage() {
  placeholder="sterling-law.com"
  />
  ) : (
- <p className="text-sm text-[#969e9b] dark:text-slate-500 font-mono">{firmDomain}</p>
+ <p className="text-sm text-[#969e9b] dark:text-[#717d79] font-mono">{firmDomain}</p>
  )}
  </div>
 
  {/* Plan */}
  <div>
- <label className="block text-sm font-medium text-[#717d79] dark:text-slate-300 mb-1">Plan</label>
+ <label className="block text-sm font-medium text-[#717d79] dark:text-black/[0.08] mb-1">Plan</label>
  <div className="flex items-center gap-2">
  <PlanBadge plan={firm?.plan || 'professional'} />
- <span className="text-xs text-slate-400">Current subscription plan</span>
+ <span className="text-xs text-[#969e9b]">Current subscription plan</span>
  </div>
  </div>
 
  {/* Stats */}
  {firm && (
- <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100">
+ <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-black/[0.04]">
  <div>
- <p className="text-xs text-[#969e9b] dark:text-slate-500">Firm ID</p>
- <p className="text-sm font-mono text-[#717d79] dark:text-slate-400">{firm.id}</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79]">Firm ID</p>
+ <p className="text-sm font-mono text-[#717d79] dark:text-[#969e9b]">{firm.id}</p>
  </div>
  <div>
- <p className="text-xs text-[#969e9b] dark:text-slate-500">Member Since</p>
- <p className="text-sm text-[#717d79] dark:text-slate-400">{new Date(firm.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79]">Member Since</p>
+ <p className="text-sm text-[#717d79] dark:text-[#969e9b]">{new Date(firm.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
  </div>
  {user && (
  <>
  <div>
- <p className="text-xs text-[#969e9b] dark:text-slate-500">Current User</p>
- <p className="text-sm text-[#717d79] dark:text-slate-400">{user.name}</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79]">Current User</p>
+ <p className="text-sm text-[#717d79] dark:text-[#969e9b]">{user.name}</p>
  </div>
  <div>
- <p className="text-xs text-[#969e9b] dark:text-slate-500">Your Role</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79]">Your Role</p>
  <Badge variant={user.role === 'admin' ? 'danger' : user.role === 'partner' ? 'info' : 'success'}>
  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
  </Badge>
@@ -187,7 +187,7 @@ export default function SettingsPage() {
  {/* Features Toggles */}
  <Card>
  <h3 className="text-lg font-semibold text-[#0c0a09] dark:text-white mb-4">Features</h3>
- <p className="text-sm text-[#969e9b] dark:text-slate-500 mb-6">
+ <p className="text-sm text-[#969e9b] dark:text-[#717d79] mb-6">
  Enable or disable platform features for your firm. Disabled features will be hidden from all users.
  </p>
  <div className="space-y-4">
@@ -198,10 +198,10 @@ export default function SettingsPage() {
  { key: 'knowledgeBase' as const, label: 'Knowledge Base', description: 'Firm-wide search across documents, precedents, and playbooks' },
  { key: 'meetings' as const, label: 'Meetings', description: 'Transcript processing, action item extraction, and meeting intelligence' },
  ].map(({ key, label, description }) => (
- <div key={key} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+ <div key={key} className="flex items-center justify-between py-3 border-b border-black/[0.04] last:border-0">
  <div className="flex-1">
- <p className="text-sm font-medium text-slate-800">{label}</p>
- <p className="text-xs text-[#969e9b] dark:text-slate-500 mt-0.5">{description}</p>
+ <p className="text-sm font-medium text-[#4b5551]">{label}</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79] mt-0.5">{description}</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
  <input
@@ -220,16 +220,16 @@ export default function SettingsPage() {
  {/* API Configuration */}
  <Card>
  <h3 className="text-lg font-semibold text-[#0c0a09] dark:text-white mb-2">API Configuration</h3>
- <p className="text-sm text-[#969e9b] dark:text-slate-500 mb-4">
+ <p className="text-sm text-[#969e9b] dark:text-[#717d79] mb-4">
  API endpoint for programmatic access to the Counsel platform.
  </p>
  <div>
- <label className="block text-sm font-medium text-[#717d79] dark:text-slate-300 mb-1">API Endpoint URL</label>
- <div className="flex items-center gap-2 bg-[#fefdfb] rounded-lg border border-black/[0.04] dark:border-white/[0.06] px-3 py-2">
- <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <label className="block text-sm font-medium text-[#717d79] dark:text-black/[0.08] mb-1">API Endpoint URL</label>
+ <div className="flex items-center gap-2 bg-[#fefdfb] rounded-xl border border-black/[0.04] dark:border-white/[0.06] px-3 py-2">
+ <svg className="w-4 h-4 text-[#969e9b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
  </svg>
- <code className="text-sm text-[#717d79] dark:text-slate-400 font-mono select-all">https://api.counsel.ai/v1</code>
+ <code className="text-sm text-[#717d79] dark:text-[#969e9b] font-mono select-all">https://api.counsel.ai/v1</code>
  </div>
  </div>
  </Card>
@@ -237,14 +237,14 @@ export default function SettingsPage() {
  {/* Danger Zone */}
  <Card className="border-red-200">
  <div className="flex items-start gap-3">
- <div className="w-10 h-10 bg-[#fdf0ee] rounded-lg flex items-center justify-center flex-shrink-0">
+ <div className="w-10 h-10 bg-[#fdf0ee] rounded-xl flex items-center justify-center flex-shrink-0">
  <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
  </svg>
  </div>
  <div className="flex-1">
  <h3 className="text-lg font-semibold text-[#0c0a09] dark:text-white">Danger Zone</h3>
- <p className="text-sm text-[#969e9b] dark:text-slate-500 mt-1 mb-4">
+ <p className="text-sm text-[#969e9b] dark:text-[#717d79] mt-1 mb-4">
  Permanently delete your firm and all associated data. This action cannot be undone.
  </p>
 
@@ -256,7 +256,7 @@ export default function SettingsPage() {
  Delete Firm
  </Button>
  ) : (
- <div className="bg-[#fdf0ee] border border-red-200 rounded-lg p-4 space-y-3">
+ <div className="bg-[#fdf0ee] border border-red-200 rounded-xl p-4 space-y-3">
  <p className="text-sm text-red-800 font-medium">
  This will permanently delete all data including documents, matters, drafts, research, and user accounts.
  </p>

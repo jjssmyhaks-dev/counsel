@@ -151,21 +151,21 @@ export default function AuditLogPage() {
       <Card>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Start Date</label>
+            <label className="block text-xs font-medium text-[#717d79] mb-1">Start Date</label>
             <input
               type="date"
               value={dateStart}
               onChange={(e) => setDateStart(e.target.value)}
-              className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full rounded-xl border border-black/[0.08] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/50"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">End Date</label>
+            <label className="block text-xs font-medium text-[#717d79] mb-1">End Date</label>
             <input
               type="date"
               value={dateEnd}
               onChange={(e) => setDateEnd(e.target.value)}
-              className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full rounded-xl border border-black/[0.08] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/50"
             />
           </div>
           <Select
@@ -178,13 +178,13 @@ export default function AuditLogPage() {
             onChange={(e) => setResourceFilter(e.target.value)}
           />
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">User</label>
+            <label className="block text-xs font-medium text-[#717d79] mb-1">User</label>
             <input
               type="text"
               placeholder="Search user..."
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
-              className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full rounded-xl border border-black/[0.08] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/50"
             />
           </div>
           <Select
@@ -215,12 +215,12 @@ export default function AuditLogPage() {
           <div className="p-5 space-y-4 animate-pulse">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div key={i} className="flex items-center gap-4">
-                <div className="h-4 bg-slate-200 rounded w-20" />
-                <div className="h-4 bg-slate-100 rounded w-24" />
-                <div className="h-4 bg-slate-200 rounded w-32" />
-                <div className="h-4 bg-slate-100 rounded w-1/4" />
-                <div className="h-4 bg-slate-100 rounded w-12" />
-                <div className="h-4 bg-slate-200 rounded w-32 ml-auto" />
+                <div className="h-4 bg-black/[0.06] rounded w-20" />
+                <div className="h-4 bg-black/[0.04] rounded w-24" />
+                <div className="h-4 bg-black/[0.06] rounded w-32" />
+                <div className="h-4 bg-black/[0.04] rounded w-1/4" />
+                <div className="h-4 bg-black/[0.04] rounded w-12" />
+                <div className="h-4 bg-black/[0.06] rounded w-32 ml-auto" />
               </div>
             ))}
           </div>
@@ -233,39 +233,39 @@ export default function AuditLogPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/50">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Timestamp</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">User</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Action</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Resource</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase hidden lg:table-cell">Details</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase hidden xl:table-cell">IP Address</th>
+                <tr className="border-b border-black/[0.06] bg-[#fefdfb]/50">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase">Timestamp</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase">User</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase">Action</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase hidden md:table-cell">Resource</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase hidden lg:table-cell">Details</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#717d79] uppercase hidden xl:table-cell">IP Address</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-3 text-sm text-slate-600 whitespace-nowrap font-mono">
+                  <tr key={log.id} className="border-b border-black/[0.04] hover:bg-[#fefdfb] transition-colors">
+                    <td className="px-5 py-3 text-sm text-[#717d79] whitespace-nowrap font-mono">
                       {formatFullDate(log.createdAt)}
                     </td>
                     <td className="px-5 py-3">
-                      <p className="text-sm font-medium text-slate-800">{log.userName}</p>
-                      <p className="text-xs text-slate-400">{log.userId}</p>
+                      <p className="text-sm font-medium text-[#4b5551]">{log.userName}</p>
+                      <p className="text-xs text-[#969e9b]">{log.userId}</p>
                     </td>
                     <td className="px-5 py-3">
                       <ActionBadge action={log.action} />
-                      <p className="text-xs text-slate-500 mt-0.5 font-mono">{log.action}</p>
+                      <p className="text-xs text-[#717d79] mt-0.5 font-mono">{log.action}</p>
                     </td>
                     <td className="px-5 py-3 hidden md:table-cell">
-                      <p className="text-sm text-slate-700 capitalize">{log.resource}</p>
-                      <p className="text-xs text-slate-400 font-mono">{log.resourceId}</p>
+                      <p className="text-sm text-[#4b5551] capitalize">{log.resource}</p>
+                      <p className="text-xs text-[#969e9b] font-mono">{log.resourceId}</p>
                     </td>
                     <td className="px-5 py-3 hidden lg:table-cell">
-                      <p className="text-sm text-slate-600 max-w-[220px] truncate" title={log.details}>
+                      <p className="text-sm text-[#717d79] max-w-[220px] truncate" title={log.details}>
                         {log.details}
                       </p>
                     </td>
-                    <td className="px-5 py-3 text-sm text-slate-500 font-mono hidden xl:table-cell">
+                    <td className="px-5 py-3 text-sm text-[#717d79] font-mono hidden xl:table-cell">
                       {log.ipAddress}
                     </td>
                   </tr>
@@ -278,14 +278,14 @@ export default function AuditLogPage() {
 
       {/* Empty filtered */}
       {!loading && !error && logs.length > 0 && pagedLogs.length === 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl border border-black/[0.06] shadow-sm">
           <EmptyState
             title="No audit entries match filters"
             description="Try adjusting your date range, resource type, or other filter criteria."
             actionLabel="Clear Filters"
             onAction={handleClearFilters}
             icon={
-              <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-16 h-16 text-black/[0.08] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             }
@@ -295,7 +295,7 @@ export default function AuditLogPage() {
 
       {/* Empty state */}
       {!loading && !error && logs.length === 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl border border-black/[0.06] shadow-sm">
           <EmptyState
             title="No audit log entries"
             description="Audit logs will appear here as users interact with the platform."

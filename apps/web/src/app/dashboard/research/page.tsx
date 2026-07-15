@@ -138,22 +138,22 @@ export default function ResearchPage() {
  {brief.title}
  </h3>
  </div>
- <p className="text-xs text-[#969e9b] dark:text-slate-500 mb-3">{brief.matterName}</p>
+ <p className="text-xs text-[#969e9b] dark:text-[#717d79] mb-3">{brief.matterName}</p>
  <div className="mb-3">
  <StatusBadgeUI status={brief.status} />
  </div>
  {brief.findings ? (
- <p className="text-xs text-[#717d79] dark:text-slate-400 line-clamp-3 mb-3 flex-1">
+ <p className="text-xs text-[#717d79] dark:text-[#969e9b] line-clamp-3 mb-3 flex-1">
  {brief.findings.substring(0, 120)}
  {brief.findings.length > 120 ? '...' : ''}
  </p>
  ) : (
- <p className="text-xs text-slate-400 italic mb-3 flex-1">
+ <p className="text-xs text-[#969e9b] italic mb-3 flex-1">
  {brief.status === 'researching' ? 'Research in progress...' : 'No findings yet'}
  </p>
  )}
- <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
- <span className="text-xs text-slate-400">{formatDate(brief.createdAt)}</span>
+ <div className="flex items-center justify-between mt-auto pt-3 border-t border-black/[0.04]">
+ <span className="text-xs text-[#969e9b]">{formatDate(brief.createdAt)}</span>
  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); router.push(`/research/${brief.id}`); }}>
  View
  </Button>
@@ -172,7 +172,7 @@ export default function ResearchPage() {
  actionLabel="Start Research"
  onAction={() => setShowNewResearch(true)}
  icon={
- <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+ <svg className="w-16 h-16 text-black/[0.08] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
  </svg>
  }
@@ -206,11 +206,11 @@ export default function ResearchPage() {
  onChange={(e) => setNewMatterId(e.target.value)}
  />
  <div>
- <label className="block text-sm font-medium text-[#717d79] dark:text-slate-300 mb-1.5">
+ <label className="block text-sm font-medium text-[#717d79] dark:text-black/[0.08] mb-1.5">
  Source Documents (optional)
  </label>
- <p className="text-xs text-slate-400 mb-2">Select specific documents to prioritize in research</p>
- <div className="max-h-36 overflow-y-auto border border-black/[0.04] dark:border-white/[0.06] rounded-lg">
+ <p className="text-xs text-[#969e9b] mb-2">Select specific documents to prioritize in research</p>
+ <div className="max-h-36 overflow-y-auto border border-black/[0.04] dark:border-white/[0.06] rounded-xl">
  {['Quantum Dynamics - Merger Agreement v3.pdf', 'Evergreen - Patent Filing US2026-001234.pdf', 'Brighton - Lease Agreement 2024.docx', 'NovaTech - Data Processing Agreement.pdf', 'Thompson - Settlement Agreement Draft.pdf', 'Quantum - Regulatory Filing SEC.pdf'].map(
  (doc, i) => {
  const isSelected = selectedDocs.includes(doc);
@@ -231,7 +231,7 @@ export default function ResearchPage() {
  }}
  className="rounded border-black/[0.08] dark:border-slate-700"
  />
- <span className="text-[#717d79] dark:text-slate-300">{doc}</span>
+ <span className="text-[#717d79] dark:text-black/[0.08]">{doc}</span>
  </label>
  );
  }

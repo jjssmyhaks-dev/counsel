@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
-          <div className="w-9 h-9 bg-gradient-to-br from-[#15b881] to-[#0a8a5f] rounded-lg flex items-center justify-center">
+          <div className="w-9 h-9 bg-gradient-to-br from-[#15b881] to-[#0a8a5f] rounded-xl flex items-center justify-center">
             <Logo />
           </div>
           <div>
@@ -106,7 +106,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                   isActive ? 'bg-[#15b881]/15 text-[#7ce3b6] border-l-[3px] border-[#15b881] pl-[9px]' : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
                 }`}>
                 <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -124,7 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 const isActive = pathname.startsWith(item.href);
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                       isActive ? 'bg-[#15b881]/15 text-[#7ce3b6] border-l-[3px] border-[#15b881] pl-[9px]' : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
                     }`}>
                     <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -170,7 +170,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <h2 className={`${serif} text-lg font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white`}>{pageTitle}</h2>
           <div className="flex-1" />
           <button onClick={toggleTheme}
-            className="p-2 rounded-lg text-[#717d79] hover:text-[#0c0a09] hover:bg-black/[0.04] dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl text-[#717d79] hover:text-[#0c0a09] hover:bg-black/[0.04] dark:text-[#969e9b] dark:hover:text-black/[0.06] dark:hover:bg-slate-800 transition-colors"
             title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
             {dark ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

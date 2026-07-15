@@ -333,30 +333,30 @@ export default function DraftEditorPage() {
       </div>
 
       {/* Editor Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
+      <div className="bg-white rounded-xl border border-black/[0.06] shadow-sm p-6 space-y-5">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
+          <label className="block text-sm font-medium text-[#4b5551] mb-1.5">Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full rounded-xl border border-black/[0.08] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/50"
             placeholder="e.g., Client Update on Merger Agreement"
           />
         </div>
 
         {/* Type selector */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Type</label>
+          <label className="block text-sm font-medium text-[#4b5551] mb-1.5">Type</label>
           <div className="flex gap-2 flex-wrap">
             {(['email', 'memo', 'report', 'brief', 'letter'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setType(t)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors ${
                   type === t
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    ? 'bg-[#0a8a5f] text-white border-blue-600'
+                    : 'bg-white text-[#4b5551] border-black/[0.08] hover:bg-[#fefdfb]'
                 }`}
               >
                 {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -401,7 +401,7 @@ export default function DraftEditorPage() {
         {content && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-700">
+              <h3 className="text-sm font-semibold text-[#4b5551]">
                 {status === 'finalized' ? 'Finalized Content' : 'Draft Content'}
               </h3>
               <div className="flex gap-2">
@@ -433,7 +433,7 @@ export default function DraftEditorPage() {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="block w-full rounded-lg border border-amber-300 bg-amber-50/60 px-4 py-4 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 min-h-[400px] resize-y"
+              className="block w-full rounded-xl border border-amber-300 bg-amber-50/60 px-4 py-4 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 min-h-[400px] resize-y"
               style={{ whiteSpace: 'pre-wrap' }}
             />
           </div>
@@ -441,12 +441,12 @@ export default function DraftEditorPage() {
 
         {/* No content yet */}
         {!content && !generating && (
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center">
-            <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="border-2 border-dashed border-black/[0.06] rounded-xl p-12 text-center">
+            <svg className="w-12 h-12 text-black/[0.08] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
-            <p className="text-sm text-slate-500 mb-1">No content generated yet</p>
-            <p className="text-xs text-slate-400">Click &quot;Generate Draft&quot; to create AI-assisted content based on your instructions</p>
+            <p className="text-sm text-[#717d79] mb-1">No content generated yet</p>
+            <p className="text-xs text-[#969e9b]">Click &quot;Generate Draft&quot; to create AI-assisted content based on your instructions</p>
           </div>
         )}
 
@@ -459,7 +459,7 @@ export default function DraftEditorPage() {
 
         {/* Action buttons */}
         {content && (
-          <div className="flex gap-3 pt-4 border-t border-slate-200">
+          <div className="flex gap-3 pt-4 border-t border-black/[0.06]">
             <Button onClick={handleSave} loading={saving} variant="secondary">
               {saving ? 'Saving...' : 'Save Draft'}
             </Button>
@@ -480,7 +480,7 @@ export default function DraftEditorPage() {
       </div>
 
       {/* Disclaimer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-3">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
         <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
         </svg>
