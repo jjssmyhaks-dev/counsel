@@ -4,6 +4,7 @@ import HeroPreview from '@/components/HeroPreview';
 import HowItWorks from '@/components/HowItWorks';
 import ScaleSection from '@/components/ScaleSection';
 import CustomerStories from '@/components/CustomerStories';
+import ProductShowcase from '@/components/ProductShowcase';
 
 /* ── Design tokens from Lovable build ──
    brand: #15b881 (mint green) / #0a8a5f (dark green) / #7ce3b6 (light)
@@ -213,29 +214,8 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* FEATURES */}
-        <section className="border-t border-black/[0.04]">
-          <div className="max-w-7xl mx-auto px-6 py-24 md:py-32">
-            <div className="text-[12px] tracking-[0.12em] uppercase text-[#0a8a5f]">Platform</div>
-            <h2 className={`${serif} mt-4 text-[2.75rem] md:text-[4rem] font-normal tracking-[-0.02em] leading-[1.02] text-[#0c0a09]`}>
-              One platform for your<br />entire legal stack
-            </h2>
-            <div className="mt-16 grid md:grid-cols-3 gap-4">
-              {features.map((f) => (
-                <div key={f.t} className="relative p-7 rounded-2xl border border-black/[0.04] bg-white hover:border-[#15b881]/30 hover:shadow-[0_20px_50px_-20px_rgba(21,184,129,0.25)] hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
-                  <div aria-hidden className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[#15b881]/0 group-hover:bg-[#15b881]/10 blur-2xl transition-all duration-500" />
-                  <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-[#eaf7f0] to-[#d1f0e2] flex items-center justify-center text-[#0a8a5f] group-hover:from-[#15b881] group-hover:to-[#0a8a5f] group-hover:text-white transition-colors">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                      <path d={iconPaths[f.icon] || "M20 6L9 17l-5-5"} />
-                    </svg>
-                  </div>
-                  <h3 className="relative mt-6 text-[17px] font-semibold tracking-[-0.01em] text-[#0c0a09]">{f.t}</h3>
-                  <p className="relative mt-2 text-[14px] text-[#717d79] leading-relaxed">{f.d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* PRODUCT SHOWCASE (interactive tab-based) */}
+        <ProductShowcase />
 
         {/* HOW IT WORKS */}
         <HowItWorks />

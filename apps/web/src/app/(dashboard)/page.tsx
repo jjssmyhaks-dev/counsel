@@ -6,20 +6,24 @@ import Link from 'next/link';
 import { getUser, getFirm } from '@/lib/auth';
 import { api } from '@/lib/api';
 
+const serif = "font-serif";
+
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+type DocStatus = 'UPLOADED' | 'PROCESSING' | 'READY' | 'FAILED';
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    UPLOADED: 'bg-blue-50 text-blue-700',
-    PROCESSING: 'bg-amber-50 text-amber-700',
-    READY: 'bg-emerald-50 text-emerald-700',
-    FAILED: 'bg-red-50 text-red-700',
+    UPLOADED: 'bg-[#f0f0f0] text-[#717d79]',
+    PROCESSING: 'bg-[#eaf7f0] text-[#0a8a5f]',
+    READY: 'bg-[#eaf7f0] text-[#0a8a5f]',
+    FAILED: 'bg-[#fdf0ee] text-[#c2452e]',
   };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${map[status] || 'bg-slate-50 text-slate-600'}`}>
-      {(status || 'unknown').charAt(0).toUpperCase() + (status || 'unknown').slice(1).toLowerCase()}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium ${map[status] || 'bg-[#f0f0f0] text-[#717d79]'}`}>
+      {(status || 'unknown').charAt(0) + (status || 'unknown').slice(1).toLowerCase()}
     </span>
   );
 }
@@ -33,144 +37,110 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const u = getUser();
-    const f = getFirm();
+    const u = getUser(); const f = getFirm();
     if (!u) { router.replace('/login'); return; }
-    setUser(u);
-    setFirm(f);
-
+    setUser(u); setFirm(f);
     Promise.all([
       api.get('/documents?limit=5').catch(() => ({ data: null })),
       api.get('/matters?limit=1').catch(() => ({ data: null })),
       api.get('/drafts?limit=1').catch(() => ({ data: null })),
       api.get('/meetings?limit=1').catch(() => ({ data: null })),
-    ])
-      .then(([docsRes, mattersRes, draftsRes, meetingsRes]: any[]) => {
-        const d = docsRes?.data?.data || docsRes?.data || [];
-        const docList = Array.isArray(d) ? d.slice(0, 5) : [];
-        setDocuments(docList);
-        setStats({
-          documents: docsRes?.data?.pagination?.total || docsRes?.pagination?.total || docList.length,
-          matters: mattersRes?.data?.pagination?.total || mattersRes?.pagination?.total || (mattersRes?.data?.data?.length || 0),
-          drafts: draftsRes?.data?.pagination?.total || draftsRes?.pagination?.total || (draftsRes?.data?.data?.length || 0),
-          meetings: meetingsRes?.data?.pagination?.total || meetingsRes?.pagination?.total || (meetingsRes?.data?.data?.length || 0),
-        });
-      })
-      .catch(err => console.warn('Dashboard fetch:', err))
-      .finally(() => setLoading(false));
+    ]).then(([d, m, dr, mt]: any[]) => {
+      const dl = Array.isArray(d?.data?.data || d?.data) ? (d.data.data || d.data).slice(0, 5) : [];
+      setDocuments(dl);
+      setStats({
+        documents: d?.data?.pagination?.total || dl.length,
+        matters: m?.data?.pagination?.total || (m?.data?.data?.length || 0),
+        drafts: dr?.data?.pagination?.total || (dr?.data?.data?.length || 0),
+        meetings: mt?.data?.pagination?.total || (mt?.data?.data?.length || 0),
+      });
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [router]);
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="animate-pulse bg-slate-200 h-24 rounded-xl" />
+        <div className="skeleton h-24 rounded-2xl" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="animate-pulse bg-slate-100 h-28 rounded-xl" />)}
+          {[1,2,3,4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}
         </div>
       </div>
     );
   }
 
   const statCards = [
-    { icon: '📄', value: stats.documents, label: 'Documents', trend: 'Total uploaded', trendUp: true },
-    { icon: '📋', value: stats.matters, label: 'Matters', trend: 'All matters', trendUp: true },
-    { icon: '✏️', value: stats.drafts, label: 'Drafts', trend: 'Generated drafts', trendUp: false },
-    { icon: '💡', value: stats.meetings, label: 'Meetings', trend: 'Processed', trendUp: true },
+    { value: stats.documents, label: 'Documents', sub: 'Total uploaded' },
+    { value: stats.matters, label: 'Matters', sub: 'Active matters' },
+    { value: stats.drafts, label: 'Drafts', sub: 'Generated drafts' },
+    { value: stats.meetings, label: 'Meetings', sub: 'Processed' },
   ];
 
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 text-white">
-        <h1 className="text-xl font-bold">Welcome back, {user?.name || 'Counselor'}</h1>
-        {firm && <p className="text-blue-200 text-sm mt-1">{firm.name}</p>}
-        <p className="text-blue-300/70 text-xs mt-3">
+      <div className="bg-gradient-to-br from-[#0c0a09] via-[#111c17] to-[#0a1a14] rounded-2xl p-6 text-white">
+        <h1 className={`${serif} text-[1.75rem] font-normal tracking-[-0.02em]`}>Welcome back, {user?.name || 'Counselor'}</h1>
+        {firm && <p className="text-[#7ce3b6]/80 text-[13px] mt-1">{firm.name}</p>}
+        <p className="text-white/30 text-[12px] mt-3">
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">{stat.label}</p>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
-              </div>
-              <span className="text-2xl">{stat.icon}</span>
-            </div>
-            <p className={`text-xs mt-3 ${stat.trendUp ? 'text-green-600' : 'text-amber-600'}`}>
-              {stat.trendUp ? '↑' : '•'} {stat.trend}
-            </p>
+        {statCards.map((s) => (
+          <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-black/[0.04] dark:border-slate-800 p-5">
+            <p className="text-[13px] text-[#717d79] dark:text-slate-400 font-medium">{s.label}</p>
+            <p className={`${serif} text-[2rem] font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white mt-1 tabular-nums`}>{s.value}</p>
+            <p className="text-[12px] text-[#969e9b] dark:text-slate-500 mt-1">{s.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { href: '/documents', label: 'Upload Document', icon: '📄', color: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-          { href: '/matters', label: 'New Matter', icon: '📋', color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-          { href: '/drafts', label: 'Create Draft', icon: '✏️', color: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-          { href: '/research', label: 'Research', icon: '🔍', color: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
-        ].map(action => (
-          <Link
-            key={action.href}
-            href={action.href}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors ${action.color}`}
-          >
-            <span className="text-lg">{action.icon}</span>
-            {action.label}
+          { href: '/documents', label: 'Upload Document', color: 'bg-[#eaf7f0] text-[#0a8a5f] hover:bg-[#15b881]/15' },
+          { href: '/matters', label: 'New Matter', color: 'bg-[#f0f0f0] text-[#0c0a09] hover:bg-[#f0f0f0]/80' },
+          { href: '/drafts', label: 'Create Draft', color: 'bg-[#eaf7f0] text-[#0a8a5f] hover:bg-[#15b881]/15' },
+          { href: '/research', label: 'Research', color: 'bg-[#f0f0f0] text-[#0c0a09] hover:bg-[#f0f0f0]/80' },
+        ].map(a => (
+          <Link key={a.href} href={a.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-[13px] transition-colors ${a.color}`}>
+            {a.label}
           </Link>
         ))}
       </div>
 
       {/* Recent Documents table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="font-semibold text-slate-900">Recent Documents</h3>
-          <Link href="/documents" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-            View all →
-          </Link>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-black/[0.04] dark:border-slate-800">
+        <div className="px-5 py-4 border-b border-black/[0.04] dark:border-slate-800 flex items-center justify-between">
+          <h3 className={`${serif} text-lg font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white`}>Recent Documents</h3>
+          <Link href="/documents" className="text-[13px] text-[#0a8a5f] hover:text-[#15b881] font-medium transition-colors">View all →</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Name</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Type</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Date</th>
+              <tr className="border-b border-black/[0.04] dark:border-slate-800">
+                {['Name','Type','Status','Date'].map(h => (
+                  <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#969e9b] dark:text-slate-500">{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {documents.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-slate-400 text-sm">
-                    No documents yet. Upload your first document to get started.
-                  </td>
-                </tr>
+                <tr><td colSpan={4} className="px-5 py-8 text-center text-[#969e9b] text-[13px]">No documents yet. Upload your first document to get started.</td></tr>
               ) : (
                 documents.map((doc: any) => (
-                  <tr
-                    key={doc.id}
-                    className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => router.push(`/documents/${doc.id}`)}
-                  >
+                  <tr key={doc.id} className="border-b border-black/[0.02] dark:border-slate-800 hover:bg-black/[0.02] dark:hover:bg-slate-800/50 cursor-pointer transition-colors" onClick={() => router.push(`/documents/${doc.id}`)}>
                     <td className="px-5 py-3">
-                      <p className="text-sm font-medium text-slate-900 truncate max-w-[280px]">
-                        {doc.originalName || doc.name || 'Unnamed'}
-                      </p>
-                      <p className="text-xs text-slate-500">{doc.matter?.name || '—'}</p>
+                      <p className="text-[13px] font-medium text-[#0c0a09] dark:text-white truncate max-w-[280px]">{doc.originalName || doc.name || 'Unnamed'}</p>
+                      <p className="text-[11px] text-[#969e9b] dark:text-slate-500">{doc.matter?.name || '—'}</p>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="text-xs font-mono uppercase text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                        {(doc.mimeType || doc.type || 'unknown').split('/').pop() || doc.type || 'file'}
-                      </span>
+                      <span className="text-[11px] font-mono uppercase text-[#717d79] dark:text-slate-400 bg-[#f0f0f0] dark:bg-slate-800 px-2 py-0.5 rounded">{((doc.mimeType || doc.type || 'unknown').split('/').pop() || doc.type || 'file')}</span>
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={doc.status} /></td>
-                    <td className="px-5 py-3 text-sm text-slate-500">{formatDate(doc.createdAt)}</td>
+                    <td className="px-5 py-3 text-[13px] text-[#717d79] dark:text-slate-400">{formatDate(doc.createdAt)}</td>
                   </tr>
                 ))
               )}
