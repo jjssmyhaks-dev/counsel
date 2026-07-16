@@ -120,7 +120,7 @@ async function aiRequest<T>(
   options: RequestInit = {},
   clientOptions: AiClientOptions = {},
 ): Promise<T> {
-  const { timeout = 5000, retries = 1 } = clientOptions;
+  const { timeout = 300000, retries = 1 } = clientOptions;
   const url = `${AI_SERVICE_URL}${path}`;
   let lastError: Error | null = null;
 
