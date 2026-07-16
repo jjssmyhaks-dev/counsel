@@ -17,37 +17,37 @@ export default function Footer() {
           <div>
             <h4 className="font-serif text-sm font-semibold text-[#0c0a09] mb-3">Features</h4>
             <ul className="space-y-2">
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Document Analysis</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">AI Drafting</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Legal Research</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Matter Management</span></li>
+              <li><Link href="/product#documents" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Document Analysis</Link></li>
+              <li><Link href="/product#drafting" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">AI Drafting</Link></li>
+              <li><Link href="/product#research" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Legal Research</Link></li>
+              <li><Link href="/dashboard/matters" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Matter Management</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-serif text-sm font-semibold text-[#0c0a09] mb-3">Company</h4>
             <ul className="space-y-2">
-              <li><span className="text-[13px] text-[#717d79] cursor-default">About</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Careers</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Blog</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Press</span></li>
+              <li><Link href="/solutions" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">About</Link></li>
+              <li><Link href="/resources#blog" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Blog</Link></li>
+              <li><Link href="/resources#changelog" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Changelog</Link></li>
+              <li><Link href="/product#audit" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Security</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-serif text-sm font-semibold text-[#0c0a09] mb-3">Legal</h4>
             <ul className="space-y-2">
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Privacy Policy</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Terms of Service</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">Security</span></li>
-              <li><span className="text-[13px] text-[#717d79] cursor-default">GDPR</span></li>
+              <li><Link href="/resources" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/resources" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Terms of Service</Link></li>
+              <li><Link href="/product#audit" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Security</Link></li>
+              <li><Link href="/solutions" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">GDPR</Link></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-black/[0.04] pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[13px] text-[#717d79]">
           <p>&copy; 2026 Counsel Technologies, Inc.</p>
           <div className="flex items-center gap-4">
-            <span className="cursor-default hover:text-[#0c0a09] transition-colors">Privacy</span>
-            <span className="cursor-default hover:text-[#0c0a09] transition-colors">Terms</span>
-            <span className="cursor-default hover:text-[#0c0a09] transition-colors">Security</span>
+            <Link href="/resources" className="hover:text-[#0c0a09] transition-colors">Privacy</Link>
+            <Link href="/resources" className="hover:text-[#0c0a09] transition-colors">Terms</Link>
+            <Link href="/product#audit" className="hover:text-[#0c0a09] transition-colors">Security</Link>
           </div>
         </div>
       </div>

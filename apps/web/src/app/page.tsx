@@ -126,7 +126,7 @@ export default function Landing() {
           <span className="text-white/80">
             Counsel <span className="font-medium text-white">Playbook Engine v2</span> is live — 8× faster clause matching.
           </span>
-          <Link href="#" className="hidden sm:inline-flex items-center gap-1 font-medium text-[#7ce3b6] hover:text-white transition-colors">
+          <Link href="/product" className="hidden sm:inline-flex items-center gap-1 font-medium text-[#7ce3b6] hover:text-white transition-colors">
             Read more →
           </Link>
         </div>
@@ -193,7 +193,7 @@ export default function Landing() {
         <section className="max-w-7xl mx-auto px-6 pb-20">
           <div className="text-center text-[15px] text-[#717d79]">
             Join <span className="font-semibold text-[#0c0a09]">500+</span> of the world's most ambitious legal teams.{" "}
-            <Link href="#" className="text-[#0a8a5f] hover:underline">Read customer stories →</Link>
+            <Link href="/resources#cases" className="text-[#0a8a5f] hover:underline">Read customer stories →</Link>
           </div>
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
             {firms.map((f) => (
@@ -239,7 +239,7 @@ export default function Landing() {
                   <span className="inline-flex items-center rounded-full bg-[#eaf7f0] border border-[#15b881]/20 text-[#0a8a5f] px-3 py-1 text-[12px] tracking-[-0.01em]">{s.tag}</span>
                   <h3 className={`${serif} mt-4 text-[28px] font-normal tracking-[-0.02em] text-[#0c0a09]`}>{s.name}</h3>
                   <p className="mt-2 text-[15px] text-[#717d79] leading-relaxed">{s.desc}</p>
-                  <span className="mt-6 inline-block text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors cursor-pointer">Read story →</span>
+                  <Link href="/resources#cases" className="mt-6 inline-block text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors">Read story →</Link>
                 </div>
               ))}
             </div>
@@ -275,7 +275,7 @@ export default function Landing() {
             <div className="text-[12px] tracking-[0.12em] uppercase text-[#0a8a5f]">Stay informed</div>
             <div className="mt-4 flex items-end justify-between flex-wrap gap-4">
               <h2 className={`${serif} text-[2.75rem] md:text-[4rem] font-normal tracking-[-0.02em] leading-[1.02] text-[#0c0a09]`}>Latest updates</h2>
-              <span className="text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors cursor-pointer">All posts →</span>
+              <Link href="/resources#blog" className="text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors cursor-pointer">All posts →</Link>
             </div>
             <div className="mt-16 grid md:grid-cols-3 gap-4">
               {posts.map((p) => (

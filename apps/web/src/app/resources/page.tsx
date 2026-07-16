@@ -53,7 +53,7 @@ export default function ResourcesPage() {
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {resourcesNav.map((r) => (
-              <a key={r.label} href="#" className="p-5 rounded-2xl border border-black/[0.04] bg-white hover:border-[#15b881]/30 transition-colors text-center group">
+              <a key={r.label} href={"#" + r.label.toLowerCase()} className="p-5 rounded-2xl border border-black/[0.04] bg-white hover:border-[#15b881]/30 transition-colors text-center group">
                 <div className="text-[15px] font-semibold text-[#0c0a09] group-hover:text-[#0a8a5f] transition-colors tracking-[-0.01em]">{r.label}</div>
                 <div className="text-[12px] text-[#717d79] mt-2 leading-relaxed">{r.desc}</div>
               </a>
@@ -70,7 +70,7 @@ export default function ResourcesPage() {
               <div className="text-[12px] tracking-[0.12em] uppercase text-[#0a8a5f] mb-3">Latest posts</div>
               <h2 className={`${serif} text-[2.5rem] md:text-[3.5rem] font-normal tracking-[-0.02em] leading-[1.02] text-[#0c0a09]`}>From the blog</h2>
             </div>
-            <a href="#" className="text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors">All posts →</a>
+            <a href="#blog" className="text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors">All posts →</a>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {blogPosts.map((p) => (
@@ -97,7 +97,7 @@ export default function ResourcesPage() {
               <div className="text-[12px] tracking-[0.12em] uppercase text-[#0a8a5f] mb-3">Guides</div>
               <h2 className={`${serif} text-[2.5rem] md:text-[3.5rem] font-normal tracking-[-0.02em] leading-[1.02] text-[#0c0a09]`}>In-depth guides</h2>
             </div>
-            <a href="#" className="text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors">All guides →</a>
+            <a href="#guides" className="text-[14px] font-medium text-[#0c0a09] hover:text-[#0a8a5f] transition-colors">All guides →</a>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {guides.map((g) => (
