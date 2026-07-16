@@ -1,4 +1,5 @@
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const serif = "font-serif";
 
@@ -126,39 +127,7 @@ export default function ResourcesPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-black/[0.04] bg-[#faf8f5]">
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="grid md:grid-cols-4 gap-10">
-            <div className="md:col-span-1">
-              <div className="flex items-center gap-2">
-                <svg width="26" height="26" viewBox="0 0 32 32" fill="none"><path d="M6 16C6 10 10 6 16 6c0 6-4 10-10 10z" fill="#15b881" /><path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#0a8a5f" /><circle cx="16" cy="16" r="2.2" fill="#0c0a09" /></svg>
-                <span className="text-[#0c0a09] font-semibold tracking-[-0.02em] text-[18px]">Counsel</span>
-              </div>
-              <p className="mt-4 text-[14px] text-[#717d79] leading-relaxed max-w-xs">AI-powered legal platform for contract analysis, research, drafting, and knowledge management.</p>
-            </div>
-            {[
-              { title: "Explore", items: ["Product", "Solutions", "Pricing", "Security"] },
-              { title: "Resources", items: ["Blog", "Guides", "API Docs", "Changelog"] },
-              { title: "Company", items: ["About", "Careers", "Contact", "Partners"] },
-            ].map(col => (
-              <div key={col.title}>
-                <div className="text-[12px] tracking-[0.12em] uppercase text-[#969e9b] mb-5">{col.title}</div>
-                <ul className="space-y-3">
-                  {col.items.map(i => (<li key={i}><a href="#" className="text-[14px] text-[#0c0a09] hover:text-[#0a8a5f] transition-colors">{i}</a></li>))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="mt-16 pt-8 border-t border-black/[0.04] flex flex-wrap items-center justify-between gap-4 text-[13px] text-[#717d79]">
-            <div>&copy; 2026 Counsel Technologies, Inc.</div>
-            <div className="flex items-center gap-4">
-              <a href="#" className="hover:text-[#0c0a09] transition-colors">Privacy</a><span>·</span>
-              <a href="#" className="hover:text-[#0c0a09] transition-colors">Terms</a><span>·</span>
-              <a href="#" className="hover:text-[#0c0a09] transition-colors">Security</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

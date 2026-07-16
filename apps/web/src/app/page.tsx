@@ -5,6 +5,7 @@ import HowItWorks from '@/components/HowItWorks';
 import ScaleSection from '@/components/ScaleSection';
 import CustomerStories from '@/components/CustomerStories';
 import ProductShowcase from '@/components/ProductShowcase';
+import Footer from '@/components/Footer';
 
 /* ── Design tokens from Lovable build ──
    brand: #15b881 (mint green) / #0a8a5f (dark green) / #7ce3b6 (light)
@@ -324,46 +325,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* FOOTER */}
-        <footer className="border-t border-black/[0.04] bg-[#fefdfb]">
-          <div className="max-w-7xl mx-auto px-6 py-16">
-            <div className="grid md:grid-cols-4 gap-10">
-              <div className="md:col-span-1">
-                <div className="flex items-center gap-2">
-                  <Logo />
-                  <span className="text-[#0c0a09] font-semibold tracking-[-0.02em] text-[18px]">Counsel</span>
-                </div>
-                <p className="mt-4 text-[14px] text-[#717d79] leading-relaxed max-w-xs">
-                  AI-powered legal platform for contract analysis, research, drafting, and knowledge management.
-                </p>
-                <div className="mt-6 flex items-center gap-2 text-[13px] text-[#717d79]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#15b881]" />All systems normal
-                </div>
-              </div>
-              {[
-                { title: "Explore", items: ["Product", "Solutions", "Pricing", "Security", "Switch"] },
-                { title: "Resources", items: ["Blog", "Guides", "API Docs", "Changelog", "Community"] },
-                { title: "Company", items: ["About", "Careers", "Contact", "Partners"] },
-              ].map((col) => (
-                <div key={col.title}>
-                  <div className="text-[12px] tracking-[0.12em] uppercase text-[#969e9b]">{col.title}</div>
-                  <ul className="mt-5 space-y-3">
-                    {col.items.map((i) => (<li key={i}><span className="text-[14px] text-[#0c0a09] hover:text-[#0a8a5f] transition-colors cursor-pointer">{i}</span></li>))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-            <div className="mt-16 pt-8 border-t border-black/[0.04] flex flex-wrap items-center justify-between gap-4 text-[13px] text-[#717d79]">
-              <div>&copy; 2026 Counsel Technologies, Inc.</div>
-              <div className="flex items-center gap-4">
-                <span className="hover:text-[#0c0a09] cursor-pointer">Privacy</span><span>·</span>
-                <span className="hover:text-[#0c0a09] cursor-pointer">Terms</span><span>·</span>
-                <span className="hover:text-[#0c0a09] cursor-pointer">Security</span><span>·</span>
-                <span className="hover:text-[#0c0a09] cursor-pointer">DSR/DSAR</span>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </main>
     </div>
   );

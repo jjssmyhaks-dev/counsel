@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 
 const serif = "font-serif";
@@ -257,15 +258,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-black/[0.04] bg-[#faf8f5]">
-        <div className="max-w-7xl mx-auto px-6 py-12 text-center text-[13px] text-[#717d79]">
-          &copy; 2026 Counsel Technologies, Inc. <span className="mx-2">·</span>
-          <a href="#" className="hover:text-[#0c0a09] transition-colors">Privacy</a> <span className="mx-2">·</span>
-          <a href="#" className="hover:text-[#0c0a09] transition-colors">Terms</a> <span className="mx-2">·</span>
-          <a href="#" className="hover:text-[#0c0a09] transition-colors">Security</a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
