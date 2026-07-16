@@ -156,7 +156,7 @@ export default function DraftsPage() {
  </td>
  <td className="px-5 py-3.5 text-right">
  <div className="flex items-center justify-end gap-2">
- <Button size="sm" variant="outline" onClick={() => router.push(`/drafts/${draft.id}`)}>
+ <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/drafts/${draft.id}`)}>
  Edit
  </Button>
  <Button size="sm" variant="ghost" onClick={() => setDeleteConfirmId(draft.id)}>

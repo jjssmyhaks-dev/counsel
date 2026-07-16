@@ -18,20 +18,20 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantClasses: Record<string, string> = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 shadow-sm',
-    secondary: 'bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 focus:ring-blue-500 shadow-sm',
-    danger: 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 focus:ring-red-500',
-    ghost: 'text-slate-600 hover:bg-slate-100 focus:ring-slate-400',
-    outline: 'border border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-blue-500',
+    primary: 'bg-[#0c0a09] hover:bg-[#0a8a5f] text-white shadow-sm',
+    secondary: 'bg-white border border-black/[0.08] hover:bg-[#fefdfb] text-[#717d79] shadow-sm',
+    danger: 'bg-[#fdf0ee] text-[#c2452e] hover:bg-[#fdf0ee]/80 border border-[#f0705b]/20',
+    ghost: 'text-[#717d79] hover:bg-black/[0.04]',
+    outline: 'border border-[#15b881]/40 text-[#0a8a5f] hover:bg-[#eaf7f0]',
   };
 
   const sizeClasses: Record<string, string> = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'px-3 py-1.5 text-xs',
+    md: 'px-4 py-2 text-[13px]',
+    lg: 'px-6 py-3 text-sm',
   };
 
   return (

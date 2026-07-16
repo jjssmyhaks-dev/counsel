@@ -174,7 +174,7 @@ export default function MeetingsPage() {
  <StatusBadgeUI status={meeting.status} />
  </td>
  <td className="px-5 py-3.5 text-right">
- <Button size="sm" variant="outline" onClick={() => router.push(`/meetings/${meeting.id}`)}>
+ <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/meetings/${meeting.id}`)}>
  View
  </Button>
  </td>

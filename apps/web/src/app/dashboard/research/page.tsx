@@ -131,7 +131,7 @@ export default function ResearchPage() {
  key={brief.id}
  hover
  className="flex flex-col"
- onClick={() => router.push(`/research/${brief.id}`)}
+ onClick={() => router.push(`/dashboard/research/${brief.id}`)}
  >
  <div className="flex items-start justify-between mb-3">
  <h3 className="font-semibold text-[#0c0a09] dark:text-white text-sm leading-snug pr-2 flex-1">
@@ -154,7 +154,7 @@ export default function ResearchPage() {
  )}
  <div className="flex items-center justify-between mt-auto pt-3 border-t border-black/[0.04]">
  <span className="text-xs text-[#969e9b]">{formatDate(brief.createdAt)}</span>
- <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); router.push(`/research/${brief.id}`); }}>
+ <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/research/${brief.id}`); }}>
  View
  </Button>
  </div>
