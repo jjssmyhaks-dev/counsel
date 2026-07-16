@@ -173,7 +173,7 @@ export default function DocumentsPage() {
  >
  <td
  className="px-5 py-3 cursor-pointer"
- onClick={() => router.push(`/documents/${doc.id}`)}
+ onClick={() => router.push(`/dashboard/documents/${doc.id}`)}
  >
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 bg-[#eaf7f0] rounded flex items-center justify-center">
@@ -202,7 +202,7 @@ export default function DocumentsPage() {
  <td className="px-5 py-3 text-right">
  <div className="flex items-center justify-end gap-2">
  <button
- onClick={() => router.push(`/documents/${doc.id}`)}
+ onClick={() => router.push(`/dashboard/documents/${doc.id}`)}
  className="text-xs text-[#0a8a5f] hover:text-[#15b881] font-medium"
  >
  View

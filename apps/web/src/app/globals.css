@@ -34,15 +34,15 @@
 
   /* Page headers */
   .page-header { @apply mb-6; }
-  .page-header h1 { @apply text-2xl font-bold text-[#0c0a09] dark:text-white; }
-  .page-header p { @apply text-[#717d79] dark:text-[#969e9b] mt-1; }
+  .page-header h1 { @apply font-serif text-[1.75rem] font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white; }
+  .page-header p { @apply text-[13px] text-[#717d79] dark:text-[#969e9b] mt-1; }
 
   /* Stat cards */
   .stat-card {
     @apply bg-white dark:bg-slate-900 border border-black/[0.04] dark:border-slate-800 rounded-2xl p-5;
   }
   .stat-card .stat-value {
-    @apply text-2xl font-semibold text-[#0c0a09] dark:text-white;
+    @apply font-serif text-[2rem] font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white tabular-nums;
   }
   .stat-card .stat-label {
     @apply text-[13px] text-[#717d79] dark:text-[#969e9b];

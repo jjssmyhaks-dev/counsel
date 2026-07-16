@@ -149,7 +149,7 @@ export default function MattersPage() {
           {matters.map((matter) => (
             <div
               key={matter.id}
-              onClick={() => router.push(`/matters/${matter.id}`)}
+              onClick={() => router.push(`/dashboard/matters/${matter.id}`)}
               className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.04)] border border-black/[0.04] dark:border-slate-800 p-5 hover:shadow-md transition-shadow cursor-pointer group"
             >
               <div className="flex items-start justify-between mb-3">
