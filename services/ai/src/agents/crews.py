@@ -3,6 +3,9 @@
 Four specialized crews, each with their own process flow and task hierarchy.
 All crews use Cloudflare Workers AI (Llama 4 Scout / Llama 3.3 70B / DeepSeek R1)
 via the CloudflareLLM wrapper.
+
+All crew runners are async — they use `crew.kickoff_async()` to avoid the
+asyncio.run() conflict with uvicorn's event loop.
 """
 from __future__ import annotations
 
@@ -37,7 +40,7 @@ logger = logging.getLogger(__name__)
 # CREW 1: DOCUMENT INTELLIGENCE
 # ═══════════════════════════════════════════════════════════════
 
-def run_document_intelligence(
+async def run_document_intelligence(
     document_text: str,
     playbook_rules: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
@@ -47,13 +50,6 @@ def run_document_intelligence(
       1. ClauseExtractor → extract clause types with excerpts
       2. RiskAnalyzer → score each clause on 1-10 risk scale
       3. PlaybookGuardian → check against firm standards
-
-    Args:
-        document_text: Full text of the contract/document.
-        playbook_rules: Optional list of playbook rule dicts.
-
-    Returns:
-        Dict with clauses, risk_assessments, playbook_results, and summary.
     """
     extractor = create_clause_extractor()
     risk_analyzer = create_risk_analyzer()
@@ -64,43 +60,31 @@ def run_document_intelligence(
         playbook_rules=playbook_rules,
     )
 
+    t_extract = tasks.extract_clauses(agent=extractor)
+    t_risks = tasks.analyze_risks(agent=risk_analyzer, context=[t_extract])
+    t_playbook = tasks.check_playbook(agent=guardian, context=[t_extract, t_risks])
+
     crew = Crew(
         agents=[extractor, risk_analyzer, guardian],
-        tasks=[
-            tasks.extract_clauses(),
-            tasks.analyze_risks(),
-            tasks.check_playbook(),
-        ],
+        tasks=[t_extract, t_risks, t_playbook],
         process=Process.sequential,
         verbose=True,
     )
 
-    result = crew.kickoff()
+    result = await crew.kickoff_async()
     return {
         "crew": "document_intelligence",
         "status": "completed",
         "raw_output": result.raw if hasattr(result, "raw") else str(result),
-        "token_usage": result.token_usage if hasattr(result, "token_usage") else {},
+        "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
     }
-
-
-def run_document_intelligence_async(
-    document_text: str,
-    playbook_rules: Optional[List[Dict[str, Any]]] = None,
-):
-    """Async wrapper for run_document_intelligence."""
-    import asyncio
-    loop = asyncio.get_event_loop()
-    return loop.run_in_executor(
-        None, run_document_intelligence, document_text, playbook_rules
-    )
 
 
 # ═══════════════════════════════════════════════════════════════
 # CREW 2: DRAFTING
 # ═══════════════════════════════════════════════════════════════
 
-def run_drafting_crew(
+async def run_drafting_crew(
     draft_type: str,
     instructions: str,
     tone_examples: Optional[List[str]] = None,
@@ -111,15 +95,6 @@ def run_drafting_crew(
     Flow:
       1. LegalDrafter → generate first draft with LLM, matching tone
       2. CitationValidator → validate and format all citations
-
-    Args:
-        draft_type: "email", "memo", "motion", "brief", "contract", or "report".
-        instructions: What the draft should contain.
-        tone_examples: Optional list of reference documents for voice matching.
-        matter_context: Optional matter background info.
-
-    Returns:
-        Dict with draft_content, citations, validation_report.
     """
     drafter = create_legal_drafter()
     validator = create_citation_validator()
@@ -131,23 +106,23 @@ def run_drafting_crew(
         matter_context=matter_context,
     )
 
+    t_draft = tasks.generate_draft(agent=drafter)
+    t_citations = tasks.validate_citations(agent=validator, context=[t_draft])
+
     crew = Crew(
         agents=[drafter, validator],
-        tasks=[
-            tasks.generate_draft(),
-            tasks.validate_citations(),
-        ],
+        tasks=[t_draft, t_citations],
         process=Process.sequential,
         verbose=True,
     )
 
-    result = crew.kickoff()
+    result = await crew.kickoff_async()
     return {
         "crew": "drafting",
         "status": "completed",
         "draft_type": draft_type,
         "raw_output": result.raw if hasattr(result, "raw") else str(result),
-        "token_usage": result.token_usage if hasattr(result, "token_usage") else {},
+        "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
     }
 
 
@@ -155,7 +130,7 @@ def run_drafting_crew(
 # CREW 3: RESEARCH & DISCOVERY
 # ═══════════════════════════════════════════════════════════════
 
-def run_research_crew(
+async def run_research_crew(
     query: str,
     source_chunks: List[str],
     jurisdiction: Optional[str] = None,
@@ -165,14 +140,6 @@ def run_research_crew(
     Flow:
       1. LegalResearcher → decompose query, search, retrieve relevant info
       2. RAGSynthesizer → synthesize into cited memorandum
-
-    Args:
-        query: The legal question to research.
-        source_chunks: Pre-retrieved context chunks from pgvector.
-        jurisdiction: Optional jurisdiction filter (e.g., "Delaware", "California").
-
-    Returns:
-        Dict with memorandum, findings, citations, open_questions.
     """
     researcher = create_legal_researcher()
     synthesizer = create_rag_synthesizer()
@@ -183,23 +150,23 @@ def run_research_crew(
         jurisdiction=jurisdiction,
     )
 
+    t_research = tasks.research(agent=researcher)
+    t_synthesize = tasks.synthesize(agent=synthesizer, context=[t_research])
+
     crew = Crew(
         agents=[researcher, synthesizer],
-        tasks=[
-            tasks.research(),
-            tasks.synthesize(),
-        ],
+        tasks=[t_research, t_synthesize],
         process=Process.sequential,
         verbose=True,
     )
 
-    result = crew.kickoff()
+    result = await crew.kickoff_async()
     return {
         "crew": "research",
         "status": "completed",
         "query": query,
         "raw_output": result.raw if hasattr(result, "raw") else str(result),
-        "token_usage": result.token_usage if hasattr(result, "token_usage") else {},
+        "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
     }
 
 
@@ -207,7 +174,7 @@ def run_research_crew(
 # CREW 4: COMPLIANCE & NEGOTIATION
 # ═══════════════════════════════════════════════════════════════
 
-def run_compliance_crew(
+async def run_compliance_crew(
     output_text: str,
     output_type: str,
     firm_id: str,
@@ -221,17 +188,6 @@ def run_compliance_crew(
       1. AuditLogger → log the action immutably
       2. ComplianceChecker → validate against regulatory requirements
       3. NegotiatorAdvisor → generate negotiation guidance (if contract issues)
-
-    Args:
-        output_text: The AI-generated output to audit and check.
-        output_type: Type of output (e.g., "contract_analysis", "draft", "research").
-        firm_id: The firm identifier.
-        user_id: The user who initiated the action.
-        matter_id: Optional matter context.
-        contract_issues: Optional list of issues from contract analysis.
-
-    Returns:
-        Dict with audit_entry, compliance_report, negotiation_advice.
     """
     logger_agent = create_audit_logger()
     checker = create_compliance_checker()
@@ -246,23 +202,23 @@ def run_compliance_crew(
         contract_issues=contract_issues,
     )
 
+    t_audit = tasks.audit_log(agent=logger_agent)
+    t_check = tasks.compliance_check(agent=checker, context=[t_audit])
+    t_advice = tasks.negotiation_advice(agent=advisor, context=[t_check])
+
     crew = Crew(
         agents=[logger_agent, checker, advisor],
-        tasks=[
-            tasks.audit_log(),
-            tasks.compliance_check(),
-            tasks.negotiation_advice(),
-        ],
+        tasks=[t_audit, t_check, t_advice],
         process=Process.sequential,
         verbose=True,
     )
 
-    result = crew.kickoff()
+    result = await crew.kickoff_async()
     return {
         "crew": "compliance",
         "status": "completed",
         "raw_output": result.raw if hasattr(result, "raw") else str(result),
-        "token_usage": result.token_usage if hasattr(result, "token_usage") else {},
+        "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
     }
 
 
@@ -280,7 +236,7 @@ async def run_full_contract_pipeline(
     """Run the complete contract analysis pipeline across all crews.
 
     This is the master orchestrator that chains all 4 crews:
-      Document Intelligence → Compliance & Negotiation → (optional Drafting)
+      Document Intelligence → Compliance & Negotiation
 
     Args:
         document_text: Full contract text.
@@ -292,18 +248,16 @@ async def run_full_contract_pipeline(
     Returns:
         Complete analysis with all crew outputs merged.
     """
-    import asyncio
-
     # Step 1: Document Intelligence
     logger.info("Starting Document Intelligence crew...")
-    di_result = run_document_intelligence(
+    di_result = await run_document_intelligence(
         document_text=document_text,
         playbook_rules=playbook_rules,
     )
 
     # Step 2: Compliance & Negotiation
     logger.info("Starting Compliance crew...")
-    compliance_result = run_compliance_crew(
+    compliance_result = await run_compliance_crew(
         output_text=di_result.get("raw_output", ""),
         output_type="contract_analysis",
         firm_id=firm_id,

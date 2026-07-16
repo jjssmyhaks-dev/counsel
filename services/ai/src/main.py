@@ -53,6 +53,7 @@ from .orchestrator.router import RouterAgent
 from .orchestrator.quality_gate import QualityGateAgent, GateResult
 from .orchestrator.pipeline_orchestrator import PipelineOrchestrator, PipelineJob
 from .orchestrator.audit_agent import audit_trail, AuditAction
+from .orchestrator.audit_persistence import setup_audit_persistence
 from .routes.agents import router as agents_router
 
 
@@ -83,6 +84,9 @@ async def lifespan(app: FastAPI):
             print(f"Cloudflare Workers AI initialised: {health}")
         except Exception as e:
             print(f"Cloudflare Workers AI init failed: {e}")
+
+    # Wire audit trail to persistent JSONL log
+    setup_audit_persistence(audit_trail)
 
     yield
     await close_pool()

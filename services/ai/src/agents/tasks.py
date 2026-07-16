@@ -3,6 +3,11 @@
 Each task is a self-contained unit of work with clear inputs, expected outputs,
 and a human-readable description. Tasks are designed to chain through CrewAI's
 sequential process mode.
+
+CrewAI 1.x requirements:
+- Each Task must have an explicit `agent`.
+- `context` must be a list of Task objects (not dicts).
+Task builders therefore accept the agent and optional context tasks.
 """
 from __future__ import annotations
 
@@ -26,7 +31,7 @@ class DocumentIntelligenceTasks:
         self.document_text = document_text
         self.playbook_rules = playbook_rules or []
 
-    def extract_clauses(self) -> Task:
+    def extract_clauses(self, agent) -> Task:
         """Task: Extract all legal clauses from the document."""
         playbook_context = ""
         if self.playbook_rules:
@@ -39,6 +44,7 @@ class DocumentIntelligenceTasks:
             )
 
         return Task(
+            agent=agent,
             description=(
                 f"Extract all legal clauses from the following contract document. "
                 f"Identify the clause type, extract the exact text, and provide a "
@@ -74,9 +80,10 @@ class DocumentIntelligenceTasks:
             ),
         )
 
-    def analyze_risks(self) -> Task:
+    def analyze_risks(self, agent, context: Optional[List[Task]] = None) -> Task:
         """Task: Score each clause on a 1-10 risk scale."""
         return Task(
+            agent=agent,
             description=(
                 f"Analyze the risk profile of each extracted clause from the document. "
                 f"For each clause:\n"
@@ -95,10 +102,10 @@ class DocumentIntelligenceTasks:
                 "3. critical_issues (clauses with risk >= 7 that need immediate attention) "
                 "4. negotiation_priority (ordered list of what to negotiate first)"
             ),
-            context=[self._get_previous_task_ref("extract_clauses")],
+            context=context or [],
         )
 
-    def check_playbook(self) -> Task:
+    def check_playbook(self, agent, context: Optional[List[Task]] = None) -> Task:
         """Task: Validate document against firm playbook rules."""
         rules_text = "\n".join(
             f"Rule {i+1}: {r.get('rule_name', 'Unknown')}\n"
@@ -109,6 +116,7 @@ class DocumentIntelligenceTasks:
         ) if self.playbook_rules else "No specific playbook rules provided. Check against standard industry best practices."
 
         return Task(
+            agent=agent,
             description=(
                 f"Validate every clause in the contract against the firm's playbook rules. "
                 f"For each rule, determine:\n"
@@ -127,19 +135,8 @@ class DocumentIntelligenceTasks:
                 "3. critical_violations (playbook violations that are showstoppers) "
                 "4. negotiation_playbook (for each violation, specific counter-position language)"
             ),
-            context=[
-                self._get_previous_task_ref("extract_clauses"),
-                self._get_previous_task_ref("analyze_risks"),
-            ],
+            context=context or [],
         )
-
-    @staticmethod
-    def _get_previous_task_ref(task_name: str):
-        """Return a reference to a previous task for context chaining.
-        
-        In CrewAI, tasks use the output of previous tasks via context.
-        """
-        return {}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -161,7 +158,7 @@ class DraftingTasks:
         self.tone_examples = tone_examples or []
         self.matter_context = matter_context
 
-    def generate_draft(self) -> Task:
+    def generate_draft(self, agent) -> Task:
         """Task: Generate the first draft."""
         tone_context = ""
         if self.tone_examples:
@@ -173,6 +170,7 @@ class DraftingTasks:
         matter = f"\n\nMATTER CONTEXT:\n{self.matter_context}" if self.matter_context else ""
 
         return Task(
+            agent=agent,
             description=(
                 f"Generate a professional legal {self.draft_type} based on the following "
                 f"instructions. The draft must be complete, properly formatted, and ready "
@@ -199,9 +197,10 @@ class DraftingTasks:
             ),
         )
 
-    def validate_citations(self) -> Task:
+    def validate_citations(self, agent, context: Optional[List[Task]] = None) -> Task:
         """Task: Validate all citations in the draft."""
         return Task(
+            agent=agent,
             description=(
                 f"Review the generated {self.draft_type} for all legal citations. "
                 f"For each citation found:\n"
@@ -219,7 +218,7 @@ class DraftingTasks:
                 "3. fabricated_citations (citations that cannot be verified) "
                 "4. suggested_improvements (better citations to use instead)"
             ),
-            context=[{}],  # References previous task output
+            context=context or [],
         )
 
 
@@ -240,7 +239,7 @@ class ResearchTasks:
         self.source_chunks = source_chunks
         self.jurisdiction = jurisdiction
 
-    def research(self) -> Task:
+    def research(self, agent) -> Task:
         """Task: Research the legal question."""
         sources = "\n\n---\n\n".join(
             f"[SOURCE {i+1}]:\n{chunk[:2000]}"
@@ -253,6 +252,7 @@ class ResearchTasks:
         ) if self.jurisdiction else ""
 
         return Task(
+            agent=agent,
             description=(
                 f"Research the following legal question using the provided source documents. "
                 f"Decompose the question into sub-questions if needed for thorough coverage.\n\n"
@@ -275,9 +275,10 @@ class ResearchTasks:
             ),
         )
 
-    def synthesize(self) -> Task:
+    def synthesize(self, agent, context: Optional[List[Task]] = None) -> Task:
         """Task: Synthesize research into a memorandum."""
         return Task(
+            agent=agent,
             description=(
                 f"Synthesize the research findings into a clear, well-structured legal "
                 f"memorandum. Every factual claim must cite a source with confidence level "
@@ -301,7 +302,7 @@ class ResearchTasks:
                 "6. recommendations "
                 "7. source_index (mapping of citation IDs to full source references)"
             ),
-            context=[{}],  # References previous task output
+            context=context or [],
         )
 
 
@@ -328,7 +329,7 @@ class ComplianceTasks:
         self.matter_id = matter_id
         self.contract_issues = contract_issues or []
 
-    def audit_log(self) -> Task:
+    def audit_log(self, agent) -> Task:
         """Task: Log the action in the immutable audit trail."""
         import hashlib
         import datetime
@@ -337,6 +338,7 @@ class ComplianceTasks:
         timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         return Task(
+            agent=agent,
             description=(
                 f"Create an audit trail entry for the following AI action:\n\n"
                 f"TIMESTAMP: {timestamp}\n"
@@ -360,7 +362,7 @@ class ComplianceTasks:
             ),
         )
 
-    def compliance_check(self) -> Task:
+    def compliance_check(self, agent, context: Optional[List[Task]] = None) -> Task:
         """Task: Validate output against regulatory requirements."""
         issues_summary = ""
         if self.contract_issues:
@@ -373,6 +375,7 @@ class ComplianceTasks:
             )
 
         return Task(
+            agent=agent,
             description=(
                 f"Validate the following AI-generated output against regulatory requirements:\n"
                 f"- SOC 2 Type II: Data handling, access controls, audit trails\n"
@@ -395,14 +398,20 @@ class ComplianceTasks:
                 "4. data_privacy_notes (GDPR/CCPA specific observations) "
                 "5. remediation_steps (how to fix any identified issues)"
             ),
+            context=context or [],
         )
 
-    def negotiation_advice(self) -> Task:
+    def negotiation_advice(self, agent, context: Optional[List[Task]] = None) -> Task:
         """Task: Generate negotiation guidance from contract issues."""
         if not self.contract_issues:
             return Task(
-                description="No contract issues to analyze. Skip negotiation advice generation.",
-                expected_output="SKIPPED: No contract issues provided for negotiation analysis.",
+                agent=agent,
+                description=(
+                    "No contract issues to analyze. Simply confirm that no negotiation "
+                    "advice is needed for this output and summarize why."
+                ),
+                expected_output="A one-line confirmation that no negotiation advice is required.",
+                context=context or [],
             )
 
         issues_text = "\n".join(
@@ -415,6 +424,7 @@ class ComplianceTasks:
         )
 
         return Task(
+            agent=agent,
             description=(
                 f"Generate a strategic negotiation playbook for the following contract issues. "
                 f"For each issue, provide:\n"
@@ -436,5 +446,5 @@ class ComplianceTasks:
                 "4. leverage_points (areas of strength identified) "
                 "5. risk_escalation_triggers (when to involve senior partners)"
             ),
-            context=[{}],  # References previous task output
+            context=context or [],
         )

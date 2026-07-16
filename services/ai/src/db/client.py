@@ -74,7 +74,7 @@ async def ensure_tables() -> None:
                 text         TEXT NOT NULL,
                 section_title TEXT,
                 page_number  INTEGER,
-                embedding    vector(384),
+                embedding    vector(768),
                 metadata     JSONB DEFAULT '{}'::jsonb,
                 created_at   TIMESTAMPTZ DEFAULT NOW(),
                 updated_at   TIMESTAMPTZ DEFAULT NOW()

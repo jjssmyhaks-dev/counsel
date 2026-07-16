@@ -1,128 +1,153 @@
-"""CrewAI LLM wrapper for Cloudflare Workers AI.
+"""CrewAI-compatible LLM wrapper for Cloudflare Workers AI.
 
-This wraps the existing CloudflareAI provider as a CrewAI-compatible LLM,
-so all agents and crews can use our Cloudflare Workers AI models directly.
+Subclasses BaseLLM directly (not the LLM pydantic model) to bypass CrewAI's
+hardcoded model-name validation. Implements a fully synchronous `call()` method
+that works with CrewAI's thread-pool-based agent execution — no asyncio.
 """
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+import httpx
+from typing import Any, Dict, List, Optional, Union
 
-from crewai import LLM
-
-from ..providers.cloudflare import get_cloudflare
+from crewai.llms.base_llm import BaseLLM
 
 logger = logging.getLogger(__name__)
 
+# Cloudflare Workers AI model IDs
+CF_DEFAULT_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct"
+CF_POWER_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+CF_REASONING_MODEL = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
 
-class CloudflareLLM(LLM):
-    """CrewAI-compatible LLM backed by Cloudflare Workers AI.
 
-    Uses Llama 4 Scout 17B for fast text generation; supports
-    Llama 3.3 70B and DeepSeek R1 Distill Qwen 32B as fallbacks.
+class CloudflareLLM(BaseLLM):
+    """Synchronous CrewAI-compatible LLM backed by Cloudflare Workers AI.
+
+    Subclasses BaseLLM directly — NOT the LLM pydantic model — to skip
+    CrewAI's hardcoded provider-specific model-name validation.
+
+    Attributes:
+        model: The Cloudflare model ID (e.g. @cf/meta/llama-4-scout-17b-16e-instruct).
+        api_base: Cloudflare Workers AI run endpoint URL.
+        api_token: Cloudflare API token.
     """
-
-    model: str = "@cf/meta/llama-4-scout-17b-16e-instruct"
-    _temperature: float = 0.3
-    _max_tokens: int = 4096
 
     def __init__(
         self,
-        model: Optional[str] = None,
+        model: str = CF_DEFAULT_MODEL,
         temperature: float = 0.3,
         max_tokens: int = 4096,
         **kwargs,
     ):
-        super().__init__(model=model or self.model, **kwargs)
-        self._temperature = temperature
-        self._max_tokens = max_tokens
+        # Bypass pydantic field injection — set attributes directly on the internal
+        # dict BEFORE calling super().__init__ so BaseLLM sees them as pre-set.
+        super().__init__(model=model, **kwargs)
+        self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+
+        # Resolve Cloudflare credentials
+        from ..config import settings
+        self._api_token = settings.cloudflare_api_token
+        self._api_base = (
+            f"https://api.cloudflare.com/client/v4/accounts/"
+            f"{settings.cloudflare_account_id}/ai/run/"
+        )
+
+    # ──────────────────────────── CrewAI API ────────────────────────────
 
     def call(
         self,
-        messages: List[Dict[str, str]],
+        messages: Union[str, List[Dict[str, str]]],
         tools: Optional[List[Dict[str, Any]]] = None,
         callbacks: Optional[List[Any]] = None,
         **kwargs,
     ) -> str:
-        """Synchronous call — delegates to async implementation."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._acall(messages, tools, **kwargs))
+        """Synchronous chat completion as required by CrewAI's BaseLLM protocol.
 
-    async def _acall(
-        self,
-        messages: List[Dict[str, str]],
-        tools: Optional[List[Dict[str, Any]]] = None,
-        **kwargs,
-    ) -> str:
-        """Async call to Cloudflare Workers AI text generation."""
-        cf = get_cloudflare()
-
-        # CrewAI sends messages as a list; convert to the format
-        # Cloudflare Workers AI expects: system prompt + user message
-        system_prompt: Optional[str] = None
-        user_prompts: List[str] = []
-
-        for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            if role == "system":
-                system_prompt = content
-            elif role == "user":
-                user_prompts.append(content)
-            elif role == "assistant":
-                # For multi-turn, we append assistant responses as context
-                user_prompts.append(f"[ASSISTANT]: {content}")
-
-        prompt = "\n\n".join(user_prompts)
+        This runs in whatever thread CrewAI assigns — must be fully synchronous.
+        """
+        payload = self._build_payload(messages)
+        url = f"{self._api_base}{self.model}"
+        headers = {
+            "Authorization": f"Bearer {self._api_token}",
+            "Content-Type": "application/json",
+        }
 
         try:
-            response = await cf.generate(
-                prompt=prompt,
-                system_prompt=system_prompt,
-                model=self.model,
-                max_tokens=self._max_tokens,
-                temperature=self._temperature,
-            )
-            return response
+            with httpx.Client(timeout=90.0) as client:
+                resp = client.post(url, json=payload, headers=headers)
+                resp.raise_for_status()
+                data = resp.json()
+
+            result = data.get("result", {})
+            text = result.get("response", "")
+            if not text:
+                logger.warning("Empty response from Cloudflare; payload received: %s...",
+                               str(result)[:200])
+            return text
         except Exception as e:
-            logger.error("Cloudflare LLM call failed: %s", e)
-            # Fallback: try the 70B model if the fast model fails
-            try:
-                return await cf.generate(
-                    prompt=prompt,
-                    system_prompt=system_prompt,
-                    model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-                    max_tokens=self._max_tokens,
-                    temperature=self._temperature,
-                )
-            except Exception:
-                raise RuntimeError(f"Cloudflare LLM call failed: {e}")
+            logger.error("Cloudflare LLM call failed (model=%s): %s", self.model, e)
+            # Fallback: try the 70B model if this isn't already it
+            if self.model != CF_POWER_MODEL:
+                fallback_url = f"{self._api_base}{CF_POWER_MODEL}"
+                try:
+                    with httpx.Client(timeout=90.0) as client:
+                        resp = client.post(fallback_url, json=payload, headers=headers)
+                        resp.raise_for_status()
+                        data = resp.json()
+                    return data.get("result", {}).get("response", "")
+                except Exception as fb_err:
+                    logger.error("Fallback also failed: %s", fb_err)
+            raise RuntimeError(f"Cloudflare LLM call failed: {e}")
+
+    # ──────────────────────────── Internals ─────────────────────────────
+
+    def _build_payload(
+        self, messages: Union[str, List[Dict[str, str]]]
+    ) -> Dict[str, Any]:
+        """Convert CrewAI message format to Cloudflare Workers AI format.
+
+        Cloudflare expects: {"messages": [{"role": ..., "content": ...}], ...}
+        """
+        system_prompt: Optional[str] = None
+        user_msgs: List[Dict[str, str]] = []
+
+        if isinstance(messages, str):
+            user_msgs = [{"role": "user", "content": messages}]
+        else:
+            for msg in messages:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "system":
+                    system_prompt = content
+                else:
+                    user_msgs.append({"role": role, "content": content})
+
+        cf_messages: List[Dict[str, str]] = []
+        if system_prompt:
+            cf_messages.append({"role": "system", "content": system_prompt})
+        cf_messages.extend(user_msgs)
+
+        return {
+            "messages": cf_messages,
+            "max_tokens": int(self.max_tokens) if self.max_tokens else 4096,
+            "temperature": float(self.temperature) if self.temperature else 0.3,
+        }
 
 
-# Model presets for different agent roles
+# ──────────────────────────── Factory helpers ───────────────────────────
+
 def get_default_llm(temperature: float = 0.3) -> CloudflareLLM:
     """Fast model for most agents — Llama 4 Scout 17B."""
-    return CloudflareLLM(
-        model="@cf/meta/llama-4-scout-17b-16e-instruct",
-        temperature=temperature,
-        max_tokens=4096,
-    )
+    return CloudflareLLM(model=CF_DEFAULT_MODEL, temperature=temperature, max_tokens=4096)
 
 
 def get_power_llm(temperature: float = 0.2) -> CloudflareLLM:
     """Powerful model for complex analysis — Llama 3.3 70B."""
-    return CloudflareLLM(
-        model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-        temperature=temperature,
-        max_tokens=8192,
-    )
+    return CloudflareLLM(model=CF_POWER_MODEL, temperature=temperature, max_tokens=8192)
 
 
 def get_reasoning_llm() -> CloudflareLLM:
-    """Reasoning model for legal analysis — DeepSeek R1."""
-    return CloudflareLLM(
-        model="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-        temperature=0.1,
-        max_tokens=16384,
-    )
+    """Reasoning model for legal analysis — DeepSeek R1 Distill 32B."""
+    return CloudflareLLM(model=CF_REASONING_MODEL, temperature=0.1, max_tokens=16384)

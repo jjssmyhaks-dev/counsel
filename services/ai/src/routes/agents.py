@@ -90,15 +90,6 @@ class AgentResponse(BaseModel):
     error: Optional[str] = None
 
 
-# ── Helper: Run crew in thread pool ────────────────────────────
-
-
-async def _run_in_executor(func, *args, **kwargs):
-    """Run a CPU/IO-bound crew function in a thread pool."""
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
-
-
 # ── Crew Endpoints ─────────────────────────────────────────────
 
 
@@ -117,8 +108,7 @@ async def analyze_contract(req: ContractAnalysisAgentRequest):
             metadata={"matter_id": req.matter_id, "text_length": len(req.document_text)},
         )
 
-        result = await _run_in_executor(
-            run_document_intelligence,
+        result = await run_document_intelligence(
             document_text=req.document_text,
             playbook_rules=req.playbook_rules,
         )
@@ -145,8 +135,7 @@ async def generate_draft(req: DraftAgentRequest):
     Pipeline: LegalDrafter → CitationValidator
     """
     try:
-        result = await _run_in_executor(
-            run_drafting_crew,
+        result = await run_drafting_crew(
             draft_type=req.draft_type,
             instructions=req.instructions,
             tone_examples=req.tone_examples,
@@ -177,24 +166,27 @@ async def research_query(req: ResearchAgentRequest):
     try:
         # Step 1: Retrieve relevant chunks via pgvector
         query_embedding = await embedder.embed_query(req.query)
-        raw_results = await retriever.search(
-            query_embedding=query_embedding,
-            firm_id=req.firm_id,
-            matter_id=req.matter_id,
-            top_k=req.top_k,
-        )
-
-        source_chunks = [r["text"] for r in raw_results]
-
-        if not source_chunks:
-            raise HTTPException(
-                status_code=404,
-                detail="No relevant documents found. Index documents first.",
+        try:
+            raw_results = await retriever.search(
+                query_embedding=query_embedding,
+                firm_id=req.firm_id,
+                matter_id=req.matter_id,
+                top_k=req.top_k,
             )
+            source_chunks = [r["text"] for r in raw_results]
+        except Exception as search_err:
+            logger.warning("pgvector search failed, using query as context: %s", search_err)
+            source_chunks = []
+
+        # If no indexed docs found, use the query itself as context so the crew can still reason
+        if not source_chunks:
+            source_chunks = [
+                f"[Research Query]: {req.query}",
+                "[Note: No indexed documents found for this firm. The researcher should provide a general analysis based on legal knowledge and standard practices.]",
+            ]
 
         # Step 2: Run the research crew
-        result = await _run_in_executor(
-            run_research_crew,
+        result = await run_research_crew(
             query=req.query,
             source_chunks=source_chunks,
             jurisdiction=req.jurisdiction,
@@ -224,8 +216,7 @@ async def check_compliance(req: ComplianceAgentRequest):
     Pipeline: AuditLogger → ComplianceChecker → NegotiatorAdvisor
     """
     try:
-        result = await _run_in_executor(
-            run_compliance_crew,
+        result = await run_compliance_crew(
             output_text=req.output_text,
             output_type=req.output_type,
             firm_id=req.firm_id,
@@ -264,7 +255,7 @@ async def full_pipeline(req: FullPipelineRequest):
             metadata={"matter_id": req.matter_id, "has_playbook": bool(req.playbook_rules)},
         )
 
-        from .crews import run_full_contract_pipeline
+        from ..agents.crews import run_full_contract_pipeline
 
         result = await run_full_contract_pipeline(
             document_text=req.document_text,
