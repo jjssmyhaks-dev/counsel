@@ -32,6 +32,9 @@ from .tasks import (
     ResearchTasks,
     ComplianceTasks,
 )
+from ..orchestrator.audit_agent import audit_trail, AuditAction
+from ..orchestrator.structured_logging import create_step_callback, metrics, write_event
+from ..orchestrator.retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +43,7 @@ logger = logging.getLogger(__name__)
 # CREW 1: DOCUMENT INTELLIGENCE
 # ═══════════════════════════════════════════════════════════════
 
+@with_retry("document_intelligence", max_retries=2)
 async def run_document_intelligence(
     document_text: str,
     playbook_rules: Optional[List[Dict[str, Any]]] = None,
@@ -60,9 +64,10 @@ async def run_document_intelligence(
         playbook_rules=playbook_rules,
     )
 
-    t_extract = tasks.extract_clauses(agent=extractor)
-    t_risks = tasks.analyze_risks(agent=risk_analyzer, context=[t_extract])
-    t_playbook = tasks.check_playbook(agent=guardian, context=[t_extract, t_risks])
+    sc = create_step_callback("document_intelligence")
+    t_extract = tasks.extract_clauses(agent=extractor, step_callback=sc)
+    t_risks = tasks.analyze_risks(agent=risk_analyzer, context=[t_extract], step_callback=sc)
+    t_playbook = tasks.check_playbook(agent=guardian, context=[t_extract, t_risks], step_callback=sc)
 
     crew = Crew(
         agents=[extractor, risk_analyzer, guardian],
@@ -72,11 +77,21 @@ async def run_document_intelligence(
     )
 
     result = await crew.kickoff_async()
+    token_usage = dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}
+    
+    # Log token usage to audit trail
+    audit_trail.log(
+        action=AuditAction.CONTRACT_ANALYSIS_COMPLETED,
+        resource_id="document_intelligence",
+        user_id="system",
+        metadata={"token_usage": token_usage},
+    )
+    
     return {
         "crew": "document_intelligence",
         "status": "completed",
         "raw_output": result.raw if hasattr(result, "raw") else str(result),
-        "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
+        "token_usage": token_usage,
     }
 
 
@@ -84,6 +99,7 @@ async def run_document_intelligence(
 # CREW 2: DRAFTING
 # ═══════════════════════════════════════════════════════════════
 
+@with_retry("drafting", max_retries=2)
 async def run_drafting_crew(
     draft_type: str,
     instructions: str,
@@ -106,8 +122,9 @@ async def run_drafting_crew(
         matter_context=matter_context,
     )
 
-    t_draft = tasks.generate_draft(agent=drafter)
-    t_citations = tasks.validate_citations(agent=validator, context=[t_draft])
+    sc = create_step_callback("drafting")
+    t_draft = tasks.generate_draft(agent=drafter, step_callback=sc)
+    t_citations = tasks.validate_citations(agent=validator, context=[t_draft], step_callback=sc)
 
     crew = Crew(
         agents=[drafter, validator],
@@ -130,6 +147,7 @@ async def run_drafting_crew(
 # CREW 3: RESEARCH & DISCOVERY
 # ═══════════════════════════════════════════════════════════════
 
+@with_retry("research", max_retries=2)
 async def run_research_crew(
     query: str,
     source_chunks: List[str],
@@ -150,8 +168,9 @@ async def run_research_crew(
         jurisdiction=jurisdiction,
     )
 
-    t_research = tasks.research(agent=researcher)
-    t_synthesize = tasks.synthesize(agent=synthesizer, context=[t_research])
+    sc = create_step_callback("research")
+    t_research = tasks.research(agent=researcher, step_callback=sc)
+    t_synthesize = tasks.synthesize(agent=synthesizer, context=[t_research], step_callback=sc)
 
     crew = Crew(
         agents=[researcher, synthesizer],
@@ -174,6 +193,7 @@ async def run_research_crew(
 # CREW 4: COMPLIANCE & NEGOTIATION
 # ═══════════════════════════════════════════════════════════════
 
+@with_retry("compliance", max_retries=2)
 async def run_compliance_crew(
     output_text: str,
     output_type: str,
@@ -202,9 +222,10 @@ async def run_compliance_crew(
         contract_issues=contract_issues,
     )
 
-    t_audit = tasks.audit_log(agent=logger_agent)
-    t_check = tasks.compliance_check(agent=checker, context=[t_audit])
-    t_advice = tasks.negotiation_advice(agent=advisor, context=[t_check])
+    sc = create_step_callback("compliance")
+    t_audit = tasks.audit_log(agent=logger_agent, step_callback=sc)
+    t_check = tasks.compliance_check(agent=checker, context=[t_audit], step_callback=sc)
+    t_advice = tasks.negotiation_advice(agent=advisor, context=[t_check], step_callback=sc)
 
     crew = Crew(
         agents=[logger_agent, checker, advisor],

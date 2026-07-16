@@ -33,6 +33,9 @@ class DocumentIntelligenceTasks:
 
     def extract_clauses(self, agent) -> Task:
         """Task: Extract all legal clauses from the document."""
+        return self._extract_clauses_task(agent=agent)
+
+    def _extract_clauses_task(self, agent=None, step_callback=None) -> Task:
         playbook_context = ""
         if self.playbook_rules:
             rules_summary = "\n".join(
@@ -45,6 +48,7 @@ class DocumentIntelligenceTasks:
 
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Extract all legal clauses from the following contract document. "
                 f"Identify the clause type, extract the exact text, and provide a "
@@ -81,9 +85,11 @@ class DocumentIntelligenceTasks:
         )
 
     def analyze_risks(self, agent, context: Optional[List[Task]] = None) -> Task:
+    def analyze_risks(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Score each clause on a 1-10 risk scale."""
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Analyze the risk profile of each extracted clause from the document. "
                 f"For each clause:\n"
@@ -106,6 +112,7 @@ class DocumentIntelligenceTasks:
         )
 
     def check_playbook(self, agent, context: Optional[List[Task]] = None) -> Task:
+    def check_playbook(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Validate document against firm playbook rules."""
         rules_text = "\n".join(
             f"Rule {i+1}: {r.get('rule_name', 'Unknown')}\n"
@@ -117,6 +124,7 @@ class DocumentIntelligenceTasks:
 
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Validate every clause in the contract against the firm's playbook rules. "
                 f"For each rule, determine:\n"

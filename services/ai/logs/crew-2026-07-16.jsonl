@@ -1,0 +1,1 @@
+{"event": "non_retryable_error", "crew": "compliance", "error": "\"Task\" object has no field \"step_callback\"", "error_type": "ValueError", "timestamp": "2026-07-16T18:39:04.424739+00:00"}
