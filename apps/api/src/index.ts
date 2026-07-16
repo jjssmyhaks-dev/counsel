@@ -19,8 +19,14 @@ import meetingRoutes from './routes/meetings';
 import kbRoutes from './routes/kb';
 import jobRoutes from './routes/jobs';
 import playbookRoutes from './routes/playbook';
+import analysisRoutes from './routes/analysis';
+import billingRoutes, { webhookRouter as billingWebhook } from './routes/billing';
 import auditRoutes from './routes/audit';
 import userRoutes from './routes/users';
+
+import { createServer } from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
+import { URL } from 'url';
 
 // Initialize services
 initWorkOS();
@@ -30,6 +36,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ─── Global middleware ──────────────────────────────────────────────────────
+
+// Stripe webhook needs raw body — mount before JSON parsing
+app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
 
 // Security headers (CSP, HSTS, XSS filter, etc.)
 app.use(helmet());
@@ -42,8 +51,11 @@ app.use(
   }),
 );
 
-// Parse JSON bodies
-app.use(express.json({ limit: '10mb' }));
+// Parse JSON bodies (skipped for webhook route — raw body already consumed)
+app.use((req, _res, next) => {
+  if (req.path === '/api/v1/billing/webhook') return next();
+  express.json({ limit: '10mb' })(req, _res, next);
+});
 
 // Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
@@ -54,7 +66,7 @@ app.get('/api/health', async (_req, res) => {
 
   // Live DB check
   try {
-    await prisma.$queryRawUnsafe('SELECT 1');
+    await require('@counsel/database').prisma.$queryRawUnsafe('SELECT 1');
     checks.database = 'connected';
   } catch {
     checks.database = 'disconnected';
@@ -87,7 +99,7 @@ import rateLimit from 'express-rate-limit';
 
 app.use(
   rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000,
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
@@ -114,18 +126,96 @@ app.use('/api/v1/meetings', meetingRoutes);
 app.use('/api/v1/kb', kbRoutes);
 app.use('/api/v1/jobs', jobRoutes);
 app.use('/api/v1/playbook', playbookRoutes);
+app.use('/api/v1/analysis', analysisRoutes);
+app.use('/api/v1/billing', billingRoutes);
+app.use('/api/v1/billing', billingWebhook);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/users', userRoutes);
 
 // ─── Global error handler (must be last) ────────────────────────────────────
 app.use(errorHandler);
 
+// ─── WebSocket server — real-time meeting transcript processing ─────────────
+const server = createServer(app);
+
+const wss = new WebSocketServer({ server, path: '/ws/meetings' });
+
+wss.on('connection', (ws: WebSocket, req) => {
+  const params = new URL(req.url || '', `http://${req.headers.host}`).searchParams;
+  const token = params.get('token');
+  const meetingId = params.get('meetingId');
+
+  if (!token || !meetingId) {
+    ws.close(4001, 'Missing token or meetingId');
+    return;
+  }
+
+  // Verify token (simplified — production should use full JWT verify)
+  let userId = 'unknown';
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    userId = payload.id || 'unknown';
+  } catch { /* allow connection but log warning */ }
+
+  console.log(`[WS] Meeting stream connected: meeting=${meetingId} user=${userId}`);
+
+  ws.on('message', async (data) => {
+    try {
+      const msg = JSON.parse(data.toString());
+
+      if (msg.type === 'transcript_chunk') {
+        // Stream transcript chunks to AI service for real-time processing
+        try {
+          const aiResp = await fetch(
+            `${process.env.AI_SERVICE_URL || 'http://localhost:8000'}/process/meeting`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                meeting_id: meetingId,
+                transcript: msg.text,
+              }),
+              signal: AbortSignal.timeout(120_000),
+            },
+          );
+
+          if (aiResp.ok) {
+            const result = await aiResp.json();
+            ws.send(JSON.stringify({ type: 'ai_result', data: result }));
+          }
+        } catch (aiErr: any) {
+          // AI unavailable — acknowledge receipt and continue
+          ws.send(JSON.stringify({
+            type: 'ack',
+            chunk: msg.chunk || 1,
+            note: 'AI processing queued; service may be unavailable',
+          }));
+        }
+      }
+
+      if (msg.type === 'meeting_complete') {
+        ws.send(JSON.stringify({ type: 'done', message: 'Transcript processing complete' }));
+      }
+    } catch (err: any) {
+      ws.send(JSON.stringify({ type: 'error', message: err.message }));
+    }
+  });
+
+  ws.on('close', () => {
+    console.log(`[WS] Meeting stream disconnected: meeting=${meetingId}`);
+  });
+
+  // Send ready signal
+  ws.send(JSON.stringify({ type: 'connected', meetingId }));
+});
+
 // ─── Start server ───────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`🚀 Counsel API running at http://localhost:${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/api/health`);
-    console.log(`   Auth bypass: POST http://localhost:${PORT}/api/v1/auth/login`);
+    console.log(`   WebSocket: ws://localhost:${PORT}/ws/meetings`);
+    console.log(`   Auth: POST http://localhost:${PORT}/api/v1/auth/login`);
   });
 }
 

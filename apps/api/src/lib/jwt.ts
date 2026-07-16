@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const SECRET = process.env.JWT_SECRET;
+const SECRET = proces…RET;
 if (!SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }
@@ -11,12 +11,18 @@ export interface TokenPayload {
   name: string;
   firmId: string;
   role: string;
+  iat?: number;
+  exp?: number;
 }
 
-export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, SECRET, { expiresIn: '24h' });
+export function signToken(payload: TokenPayload, expiresIn?: string): string {
+  return jwt.sign(payload, SECRET, { expiresIn: expiresIn || '24h' });
 }
 
-export function verifyToken(token: string): TokenPayload {
-  return jwt.verify(token, SECRET) as TokenPayload;
+export function verifyToken(token: string, allowExpired = false): TokenPayload | null {
+  try {
+    return jwt.verify(token, SECRET, allowExpired ? { ignoreExpiration: true } : {}) as TokenPayload;
+  } catch {
+    return null;
+  }
 }

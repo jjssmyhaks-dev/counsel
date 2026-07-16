@@ -1,10 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@counsel/database';
-import { signToken } from '../lib/jwt';
-import { z } from 'zod';
-import { validate } from '../middleware/validate';
-import { UnauthorizedError } from '../lib/errors';
+import { signToken, verifyToken } from '../lib/jwt';
+import { issueRefreshToken, rotateRefreshToken, revokeRefreshTokens } from '../lib/refresh';
 import {
   getWorkOS,
   isWorkOSAvailable,
@@ -59,6 +57,20 @@ router.post(
         firmId: user.firmId,
         role: user.role,
       });
+      const refreshToken = issueRefreshToken({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        firmId: user.firmId,
+        role: user.role,
+      });
+      const refreshToken = issueRefreshToken({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        firmId: user.firmId,
+        role: user.role,
+      });
 
       const firm = await prisma.firm.findUnique({
         where: { id: user.firmId },
@@ -67,6 +79,7 @@ router.post(
 
       res.json({
         token,
+        refreshToken,
         user: {
           id: user.id,
           email: user.email,
@@ -135,9 +148,40 @@ router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // ─── POST /logout ───────────────────────────────────────────────────────────
-router.post('/logout', (_req: Request, res: Response) => {
-  res.json({ message: 'Logged out successfully' });
+router.post('/logout', async (req: Request, res: Response) => {
+  if (req.user?.id) {
+    revokeRefreshTokens(req.user.id);
+  }
+  res.json({ message: 'Logged out successfully — all refresh tokens revoked' });
 });
+
+// ─── POST /refresh ─── Rotate access token using refresh token ───────────────
+const refreshSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
+router.post(
+  '/refresh',
+  validate('body', refreshSchema),
+  (req: Request, res: Response) => {
+    const result = rotateRefreshToken(req.body.refreshToken);
+    if (!result) {
+      res.status(401).json({ error: 'Invalid or expired refresh token' });
+      return;
+    }
+    res.json({
+      token: result.accessToken,
+      refreshToken: result.refreshToken,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        firmId: result.user.firmId,
+        role: result.user.role,
+      },
+    });
+  },
+);
 
 // ─── POST /register ─────────────────────────────────────────────────────────
 const registerSchema = z.object({
