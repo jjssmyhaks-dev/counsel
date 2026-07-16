@@ -72,7 +72,7 @@ app.get('/api/health', async (_req, res) => {
 
   // Live DB check
   try {
-    await require('@counsel/database').prisma.$queryRawUnsafe('SELECT 1');
+    await import('@counsel/database').then(m => m.prisma.$queryRawUnsafe('SELECT 1'));
     checks.database = 'connected';
   } catch {
     checks.database = 'disconnected';

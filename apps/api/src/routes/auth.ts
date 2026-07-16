@@ -1,6 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@counsel/database';
+import { z } from 'zod';
+import { validate } from '../middleware/validate';
+import { UnauthorizedError } from '../lib/errors';
 import { signToken, verifyToken } from '../lib/jwt';
 import { issueRefreshToken, rotateRefreshToken, revokeRefreshTokens } from '../lib/refresh';
 import {
@@ -51,13 +54,6 @@ router.post(
       }
 
       const token = signToken({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        firmId: user.firmId,
-        role: user.role,
-      });
-      const refreshToken = issueRefreshToken({
         id: user.id,
         email: user.email,
         name: user.name,

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const SECRET = proces…RET;
+const SECRET = process.env.JWT_SECRET;
 if (!SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }

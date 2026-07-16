@@ -12,7 +12,7 @@
 import { prisma } from '@counsel/database';
 import { Queue, Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
-import { aiClient } from './ai-client';
+import { aiClient } from '../lib/ai-client';
 import fs from 'fs';
 import path from 'path';
 
@@ -20,10 +20,17 @@ import path from 'path';
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
 let connection: IORedis | null = null;
+let redisAvailable = false;
+
 try {
-  connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null, lazyConnect: true });
+  connection = new IORedis(REDIS_URL, {
+    maxRetriesPerRequest: 1,
+    retryStrategy: () => null, // Don't retry — fail fast
+    lazyConnect: true,
+    enableOfflineQueue: false,
+  });
 } catch {
-  console.warn('[Worker] Redis unavailable — using in-process fallback');
+  connection = null;
 }
 
 let documentQueue: Queue | null = null;
@@ -36,15 +43,20 @@ let meetingWorker: Worker | null = null;
 // ── Start workers ───────────────────────────────────────────────
 
 export async function startWorkers() {
-  if (!connection) {
-    console.log('[Worker] Starting in-process polling fallback (no Redis)');
-    startPolling();
-    return;
+  // Try Redis, fall back to polling if unavailable
+  let redisOk = false;
+  if (connection) {
+    try {
+      await connection.connect();
+      redisOk = true;
+      console.log('[Worker] Redis connected — starting BullMQ workers');
+    } catch (err: any) {
+      console.warn('[Worker] Redis unavailable (', err.message, ') — using in-process polling fallback');
+      connection = null;
+    }
   }
 
-  try {
-    await connection.connect();
-    console.log('[Worker] Redis connected — starting BullMQ workers');
+  if (redisOk && connection) {
 
     documentQueue = new Queue('document-parse', { connection });
     analysisQueue = new Queue('analysis-run', { connection });
@@ -79,9 +91,8 @@ export async function startWorkers() {
 
     // Also start polling for legacy jobs created before workers were active
     startPolling();
-  } catch (err) {
-    console.warn('[Worker] Redis connect failed, using in-process fallback:', (err as Error).message);
-    connection = null;
+  } else {
+    console.log('[Worker] Starting in-process polling fallback (no Redis)');
     startPolling();
   }
 }
