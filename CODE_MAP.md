@@ -1,183 +1,163 @@
 # Counsel Platform — Code Domain Map
 
-Segments the codebase into **Frontend**, **Backend API**, **AI Agents**, **Database**, **Chrome Extension**, **Scripts & Tooling**, and **Shared Types**.
+> **Monorepo layout → domain mapping:**  
+> `apps/web/` = Frontend · `apps/api/` = Backend · `services/ai/` = AI Agents · `packages/database/` = Database · `extensions/chrome/` = Chrome Extension · `scripts/` = Scripts
 
 ---
 
 ## 🎨 Frontend (`apps/web/`)
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `apps/web/src/app/page.tsx` | Landing page — hero, product showcase, How It Works, Scale section |
-| `apps/web/src/app/layout.tsx` | Root layout with SEO metadata, fonts (Inter + serif), global styles |
-| `apps/web/src/app/globals.css` | Lovable green-serif design tokens (`#15b881`, `#0a8a5f`, `#fefdfb`, `#0c0a09`) |
-| `apps/web/src/app/(auth)/login/page.tsx` | Split-layout login page (green panel + form), Password/SSO toggle |
-| `apps/web/src/app/(auth)/register/page.tsx` | Register page with matching brand panel |
-| `apps/web/src/app/dashboard/layout.tsx` | Authenticated dashboard shell — sidebar, header, tenant guard |
-| `apps/web/src/app/dashboard/page.tsx` | Dashboard home — stats, recent activity, quick actions |
-| `apps/web/src/app/dashboard/documents/page.tsx` | Document management page |
-| `apps/web/src/app/dashboard/matters/page.tsx` | Legal matters overview page |
-| `apps/web/src/app/dashboard/drafts/page.tsx` | Drafting interface (native green-serif, no shadcn) |
-| `apps/web/src/app/dashboard/research/page.tsx` | Research query interface |
-| `apps/web/src/app/dashboard/meetings/page.tsx` | Meeting intelligence page |
-| `apps/web/src/app/dashboard/kb/page.tsx` | Knowledge Base / Ask The Firm page |
-| `apps/web/src/app/dashboard/admin/page.tsx` | Admin & playbook editor |
-| `apps/web/src/app/dashboard/settings/page.tsx` | Firm/user settings |
-| `apps/web/src/components/Navbar.tsx` | Public navigation bar with responsive mobile menu |
-| `apps/web/src/components/Footer.tsx` | Shared footer (applied to all public pages) |
-| `apps/web/src/components/HeroPreview.tsx` | Animated hero dashboard preview with 6 data-rich tabs |
-| `apps/web/src/components/ProductShowcase.tsx` | Product feature cards section |
-| `apps/web/src/components/HowItWorks.tsx` | 3-step workflow visualization |
-| `apps/web/src/components/ScaleSection.tsx` | Pricing/scale comparison section |
-| `apps/web/src/components/CustomerStories.tsx` | Social proof carousel |
-| `apps/web/src/components/ui/button.tsx` | Button primitive (Lovable green-serif fallback) |
-| `apps/web/src/components/ui/card.tsx` | Card primitive |
-| `apps/web/src/components/ui/badge.tsx` | Badge/tag component |
-| `apps/web/src/lib/api.ts` | API client with auto-fallback to mock data |
-| `apps/web/src/lib/auth.ts` | Auth utilities (token management, middleware) |
-| `apps/web/src/lib/types.ts` | Frontend TypeScript type definitions |
-| `apps/web/src/middleware.ts` | Next.js middleware — route protection, tenant resolution |
-| `apps/web/next.config.ts` | Next.js config (rewrites, images, env) |
-| `apps/web/tailwind.config.ts` | Tailwind config with Lovable brand colors |
+| `app/page.tsx` | Landing page — hero, product showcase, How It Works, Scale section, social proof |
+| `app/layout.tsx` | Root layout with SEO metadata, Inter + serif fonts, global styles |
+| `app/globals.css` | Design tokens — Lovable green-serif theme (`#15b881` mint, `#0a8a5f` dark green, `#7ce3b6` light, `#fefdfb` warm bg, `#0c0a09` text), serif headings, dark mode |
+| `app/(auth)/login/page.tsx` | Split-layout login: green brand panel + form with Password/SSO toggle |
+| `app/(auth)/register/page.tsx` | Register page — matching brand panel, creates firm + admin user |
+| `app/dashboard/layout.tsx` | Authenticated dashboard shell — sidebar navigation, header, tenant guard |
+| `app/dashboard/page.tsx` | Dashboard home — KPI cards, recent activity feed, quick-action buttons |
+| `app/dashboard/documents/page.tsx` | Document management — upload, list, view, analyze (green-serif, no shadcn) |
+| `app/dashboard/matters/page.tsx` | Legal matters overview — matter cards, status badges, filters |
+| `app/dashboard/drafts/page.tsx` | Drafting interface — type selector (email/memo/motion/brief/contract), instructions input |
+| `app/dashboard/research/page.tsx` | Research query — jurisdiction picker, source filters, results display |
+| `app/dashboard/meetings/page.tsx` | Meeting intelligence — transcript upload, action items, decisions extraction |
+| `app/dashboard/kb/page.tsx` | Ask The Firm — RAG query with inline citations and confidence indicators |
+| `app/dashboard/admin/page.tsx` | Admin panel — playbook rule editor, firm settings, user management |
+| `app/dashboard/settings/page.tsx` | User/firm settings — profile, preferences, API keys |
+| `components/Navbar.tsx` | Public navigation bar — responsive hamburger menu, CTA buttons |
+| `components/Footer.tsx` | Shared footer — applied to all public pages (landing, pricing, product, resources) |
+| `components/HeroPreview.tsx` | Animated dashboard preview — 6 data-rich tabs (contracts, matters, assistant, playbooks, research, meetings) with live badges |
+| `components/ProductShowcase.tsx` | Feature cards section — AI-powered modules with illustrations |
+| `components/HowItWorks.tsx` | 3-step workflow — Upload → Analyze → Act visualization |
+| `components/ScaleSection.tsx` | Enterprise scale comparison table |
+| `components/CustomerStories.tsx` | Social proof carousel — firm testimonials and logos |
+| `components/ui/button.tsx` | Button primitive — Lovable green-serif variant with hover/active/disabled states |
+| `components/ui/card.tsx` | Card primitive — border, shadow, header/content/footer slots |
+| `components/ui/badge.tsx` | Badge/tag — variant colors (mint, amber, red, gray) for status indicators |
+| `lib/api.ts` | API client — typed fetch wrapper with automatic mock data fallback on network error |
+| `lib/auth.ts` | Auth utilities — token storage, refresh flow, logout |
+| `lib/types.ts` | TypeScript types — User, Firm, Matter, Document, Draft, Meeting interfaces |
+| `middleware.ts` | Next.js middleware — route protection, redirect unauthenticated to /login |
+| `next.config.ts` | Next.js config — rewrites, image domains, env variables |
+| `tailwind.config.ts` | Tailwind config — Lovable brand colors, serif font stack, custom utilities |
+| `.env.local` | Frontend env — `NEXT_PUBLIC_API_URL`, WorkOS client ID |
 
 ---
 
-## ⚙️ Backend API (`apps/api/`)
+## ⚙️ Backend (`apps/api/`)
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `apps/api/src/index.ts` | Express server entry point (port 3001) |
-| `apps/api/src/middleware/auth.ts` | JWT auth middleware + public path allowlist + SSO routes |
-| `apps/api/src/middleware/errorHandler.ts` | Global error handler with structured error responses |
-| `apps/api/src/routes/auth.ts` | POST login/register/refresh/me + SSO authorize/callback |
-| `apps/api/src/routes/documents.ts` | Document upload, list, get, delete, analyze |
-| `apps/api/src/routes/matters.ts` | Matter CRUD + research trigger |
-| `apps/api/src/routes/users.ts` | User management (admin) |
-| `apps/api/src/routes/jobs.ts` | Background job status tracking |
-| `apps/api/src/routes/kb.ts` | Knowledge Base RAG query endpoint |
-| `apps/api/src/lib/jwt.ts` | JWT sign/verify/refresh utilities |
-| `apps/api/src/lib/workos.ts` | WorkOS SSO client (SAML/OIDC integration) |
-| `apps/api/src/lib/ai-client.ts` | Proxy client forwarding AI requests to Python service (:8000) |
-| `apps/api/.env` | API environment variables (JWT secret, WorkOS keys, AI service URL) |
+| `src/index.ts` | Express server entry — middleware stack, route mounting, error handler, port 3001 |
+| `src/middleware/auth.ts` | JWT authentication middleware — token verification, public path allowlist, SSO bypass routes |
+| `src/middleware/errorHandler.ts` | Global error handler — structured JSON error responses with stack traces in dev |
+| `src/routes/auth.ts` | Auth routes — POST login/register/refresh/me, SSO authorize/callback |
+| `src/routes/documents.ts` | Document routes — upload (multer), list, get by ID, delete (soft), analyze trigger |
+| `src/routes/matters.ts` | Matter routes — CRUD operations, research trigger, document association |
+| `src/routes/users.ts` | User management — list firm users, update roles (admin only) |
+| `src/routes/jobs.ts` | Background job tracking — BullMQ job status, retry, cancel |
+| `src/routes/kb.ts` | Knowledge Base — RAG query proxy to AI service, returns cited answers |
+| `src/lib/jwt.ts` | JWT utilities — sign (HS256), verify, refresh, payload extraction |
+| `src/lib/workos.ts` | WorkOS SSO client — SAML/OIDC authorization URL generation, profile retrieval |
+| `src/lib/ai-client.ts` | AI proxy client — forwards requests to Python AI service on port 8000 |
+| `.env` | Backend env — JWT secret, WorkOS credentials, AI service URL, database URL |
 
 ---
 
 ## 🤖 AI Agents (`services/ai/`)
 
-### Multi-Agent Crews (CrewAI)
+### Agent System (CrewAI)
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `services/ai/src/agents/crews.py` | 4 crew definitions + full pipeline orchestrator — all async with `kickoff_async()` |
-| `services/ai/src/agents/tasks.py` | 10 CrewAI Task builders (clause extraction, risk analysis, drafting, research, compliance) |
-| `services/ai/src/agents/definitions.py` | 10 Agent definitions with Cloudflare LLM configurations |
-| `services/ai/src/agents/cloudflare_llm.py` | `CloudflareLLM` — CrewAI-compatible bridge (BaseLLM subclass, sync httpx, no model validation) |
+| `src/agents/cloudflare_llm.py` | `CloudflareLLM` — CrewAI-compatible bridge. Subclasses `BaseLLM` directly to bypass model-name validation. Synchronous `httpx` call() for thread-pool compatibility. Falls back to 70B model on failure. |
+| `src/agents/definitions.py` | 10 agent definitions — ClauseExtractor, RiskAnalyzer, PlaybookGuardian, LegalDrafter, CitationValidator, LegalResearcher, RAGSynthesizer, AuditLogger, ComplianceChecker, NegotiatorAdvisor. Each configured with Cloudflare Workers AI model (Llama 4 Scout 17B / Llama 3.3 70B / DeepSeek R1). |
+| `src/agents/crews.py` | 4 crew definitions + full pipeline orchestrator. All async with `kickoff_async()`. Wired with `@with_retry()` decorator, `step_callbacks` for structured logging, and auto audit trail logging after each run. |
+| `src/agents/tasks.py` | 10 CrewAI Task builders — clause extraction, risk analysis (1-10 scale), playbook compliance check, legal drafting, citation validation, legal research with RAG sources, memorandum synthesis, audit logging, regulatory compliance check (SOC 2/ISO 27001/GDPR), negotiation advice. |
 
-### Orchestration & Audit
+### Orchestration & Observability
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `services/ai/src/orchestrator/router.py` | Request router dispatching to correct crew |
-| `services/ai/src/orchestrator/pipeline_orchestrator.py` | Pipeline coordinator for full contract flow |
-| `services/ai/src/orchestrator/audit_agent.py` | Immutable audit trail singleton (in-memory + observer pattern) |
-| `services/ai/src/orchestrator/audit_persistence.py` | JSONL file persistence with date rotation (10 MB chunks) |
-| `services/ai/src/orchestrator/structured_logging.py` | JSONL crew execution logs — task_start/complete/error/crew_complete events + step_callbacks |
-| `services/ai/src/orchestrator/retry.py` | `@with_retry(crew_name)` decorator — exponential backoff, retryable exception filtering |
+| `src/orchestrator/router.py` | Request router — dispatches to correct crew based on request type |
+| `src/orchestrator/pipeline_orchestrator.py` | Pipeline coordinator — manages multi-step contract analysis flow |
+| `src/orchestrator/audit_agent.py` | Immutable audit trail — in-memory singleton with observer pattern. Tracks every AI action with timestamp, user, firm, model, input/output hashes. |
+| `src/orchestrator/audit_persistence.py` | JSONL file logger — persists audit entries to disk with date rotation (10 MB chunks). Wired at startup via `setup_audit_persistence()`. |
+| `src/orchestrator/structured_logging.py` | JSONL crew execution logs — `task_start`, `task_complete`, `task_error`, `agent_step`, `crew_complete` events. `create_step_callback()` factory for CrewAI step callbacks. `CrewMetrics` class for per-task timing and token tracking. |
+| `src/orchestrator/retry.py` | `@with_retry(crew_name, max_retries=2)` decorator — exponential backoff (2s→4s), retryable exception filtering (TimeoutError, ConnectionError, RuntimeError). Structured log events on retry. |
 
-### RAG Pipeline (pgvector)
+### RAG & Embeddings
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `services/ai/src/embeddings/embedder.py` | Cloudflare bge-base-en-v1.5 embedder (768-dim) with local fallback |
-| `services/ai/src/rag/retriever.py` | pgvector cosine similarity search + chunk indexing |
-| `services/ai/src/rag/pipeline.py` | Full RAG pipeline (ingest → chunk → embed → search → synthesize) |
-| `services/ai/src/db/client.py` | asyncpg connection pool + `document_chunks` table management (vector(768)) |
+| `src/embeddings/embedder.py` | Cloudflare bge-base-en-v1.5 embedder — 768-dimensional vectors. Falls back to local SentenceTransformer if Cloudflare is unreachable. |
+| `src/rag/retriever.py` | pgvector retriever — cosine similarity search, chunk indexing with ON CONFLICT upsert, document-scoped search filters |
+| `src/rag/pipeline.py` | Full RAG pipeline — ingest → semantic chunk → embed → pgvector store → search → synthesize |
+| `src/db/client.py` | asyncpg connection pool — `document_chunks` table management (vector(768)), `ensure_tables()` for schema auto-creation |
 
-### Analysis & Drafting
+### Analysis & Generation
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `services/ai/src/analysis/contract_analyzer.py` | Standalone contract analysis (pre-CrewAI fallback) |
-| `services/ai/src/analysis/clause_extractor.py` | Clause type identification + extraction logic |
-| `services/ai/src/drafting/draft_generator.py` | Standalone draft generation (pre-CrewAI fallback) |
+| `src/analysis/contract_analyzer.py` | Standalone contract analysis engine (pre-CrewAI fallback) |
+| `src/analysis/clause_extractor.py` | Clause type identification and extraction from legal text |
+| `src/drafting/draft_generator.py` | Standalone draft generation (pre-CrewAI fallback) |
 
-### Providers & Config
+### API & Configuration
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `services/ai/src/providers/cloudflare.py` | Cloudflare Workers AI API client (61 models, health check) |
-| `services/ai/src/config.py` | Pydantic settings — database URL, Cloudflare credentials, model IDs |
-| `services/ai/src/main.py` | FastAPI app entry point — router mounting, startup hooks, audit persistence wiring |
-| `services/ai/src/routes/agents.py` | 5 FastAPI endpoints (analyze/draft/research/compliance/pipeline) |
-| `services/ai/requirements.txt` | Python dependencies (crewai, httpx, asyncpg, pydantic, etc.) |
-| `services/ai/.env` | AI service environment variables |
+| `src/main.py` | FastAPI application — lifespan hooks (Cloudflare init, audit persistence wiring), router mounting, CORS |
+| `src/routes/agents.py` | 5 multi-agent endpoints — `POST /agents/analyze/contract`, `/draft`, `/research`, `/compliance`, `/pipeline/full`. Plus `GET /agents/status`. |
+| `src/providers/cloudflare.py` | Cloudflare Workers AI API client — 61 models available, health check, embedding + text generation |
+| `src/config.py` | Pydantic settings — database URL, Cloudflare credentials, model IDs, chunking parameters |
+| `.env` | AI env — Cloudflare account ID, API token, model names, database connection string |
+| `requirements.txt` | Python dependencies — crewai, httpx, asyncpg, pydantic, fastapi, uvicorn, python-dotenv |
 
-### Indexing & Data Scripts
+### Data & Scripts
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `services/ai/scripts/index_cf_embeddings.py` | Index 4 sample legal docs → 16 chunks × 768-dim Cloudflare embeddings |
-| `services/ai/scripts/index_sample_docs.py` | Alternative indexing script (local embeddings fallback) |
-| `services/ai/logs/audit-2026-07-16.jsonl` | 8 audit trail entries (production runs) |
-| `services/ai/logs/crew-2026-07-16.jsonl` | Structured crew execution log |
+| `scripts/index_cf_embeddings.py` | Index 4 sample legal documents into pgvector using Cloudflare 768-dim embeddings. Drops and recreates `document_chunks` table to ensure schema compatibility. |
+| `scripts/index_sample_docs.py` | Alternative indexing with local SentenceTransformer fallback (384-dim) |
+| `logs/audit-2026-07-16.jsonl` | Production audit trail — 8 entries from verified crew + pipeline runs |
 
 ---
 
 ## 🗄️ Database (`packages/database/`)
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `packages/database/prisma/schema.prisma` | Prisma schema — 16 models (firms, users, documents, matters, document_chunks, audit_log, playbook_rules) with pgvector |
-| `packages/database/prisma/seed.ts` | Seed data — Sterling & Associates firm, 3 users, 3 matters, 8 playbook rules |
-| `packages/database/.env` | Database connection string (Neon serverless, Singapore region) |
+| `prisma/schema.prisma` | Database schema — 16 models: `Firm`, `User`, `UserFirm`, `Document`, `DocumentChunk` (with pgvector 768-dim), `Matter`, `Draft`, `Meeting`, `MeetingActionItem`, `PlaybookRule`, `AuditLog`, `ApiKey`, `KbQuery`, `Job`, `Notification`, `Subscription`. PostgreSQL provider with pgvector extension. |
+| `prisma/seed.ts` | Seed script — creates Sterling & Associates firm, 3 demo users (James Sterling/partner, associate, paralegal), 3 matters, 8 playbook rules, sample documents |
+| `.env` | Database connection string (Neon serverless, Singapore region, ap-southeast-1) |
 
 ---
 
 ## 🧩 Chrome Extension (`extensions/chrome/`)
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `extensions/chrome/manifest.json` | Manifest V3 — Gmail compose/read injection permissions |
+| `manifest.json` | Manifest V3 — Gmail compose and read page injection permissions, content security policy, host permissions for `mail.google.com` |
 
 ---
 
-## 🔧 Scripts & Tooling (`scripts/`)
+## 🔧 Scripts (`scripts/`)
 
-| Path | Description |
+| File | Description |
 |---|---|
-| `scripts/test-auth.cjs` | Auth flow E2E test (login, register, SSO) |
-| `scripts/test-ai-agents.cjs` | Test all 8 standalone AI agents via HTTP |
-| `scripts/test-c1-only.cjs` | Crew 1 (Document Intelligence) verification |
-| `scripts/test-c2-c4-pipeline.cjs` | Crews 2-4 + Full Pipeline verification |
-| `scripts/check-frontend.cjs` | Frontend page status checker |
-| `scripts/check-links.mjs` | Dead link scanner |
-| `scripts/check-theme.js` | Theme drift audit |
-| `scripts/check-product.js` | Product page consistency check |
-| `scripts/check-firm.cjs` | Firm lookup utility (Prisma query) |
-| `scripts/start-ai.bat` | Windows batch launcher for Python AI service |
-| `scripts/verify-all.py` | pgvector + audit log verification |
-| `scripts/start-api.mjs` | Express API launcher |
-| `scripts/e2e-auth-test.cjs` | Full auth E2E (register → login → dashboard) |
-
----
-
-## 📦 Root & Config
-
-| Path | Description |
-|---|---|
-| `package.json` | Monorepo root — workspace config, scripts, dependencies |
-| `.gitignore` | Git ignore rules |
-| `README.md` | Project documentation — architecture, getting started, API reference |
-
----
-
-## 📊 Domain Summary
-
-| Domain | Files | Key Technologies |
-|---|---|---|
-| **Frontend** | ~25 | Next.js 15, Tailwind CSS, Lovable green-serif theme |
-| **Backend API** | ~12 | Express, TypeScript, JWT, WorkOS SSO, BullMQ |
-| **AI Agents** | ~22 | CrewAI (10 agents, 4 crews), Cloudflare Workers AI (Llama 4 Scout, DeepSeek R1), pgvector, SentenceTransformers |
-| **Database** | 3 | Prisma, PostgreSQL, pgvector (768-dim) |
-| **Chrome Extension** | 1 | Manifest V3, Gmail hooks |
-| **Scripts** | ~12 | Node.js test runners, theme/link auditors |
+| `test-auth.cjs` | Auth flow E2E test — POST login, register, refresh token, validate JWT structure |
+| `test-ai-agents.cjs` | Standalone AI agent test — tests all 8 agents (Contract Analyzer, Draft Generator, Meeting Processor, Research Synthesizer, Document Parser, Embedding Engine, Orchestrator Router, Quality Gate) via HTTP |
+| `test-c1-only.cjs` | Crew 1 (Document Intelligence) verification — ClauseExtractor → RiskAnalyzer → PlaybookGuardian, 3-agent sequential pipeline |
+| `test-c2-c4-pipeline.cjs` | Crews 2 (Drafting), 3 (Research), 4 (Compliance) + Full Pipeline verification |
+| `test-crew-agents.cjs` | Legacy crew test runner (pre-kickoff_async fix) |
+| `test-all-crews.cjs` | All 4 crews + pipeline + audit trail comprehensive test |
+| `check-frontend.cjs` | Frontend page availability checker — HTTP GET all dashboard pages, reports status codes |
+| `check-links.mjs` | Dead link scanner — crawls landing page for broken `href` references |
+| `check-theme.js` | Theme drift auditor — checks color token usage across all frontend pages |
+| `check-product.js` | Product page consistency checker |
+| `check-firm.cjs` | Firm lookup utility — Prisma query to find firm UUID and document IDs |
+| `verify-all.py` | pgvector + audit log verification — chunk count, embedding dimension, audit entry count |
+| `e2e-auth-test.cjs` | Full auth E2E — register new firm → login → access dashboard → logout |
+| `start-ai.bat` | Windows batch launcher for Python AI service (`uvicorn src.main:app --port 8000`) |
+| `start-api.mjs` | Express API launcher script |
