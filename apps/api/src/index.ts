@@ -21,12 +21,14 @@ import jobRoutes from './routes/jobs';
 import playbookRoutes from './routes/playbook';
 import analysisRoutes from './routes/analysis';
 import billingRoutes, { webhookRouter as billingWebhook } from './routes/billing';
+import docsRoutes from './routes/docs';
 import auditRoutes from './routes/audit';
 import userRoutes from './routes/users';
 
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { URL } from 'url';
+import { startWorkers } from './workers/jobWorker';
 
 // Initialize services
 initWorkOS();
@@ -35,7 +37,11 @@ initResend();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ─── Global middleware ──────────────────────────────────────────────────────
+// Stripe webhook needs raw body — mount before JSON parsing
+app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
+
+// API documentation — no auth required
+app.use('/api', docsRoutes);
 
 // Stripe webhook needs raw body — mount before JSON parsing
 app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
@@ -209,13 +215,19 @@ wss.on('connection', (ws: WebSocket, req) => {
   ws.send(JSON.stringify({ type: 'connected', meetingId }));
 });
 
-// ─── Start server ───────────────────────────────────────────────────────────
+// ─── Start server with WebSocket + background workers ────────────────────────
 if (process.env.NODE_ENV !== 'test') {
   server.listen(PORT, () => {
     console.log(`🚀 Counsel API running at http://localhost:${PORT}`);
-    console.log(`   Health: http://localhost:${PORT}/api/health`);
+    console.log(`   Health:    http://localhost:${PORT}/api/health`);
+    console.log(`   API Docs:  http://localhost:${PORT}/api/docs`);
     console.log(`   WebSocket: ws://localhost:${PORT}/ws/meetings`);
-    console.log(`   Auth: POST http://localhost:${PORT}/api/v1/auth/login`);
+    console.log(`   Auth:      POST http://localhost:${PORT}/api/v1/auth/login`);
+
+    // Start background job worker
+    startWorkers().catch((err) => {
+      console.warn('[Worker] Failed to start background workers:', err.message);
+    });
   });
 }
 
