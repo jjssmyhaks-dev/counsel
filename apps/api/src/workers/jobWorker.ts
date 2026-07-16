@@ -1,8 +1,8 @@
 /**
  * Background job worker — polls the DB for pending jobs and processes them.
  *
- * Uses BullMQ (Redis-backed) for reliable job processing with retries.
- * Falls back to in-process polling if Redis is unavailable.
+ * Falls back to in-process setInterval polling when Redis/BullMQ is unavailable.
+ * BullMQ is lazy-loaded — no import cost or crashes if Redis isn't ready.
  *
  * Job types handled:
  *   DOCUMENT_PARSE  — parse → chunk → embed → index → mark READY
@@ -10,108 +10,61 @@
  *   MEETING_PROCESS — process meeting transcript
  */
 import { prisma } from '@counsel/database';
-import { Queue, Worker, Job } from 'bullmq';
-import IORedis from 'ioredis';
 import { aiClient } from '../lib/ai-client';
 import fs from 'fs';
 import path from 'path';
 
-// ── Redis connection ────────────────────────────────────────────
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-
-let connection: IORedis | null = null;
-let redisAvailable = false;
-
-try {
-  connection = new IORedis(REDIS_URL, {
-    maxRetriesPerRequest: 1,
-    retryStrategy: () => null, // Don't retry — fail fast
-    lazyConnect: true,
-    enableOfflineQueue: false,
-  });
-} catch {
-  connection = null;
-}
-
-let documentQueue: Queue | null = null;
-let analysisQueue: Queue | null = null;
-let meetingQueue: Queue | null = null;
-let docWorker: Worker | null = null;
-let analysisWorker: Worker | null = null;
-let meetingWorker: Worker | null = null;
-
 // ── Start workers ───────────────────────────────────────────────
 
 export async function startWorkers() {
-  // Try Redis, fall back to polling if unavailable
   let redisOk = false;
-  if (connection) {
-    try {
-      await connection.connect();
-      redisOk = true;
-      console.log('[Worker] Redis connected — starting BullMQ workers');
-    } catch (err: any) {
-      console.warn('[Worker] Redis unavailable (', err.message, ') — using in-process polling fallback');
-      connection = null;
-    }
+
+  // Try Redis + BullMQ first
+  try {
+    const IORedis = (await import('ioredis')).default;
+    const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+
+    const connection = new IORedis(REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      retryStrategy: () => null,
+      lazyConnect: true,
+      enableOfflineQueue: false,
+    });
+
+    await connection.connect();
+    await connection.ping();
+
+    // Only import BullMQ if Redis is confirmed working
+    const { Queue, Worker } = await import('bullmq');
+
+    console.log('[Worker] Redis connected — starting BullMQ workers');
+
+    const docQueue = new Queue('document-parse', { connection });
+    const analysisQueue = new Queue('analysis-run', { connection });
+    const meetingQueue = new Queue('meeting-process', { connection });
+
+    const docWorker = new Worker('document-parse', async (job: any) => {
+      await processDocumentJobImpl(job.data.documentId, job.data.firmId);
+    }, { connection, concurrency: 2 });
+
+    const analysisWorker = new Worker('analysis-run', async (job: any) => {
+      await processAnalysisJobImpl(job.data.analysisId, job.data.documentId, job.data.firmId);
+    }, { connection, concurrency: 1 });
+
+    const meetingWorker = new Worker('meeting-process', async (job: any) => {
+      await processMeetingJobImpl(job.data.meetingId, job.data.firmId);
+    }, { connection, concurrency: 3 });
+
+    docWorker.on('completed', (job: any) => console.log(`[Worker] ${job.id} completed`));
+    docWorker.on('failed', (job: any, err: Error) => console.error(`[Worker] ${job?.id} failed:`, err.message));
+
+    redisOk = true;
+  } catch (err: any) {
+    console.warn('[Worker] Redis/BullMQ unavailable (' + (err.message || err) + ') — using in-process polling');
   }
 
-  if (redisOk && connection) {
-
-    documentQueue = new Queue('document-parse', { connection });
-    analysisQueue = new Queue('analysis-run', { connection });
-    meetingQueue = new Queue('meeting-process', { connection });
-
-    docWorker = new Worker('document-parse', processDocumentJob, {
-      connection,
-      concurrency: 2,
-      limiter: { max: 5, duration: 60000 },
-    });
-
-    analysisWorker = new Worker('analysis-run', processAnalysisJob, {
-      connection,
-      concurrency: 1,
-      limiter: { max: 3, duration: 300000 }, // 3 analysis jobs per 5 min
-    });
-
-    meetingWorker = new Worker('meeting-process', processMeetingJob, {
-      connection,
-      concurrency: 3,
-      limiter: { max: 10, duration: 60000 },
-    });
-
-    docWorker.on('completed', (job) => console.log(`[Worker] DOCUMENT_PARSE completed: job ${job.id}`));
-    docWorker.on('failed', (job, err) => console.error(`[Worker] DOCUMENT_PARSE failed: job ${job?.id}`, err.message));
-
-    analysisWorker.on('completed', (job) => console.log(`[Worker] ANALYSIS_RUN completed: job ${job.id}`));
-    analysisWorker.on('failed', (job, err) => console.error(`[Worker] ANALYSIS_RUN failed: job ${job?.id}`, err.message));
-
-    meetingWorker.on('completed', (job) => console.log(`[Worker] MEETING_PROCESS completed: job ${job.id}`));
-    meetingWorker.on('failed', (job, err) => console.error(`[Worker] MEETING_PROCESS failed: job ${job?.id}`, err.message));
-
-    // Also start polling for legacy jobs created before workers were active
-    startPolling();
-  } else {
-    console.log('[Worker] Starting in-process polling fallback (no Redis)');
-    startPolling();
-  }
-}
-
-// ── BullMQ job handlers ─────────────────────────────────────────
-
-async function processDocumentJob(job: Job) {
-  const { documentId, firmId } = job.data;
-  await processDocumentJobImpl(documentId, firmId);
-}
-
-async function processAnalysisJob(job: Job) {
-  const { analysisId, documentId, firmId } = job.data;
-  await processAnalysisJobImpl(analysisId, documentId, firmId);
-}
-
-async function processMeetingJob(job: Job) {
-  const { meetingId, firmId } = job.data;
-  await processMeetingJobImpl(meetingId, firmId);
+  // Always start polling as fallback (or to handle legacy jobs)
+  startPolling();
 }
 
 // ── Job processing implementations ──────────────────────────────
@@ -124,24 +77,12 @@ export async function processDocumentJobImpl(documentId: string, firmId: string)
   if (!fs.existsSync(filePath)) throw new Error(`File not found: ${filePath}`);
 
   const fileBytes = fs.readFileSync(filePath);
-
-  // Step 1: Parse (extract text)
   const parseResult = await aiClient.parseDocument(document.id, document.mimeType, fileBytes);
-
-  // Step 2: Embed chunks
   const texts = parseResult.chunks.map((c: any) => c.text);
   const embedResult = await aiClient.embedTexts(texts);
 
-  // Step 3: Index into pgvector
-  await aiClient.indexDocument(
-    document.id,
-    firmId,
-    parseResult.chunks,
-    embedResult.embeddings,
-    document.matterId || undefined,
-  );
+  await aiClient.indexDocument(document.id, firmId, parseResult.chunks, embedResult.embeddings, document.matterId || undefined);
 
-  // Step 4: Update document status to READY
   await prisma.document.update({
     where: { id: document.id },
     data: { status: 'READY' as any },
@@ -156,10 +97,8 @@ export async function processAnalysisJobImpl(analysisId: string, documentId: str
 
   const filePath = path.resolve(process.cwd(), 'uploads', document.filename);
   if (!fs.existsSync(filePath)) throw new Error(`File not found: ${filePath}`);
-
   const fileBytes = fs.readFileSync(filePath);
 
-  // Send to AI service for CrewAI analysis
   const aiResp = await fetch(
     `${process.env.AI_SERVICE_URL || 'http://localhost:8000'}/agents/analyze/contract`,
     {
@@ -183,21 +122,16 @@ export async function processAnalysisJobImpl(analysisId: string, documentId: str
 
   await prisma.analysis.update({
     where: { id: analysisId },
-    data: {
-      status: 'COMPLETED',
-      result: aiResult,
-      modelUsed: 'cloudflare-crewai',
-      completedAt: new Date(),
-    },
+    data: { status: 'COMPLETED', result: aiResult, modelUsed: 'cloudflare-crewai', completedAt: new Date() },
   });
 
   return aiResult;
 }
 
-export async function processMeetingJobImpl(meetingId: string, firmId: string) {
+export async function processMeetingJobImpl(meetingId: string, _firmId: string) {
   const meeting = await prisma.meeting.findUnique({
     where: { id: meetingId },
-    select: { id: true, transcript: true, title: true },
+    select: { id: true, transcript: true },
   });
   if (!meeting || !meeting.transcript) throw new Error('Meeting or transcript not found');
 
@@ -213,24 +147,14 @@ export async function processMeetingJobImpl(meetingId: string, firmId: string) {
 
   if (aiResp.ok) {
     const result = await aiResp.json();
-    await prisma.meeting.update({
-      where: { id: meetingId },
-      data: { status: 'COMPLETED' },
-    });
-
-    // Create action items from AI output
+    await prisma.meeting.update({ where: { id: meetingId }, data: { status: 'COMPLETED' } });
     if (result.action_items) {
       for (const item of result.action_items) {
         await prisma.meetingActionItem.create({
-          data: {
-            meetingId,
-            text: item.text || item,
-            status: 'OPEN',
-          },
+          data: { meetingId, text: item.text || item, status: 'OPEN' },
         });
       }
     }
-
     return result;
   }
 
@@ -257,54 +181,36 @@ async function pollPendingJobs() {
 
     for (const job of pendingJobs) {
       try {
-        await prisma.job.update({
-          where: { id: job.id },
-          data: { status: 'PROCESSING' },
-        });
+        await prisma.job.update({ where: { id: job.id }, data: { status: 'PROCESSING' } });
 
         let result: any = {};
         if (job.type === 'DOCUMENT_PARSE') {
           const documentId = (job.result as any)?.documentId;
-          if (documentId) {
-            result = await processDocumentJobImpl(documentId, job.firmId);
-          }
+          if (documentId) result = await processDocumentJobImpl(documentId, job.firmId);
         } else if (job.type === 'ANALYSIS_RUN') {
           const analysisId = (job.result as any)?.analysisId;
           const documentId = (job.result as any)?.documentId;
-          if (analysisId && documentId) {
-            result = await processAnalysisJobImpl(analysisId, documentId, job.firmId);
-          }
+          if (analysisId && documentId) result = await processAnalysisJobImpl(analysisId, documentId, job.firmId);
         } else if (job.type === 'MEETING_PROCESS') {
           const meetingId = (job.result as any)?.meetingId;
-          if (meetingId) {
-            result = await processMeetingJobImpl(meetingId, job.firmId);
-          }
+          if (meetingId) result = await processMeetingJobImpl(meetingId, job.firmId);
         }
 
         await prisma.job.update({
           where: { id: job.id },
-          data: {
-            status: 'COMPLETED',
-            result: { ...job.result as any, ...result },
-            completedAt: new Date(),
-          },
+          data: { status: 'COMPLETED', result: { ...job.result as any, ...result }, completedAt: new Date() },
         });
-
         console.log(`[Worker] Job ${job.id} (${job.type}) completed`);
       } catch (err: any) {
         await prisma.job.update({
           where: { id: job.id },
-          data: {
-            status: 'FAILED',
-            error: err.message?.substring(0, 500) || 'Unknown error',
-            completedAt: new Date(),
-          },
+          data: { status: 'FAILED', error: err.message?.substring(0, 500) || 'Unknown error', completedAt: new Date() },
         });
         console.error(`[Worker] Job ${job.id} (${job.type}) failed:`, err.message);
       }
     }
-  } catch (err: any) {
-    // Silently ignore polling errors — will retry next interval
+  } catch {
+    // Silently ignore — retry next interval
   }
 }
 
@@ -313,7 +219,4 @@ export function stopWorkers() {
     clearInterval(pollingInterval);
     pollingInterval = null;
   }
-  if (docWorker) docWorker.close();
-  if (analysisWorker) analysisWorker.close();
-  if (meetingWorker) meetingWorker.close();
 }

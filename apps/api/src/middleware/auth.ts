@@ -11,11 +11,15 @@ import { verifyToken, TokenPayload } from '../lib/jwt';
 const publicPaths = [
   { method: 'POST', path: '/api/v1/auth/login' },
   { method: 'POST', path: '/api/v1/auth/register' },
+  { method: 'POST', path: '/api/v1/auth/refresh' },
   { method: 'GET', path: '/api/v1/auth/callback' },
   { method: 'POST', path: '/api/v1/auth/sso/authorize' },
   { method: 'POST', path: '/api/v1/auth/sso/create' },
   { method: 'GET', path: '/api/v1/auth/sso' },
   { method: 'GET', path: '/api/health' },
+  { method: 'GET', path: '/api/docs' },
+  { method: 'GET', path: '/api/openapi.json' },
+  { method: 'POST', path: '/api/v1/billing/webhook' },
 ];
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction) {

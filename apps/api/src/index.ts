@@ -67,6 +67,10 @@ app.use((req, _res, next) => {
 app.use(express.urlencoded({ extended: true }));
 
 // Health check — before auth middleware so it's always accessible
+app.get('/', (_req, res) => {
+  res.redirect('/api/docs');
+});
+
 app.get('/api/health', async (_req, res) => {
   const checks: Record<string, any> = { status: 'ok', timestamp: new Date().toISOString(), uptime: process.uptime() };
 
