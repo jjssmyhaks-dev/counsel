@@ -89,14 +89,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#0c0a09] flex flex-col transform transition-transform lg:translate-x-0 lg:relative ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
+        <Link href="/dashboard" className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
 
           <Logo />
           <div>
             <h1 className={`${serif} text-white font-bold text-lg leading-tight tracking-[-0.02em]`}>Counsel</h1>
             <p className="text-[#7ce3b6]/60 text-[11px]">Legal Intelligence</p>
           </div>
-        </div>
+        </Link>
 
         <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
           <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mb-2">Main</div>
