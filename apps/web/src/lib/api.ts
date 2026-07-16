@@ -804,6 +804,9 @@ export const api = {
       if (err instanceof TypeError || (err instanceof ApiError && err.status === 0)) {
         localStorage.setItem('counsel_use_mock', 'true');
       }
+      // Auto-fallback to mock data when API is unavailable
+      const mock = getMockResponse<T>(path);
+      if (mock !== undefined) return mock;
       throw err;
     }
   },
@@ -819,16 +822,15 @@ export const api = {
       if (err instanceof TypeError || (err instanceof ApiError && err.status === 0)) {
         localStorage.setItem('counsel_use_mock', 'true');
       }
+      const mock = getMockResponse<T>(path, body);
+      if (mock !== undefined) return mock;
       throw err;
     }
   },
 
   patch: async <T>(path: string, body: unknown): Promise<T> => {
     try {
-      return await request<T>(path, {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      });
+      return await request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
     } catch (err) {
       if (err instanceof ApiError && err.code === 'SERVER_SIDE') throw err;
       if (err instanceof TypeError || (err instanceof ApiError && err.status === 0)) {
@@ -874,6 +876,72 @@ export const api = {
     }
   },
 };
+
+// ── Mock Fallback Router ─────────────────────────────────────────
+
+function getMockResponse<T>(path: string, body?: unknown): T | undefined {
+  // GET routes
+  if (path === '/matters') return mockGetMatters() as unknown as T;
+  if (path.startsWith('/matters/')) {
+    const id = path.split('/matters/')[1];
+    return mockGetMatter(id) as unknown as T;
+  }
+  if (path === '/documents') return mockGetDocuments() as unknown as T;
+  if (path.startsWith('/documents/') && path.includes('/analysis')) {
+    const id = path.split('/documents/')[1].split('/analysis')[0];
+    return mockGetAnalysis(id) as unknown as T;
+  }
+  if (path.startsWith('/documents/')) {
+    const id = path.split('/documents/')[1];
+    return mockGetDocument(id) as unknown as T;
+  }
+  if (path === '/drafts') return mockGetDrafts() as unknown as T;
+  if (path.startsWith('/drafts/')) {
+    const id = path.split('/drafts/')[1];
+    return mockGetDraft(id) as unknown as T;
+  }
+  if (path === '/research') return mockGetResearch() as unknown as T;
+  if (path.startsWith('/research/')) {
+    const id = path.split('/research/')[1];
+    return mockGetResearchBrief(id) as unknown as T;
+  }
+  if (path === '/meetings') return mockGetMeetings() as unknown as T;
+  if (path.startsWith('/meetings/')) {
+    const id = path.split('/meetings/')[1];
+    return mockGetMeeting(id) as unknown as T;
+  }
+  if (path === '/kb/history') return mockGetAuditLogs() as unknown as T;
+  if (path === '/playbook/rules') return mockGetPlaybookRules() as unknown as T;
+  if (path === '/admin/users') return mockGetUsers() as unknown as T;
+  if (path === '/admin/audit') return mockGetAuditLogs() as unknown as T;
+
+  // POST routes
+  if (path === '/drafts' && body) {
+    const b = body as CreateDraftRequest;
+    return mockCreateDraft(b) as unknown as T;
+  }
+  if (path === '/research' && body) {
+    const b = body as CreateResearchRequest;
+    return mockCreateResearch(b) as unknown as T;
+  }
+  if (path === '/kb/query' && body) {
+    const b = body as KbQueryRequest;
+    return mockKbQuery(b) as unknown as T;
+  }
+  if (path === '/matters' && body) {
+    return mockCreateMatter(body as CreateMatterRequest) as unknown as T;
+  }
+  if (path.startsWith('/meetings/') && path.endsWith('/action-items')) {
+    const id = path.split('/meetings/')[1].split('/action-items')[0];
+    return mockGetActionItems(id) as unknown as T;
+  }
+  if (path.startsWith('/meetings/') && path.endsWith('/decisions')) {
+    const id = path.split('/meetings/')[1].split('/decisions')[0];
+    return mockGetDecisions(id) as unknown as T;
+  }
+
+  return undefined;
+}
 
 // ── Mock API Functions ──────────────────────────────────────────
 

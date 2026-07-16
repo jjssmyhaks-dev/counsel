@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -25,10 +25,9 @@ const adminNavItems = [
 
 function Logo() {
   return (
-    <svg width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden>
+    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden>
       <path d="M6 16C6 10 10 6 16 6c0 6-4 10-10 10z" fill="#15b881" />
-      <path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#0a8a5f" />
-      <circle cx="16" cy="16" r="2.2" fill="#0c0a09" />
+      <path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#7ce3b6" /><circle cx="16" cy="16" r="2.2" fill="white" />
     </svg>
   );
 }
@@ -91,9 +90,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
-          <div className="w-9 h-9 bg-gradient-to-br from-[#15b881] to-[#0a8a5f] rounded-xl flex items-center justify-center">
-            <Logo />
-          </div>
+
+          <Logo />
           <div>
             <h1 className={`${serif} text-white font-bold text-lg leading-tight tracking-[-0.02em]`}>Counsel</h1>
             <p className="text-[#7ce3b6]/60 text-[11px]">Legal Intelligence</p>
