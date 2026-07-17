@@ -25,7 +25,7 @@ export default function SettingsPage() {
 
  const [firmName, setFirmName] = useState('');
  const [firmDomain, setFirmDomain] = useState('');
- const [features, setFeatures] = useState<Firm['settings']['features']>({
+ const [features, setFeatures] = useState({
  documentAnalysis: true,
  research: true,
  drafting: true,
@@ -43,8 +43,8 @@ export default function SettingsPage() {
  setFirm(f);
  if (f) {
  setFirmName(f.name);
- setFirmDomain(f.domain);
- setFeatures(f.settings.features);
+ setFirmDomain(f.domain || '');
+ setFeatures(f.settings?.features || { documentAnalysis: true, research: true, drafting: true, knowledgeBase: true, meetings: true });
  }
  setLoading(false);
  }, []);
@@ -60,7 +60,7 @@ export default function SettingsPage() {
  }, 800);
  }
 
- function toggleFeature(key: keyof Firm['settings']['features']) {
+ function toggleFeature(key: keyof Exclude<Firm['settings'], undefined>['features']) {
  setFeatures((prev) => ({ ...prev, [key]: !prev[key] }));
  }
 
@@ -163,7 +163,7 @@ export default function SettingsPage() {
  </div>
  <div>
  <p className="text-xs text-[#969e9b] dark:text-[#717d79]">Member Since</p>
- <p className="text-sm text-[#717d79] dark:text-[#969e9b]">{new Date(firm.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+ <p className="text-sm text-[#717d79] dark:text-[#969e9b]">{firm.createdAt ? new Date(firm.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}</p>
  </div>
  {user && (
  <>

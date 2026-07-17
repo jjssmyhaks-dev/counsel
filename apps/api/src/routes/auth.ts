@@ -70,7 +70,7 @@ router.post(
 
       const firm = await prisma.firm.findUnique({
         where: { id: user.firmId },
-        select: { id: true, name: true, slug: true, plan: true, seatCount: true, createdAt: true },
+        select: { id: true, name: true, slug: true, firmType: true, onboardingCompleted: true, plan: true, seatCount: true, createdAt: true },
       });
 
       res.json({
@@ -88,6 +88,8 @@ router.post(
           id: firm.id,
           name: firm.name,
           slug: firm.slug,
+          firmType: (firm as any).firmType || 'LEGAL',
+          onboardingCompleted: (firm as any).onboardingCompleted || false,
           plan: firm.plan,
           seatCount: firm.seatCount,
         } : { id: user.firmId },
@@ -185,6 +187,7 @@ const registerSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   name: z.string().min(1, 'Name is required'),
   firmName: z.string().optional(),
+  firmType: z.enum(['LEGAL', 'CONSULTING', 'HYBRID']).optional(),
 });
 
 router.post(
@@ -192,7 +195,7 @@ router.post(
   validate('body', registerSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, password, name, firmName } = req.body;
+      const { email, password, name, firmName, firmType } = req.body;
 
       // Check if user already exists
       const existing = await prisma.user.findUnique({ where: { email } });
@@ -206,7 +209,7 @@ router.post(
       const slug = (firmName || 'default').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50);
       if (firmName) {
         const firm = await prisma.firm.create({
-          data: { name: firmName, slug },
+          data: { name: firmName, slug, firmType: (firmType || 'LEGAL') as any },
         });
         firmId = firm.id;
       } else {

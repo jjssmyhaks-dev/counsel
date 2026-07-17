@@ -168,8 +168,17 @@ export default function Landing() {
                 <span className="inline-flex items-center gap-1.5"><CheckIcon />14-day free trial</span>
                 <span className="inline-flex items-center gap-1.5"><CheckIcon />SOC 2 Type II</span>
               </div>
-              <div className="mt-8 flex items-center gap-4">
-                <div className="flex -space-x-2">
+              <div className="mt-8 flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-[#717d79]">
+                  <Link href="/register" className="inline-flex items-center gap-1.5 text-[#0a8a5f] hover:text-[#15b881] font-medium transition-colors">
+                    ⚖️ I'm a Legal firm →
+                  </Link>
+                  <span className="text-black/[0.15]">|</span>
+                  <Link href="/register" className="inline-flex items-center gap-1.5 text-[#0a8a5f] hover:text-[#15b881] font-medium transition-colors">
+                    📊 I'm a Consulting firm →
+                  </Link>
+                </div>
+                <div className="flex items-center gap-4">
                   {["#15b881", "#0a8a5f", "#0c0a09", "#f2c14e", "#f0705b"].map((c) => (
                     <div key={c} className="w-8 h-8 rounded-full border-2 border-white" style={{ background: c }} />
                   ))}

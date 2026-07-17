@@ -28,6 +28,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firmName, setFirmName] = useState('');
+  const [firmType, setFirmType] = useState<'LEGAL' | 'CONSULTING'>('LEGAL');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +43,7 @@ export default function RegisterPage() {
       const res = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, firmName: firmName || undefined }),
+        body: JSON.stringify({ email, password, name, firmName: firmName || undefined, firmType }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed');
@@ -123,6 +124,36 @@ export default function RegisterPage() {
               <input id="firmName" type="text" value={firmName} onChange={(e) => setFirmName(e.target.value)}
                 placeholder="Sterling & Associates"
                 className="w-full px-4 py-3 rounded-xl border border-black/[0.08] bg-white text-[14px] text-[#0c0a09] placeholder:text-[#969e9b] focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 transition-all" />
+            </div>
+
+            {/* Firm type selector */}
+            <div>
+              <label className="block text-[13px] font-medium text-[#0c0a09] mb-2">Firm Type</label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'LEGAL' as const, label: '🏛️ Legal Firm', sub: 'Document analysis, drafting, case research' },
+                  { value: 'CONSULTING' as const, label: '📊 Consulting Firm', sub: 'Proposals, market intel, engagement mgmt' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setFirmType(opt.value)}
+                    className={`text-left p-3 rounded-xl border-2 transition-all ${
+                      firmType === opt.value
+                        ? 'border-[#15b881] bg-[#eaf7f0]'
+                        : 'border-black/[0.06] bg-white hover:border-[#15b881]/30'
+                    }`}
+                  >
+                    <div className="text-[13px] font-semibold text-[#0c0a09]">{opt.label}</div>
+                    <div className="text-[11px] text-[#969e9b] mt-0.5">{opt.sub}</div>
+                    {firmType === opt.value && (
+                      <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-[#0a8a5f]">
+                        <CheckIcon /> Selected
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button type="submit" disabled={loading}

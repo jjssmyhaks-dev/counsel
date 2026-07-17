@@ -12,6 +12,12 @@ datasource db {
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
+enum FirmType {
+  LEGAL
+  CONSULTING
+  HYBRID
+}
+
 enum UserRole {
   ADMIN
   PARTNER
@@ -107,13 +113,15 @@ enum JobStatus {
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Firm {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  slug      String   @unique
-  plan      String   @default("free")
-  seatCount Int      @default(5) @map("seat_count")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String
+  slug                String    @unique
+  firmType            FirmType  @default(LEGAL) @map("firm_type")
+  onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
+  plan                String    @default("free")
+  seatCount           Int       @default(5) @map("seat_count")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   users          User[]
   matters        Matter[]

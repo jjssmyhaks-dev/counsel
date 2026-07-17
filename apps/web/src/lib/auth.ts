@@ -49,9 +49,21 @@ export async function login(req: LoginRequest): Promise<LoginResponse> {
   if (typeof window !== 'undefined') {
     localStorage.setItem('counsel_token', data.token);
     localStorage.setItem('counsel_user', JSON.stringify(data.user));
-    if (data.firm) localStorage.setItem('counsel_firm', JSON.stringify(data.firm));
+    if (data.firm) {
+      localStorage.setItem('counsel_firm', JSON.stringify(data.firm));
+    }
   }
   return data;
+}
+
+export function getFirmType(): string | null {
+  const firm = getFirm();
+  return firm?.firmType || 'LEGAL';
+}
+
+export function isOnboardingCompleted(): boolean {
+  const firm = getFirm();
+  return firm?.onboardingCompleted === true;
 }
 
 export function logout(): void {

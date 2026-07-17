@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { isAuthenticated, getUser, getFirm, logout } from '@/lib/auth';
+import { isAuthenticated, getUser, getFirm, logout, isOnboardingCompleted, getFirmType } from '@/lib/auth';
 import type { User } from '@/lib/types';
 
 const serif = "font-serif";
@@ -52,8 +52,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const u = getUser();
     if (!u) { router.replace('/login'); return; }
     setUser(u);
+
+    // Redirect to onboarding if first login
+    const firm = getFirm();
+    if (firm && !firm.onboardingCompleted && !pathname.includes('/onboarding')) {
+      router.replace('/dashboard/onboarding');
+    }
+
     setLoading(false);
-  }, [router]);
+  }, [router, pathname]);
 
   useEffect(() => {
     const stored = localStorage.getItem('counsel_theme');
@@ -167,6 +174,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           <h2 className={`${serif} text-lg font-normal tracking-[-0.02em] text-[#0c0a09] dark:text-white`}>{pageTitle}</h2>
           <div className="flex-1" />
+          {/* "Ask the Firm" search bar — always visible */}
+          <button
+            onClick={() => router.push('/dashboard/kb')}
+            className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#f0f0f0] dark:bg-slate-800 text-[#969e9b] hover:text-[#0c0a09] dark:hover:text-white hover:bg-[#e5e5e5] dark:hover:bg-slate-700 text-[13px] transition-all border border-transparent hover:border-black/[0.06] min-w-[240px]"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Ask the Firm...</span>
+            <kbd className="ml-auto text-[10px] bg-white dark:bg-slate-700 px-1.5 py-0.5 rounded border border-black/[0.06] dark:border-slate-600 font-mono">⌘K</kbd>
+          </button>
           <button onClick={toggleTheme}
             className="p-2 rounded-xl text-[#717d79] hover:text-[#0c0a09] hover:bg-black/[0.04] dark:text-[#969e9b] dark:hover:text-black/[0.06] dark:hover:bg-slate-800 transition-colors"
             title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>

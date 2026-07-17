@@ -3,11 +3,15 @@
 export interface Firm {
   id: string;
   name: string;
-  domain: string;
-  plan: 'starter' | 'professional' | 'enterprise';
+  slug: string;
+  domain?: string;
+  firmType?: 'LEGAL' | 'CONSULTING' | 'HYBRID';
+  onboardingCompleted?: boolean;
+  plan: 'free' | 'starter' | 'professional' | 'enterprise';
+  seatCount?: number;
   logo?: string;
-  createdAt: string;
-  settings: FirmSettings;
+  createdAt?: string;
+  settings?: FirmSettings;
 }
 
 export interface FirmSettings {

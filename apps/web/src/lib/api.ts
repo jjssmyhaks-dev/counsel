@@ -91,8 +91,12 @@ const MOCK_DELAY = () => new Promise((r) => setTimeout(r, 300 + Math.random() * 
 const MOCK_FIRM: Firm = {
   id: 'firm-001',
   name: 'Sterling & Associates LLP',
+  slug: 'sterling-law',
   domain: 'sterling-law.com',
+  firmType: 'LEGAL',
+  onboardingCompleted: true,
   plan: 'professional',
+  seatCount: 25,
   createdAt: '2024-01-15T08:00:00Z',
   settings: {
     defaultLanguage: 'en',
