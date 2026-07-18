@@ -1,0 +1,1 @@
+{"event": "non_retryable_error", "crew": "document_intelligence", "error": "DocumentIntelligenceTasks.extract_clauses() got an unexpected keyword argument 'step_callback'", "error_type": "TypeError", "timestamp": "2026-07-18T09:38:36.972521+00:00"}

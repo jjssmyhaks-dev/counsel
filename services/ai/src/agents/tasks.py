@@ -31,7 +31,7 @@ class DocumentIntelligenceTasks:
         self.document_text = document_text
         self.playbook_rules = playbook_rules or []
 
-    def extract_clauses(self, agent) -> Task:
+    def extract_clauses(self, agent, step_callback=None) -> Task:
         """Task: Extract all legal clauses from the document."""
         return self._extract_clauses_task(agent=agent)
 
@@ -84,7 +84,6 @@ class DocumentIntelligenceTasks:
             ),
         )
 
-    def analyze_risks(self, agent, context: Optional[List[Task]] = None) -> Task:
     def analyze_risks(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Score each clause on a 1-10 risk scale."""
         return Task(
@@ -111,7 +110,6 @@ class DocumentIntelligenceTasks:
             context=context or [],
         )
 
-    def check_playbook(self, agent, context: Optional[List[Task]] = None) -> Task:
     def check_playbook(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Validate document against firm playbook rules."""
         rules_text = "\n".join(
@@ -166,7 +164,7 @@ class DraftingTasks:
         self.tone_examples = tone_examples or []
         self.matter_context = matter_context
 
-    def generate_draft(self, agent) -> Task:
+    def generate_draft(self, agent, step_callback=None) -> Task:
         """Task: Generate the first draft."""
         tone_context = ""
         if self.tone_examples:
@@ -179,6 +177,7 @@ class DraftingTasks:
 
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Generate a professional legal {self.draft_type} based on the following "
                 f"instructions. The draft must be complete, properly formatted, and ready "
@@ -205,10 +204,11 @@ class DraftingTasks:
             ),
         )
 
-    def validate_citations(self, agent, context: Optional[List[Task]] = None) -> Task:
+    def validate_citations(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Validate all citations in the draft."""
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Review the generated {self.draft_type} for all legal citations. "
                 f"For each citation found:\n"
@@ -247,7 +247,7 @@ class ResearchTasks:
         self.source_chunks = source_chunks
         self.jurisdiction = jurisdiction
 
-    def research(self, agent) -> Task:
+    def research(self, agent, step_callback=None) -> Task:
         """Task: Research the legal question."""
         sources = "\n\n---\n\n".join(
             f"[SOURCE {i+1}]:\n{chunk[:2000]}"
@@ -261,6 +261,7 @@ class ResearchTasks:
 
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Research the following legal question using the provided source documents. "
                 f"Decompose the question into sub-questions if needed for thorough coverage.\n\n"
@@ -283,10 +284,11 @@ class ResearchTasks:
             ),
         )
 
-    def synthesize(self, agent, context: Optional[List[Task]] = None) -> Task:
+    def synthesize(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Synthesize research into a memorandum."""
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Synthesize the research findings into a clear, well-structured legal "
                 f"memorandum. Every factual claim must cite a source with confidence level "
@@ -337,7 +339,7 @@ class ComplianceTasks:
         self.matter_id = matter_id
         self.contract_issues = contract_issues or []
 
-    def audit_log(self, agent) -> Task:
+    def audit_log(self, agent, step_callback=None) -> Task:
         """Task: Log the action in the immutable audit trail."""
         import hashlib
         import datetime
@@ -347,6 +349,7 @@ class ComplianceTasks:
 
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Create an audit trail entry for the following AI action:\n\n"
                 f"TIMESTAMP: {timestamp}\n"
@@ -370,7 +373,7 @@ class ComplianceTasks:
             ),
         )
 
-    def compliance_check(self, agent, context: Optional[List[Task]] = None) -> Task:
+    def compliance_check(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Validate output against regulatory requirements."""
         issues_summary = ""
         if self.contract_issues:
@@ -384,6 +387,7 @@ class ComplianceTasks:
 
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Validate the following AI-generated output against regulatory requirements:\n"
                 f"- SOC 2 Type II: Data handling, access controls, audit trails\n"
@@ -409,12 +413,13 @@ class ComplianceTasks:
             context=context or [],
         )
 
-    def negotiation_advice(self, agent, context: Optional[List[Task]] = None) -> Task:
+    def negotiation_advice(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Generate negotiation guidance from contract issues."""
         if not self.contract_issues:
             return Task(
                 agent=agent,
-                description=(
+            step_callback=step_callback,
+            description=(
                     "No contract issues to analyze. Simply confirm that no negotiation "
                     "advice is needed for this output and summarize why."
                 ),
@@ -433,6 +438,7 @@ class ComplianceTasks:
 
         return Task(
             agent=agent,
+            step_callback=step_callback,
             description=(
                 f"Generate a strategic negotiation playbook for the following contract issues. "
                 f"For each issue, provide:\n"
