@@ -156,7 +156,7 @@ export default function SettingsPage() {
 
  {/* Stats */}
  {firm && (
- <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-black/[0.04]">
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-black/[0.04]">
  <div>
  <p className="text-xs text-[#969e9b] dark:text-[#717d79]">Firm ID</p>
  <p className="text-sm font-mono text-[#717d79] dark:text-[#969e9b]">{firm.id}</p>

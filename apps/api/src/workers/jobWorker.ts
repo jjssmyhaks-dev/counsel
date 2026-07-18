@@ -34,7 +34,16 @@ export async function startWorkers() {
     await connection.connect();
     await connection.ping();
 
-    // Only import BullMQ if Redis is confirmed working
+    // Check Redis version — BullMQ requires >=5.0
+    const info = await connection.info('server') as string;
+    const versionMatch = info.match(/redis_version:(\d+\.\d+)/);
+    const redisVersion = versionMatch ? parseFloat(versionMatch[1]) : 0;
+
+    if (redisVersion < 5.0) {
+      throw new Error(`Redis ${redisVersion} too old for BullMQ (needs >=5.0)`);
+    }
+
+    // Only import BullMQ if Redis is confirmed working and version-compatible
     const { Queue, Worker } = await import('bullmq');
 
     console.log('[Worker] Redis connected — starting BullMQ workers');

@@ -131,8 +131,8 @@ export default function KbPage() {
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask anything about your firm's documents, precedents, and policies..."
-            className="block w-full pl-12 pr-24 py-3.5 text-sm border border-black/[0.08] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 placeholder:text-[#969e9b] dark:bg-slate-900 dark:text-white dark:border-slate-700"
+            placeholder="Ask anything about your firm's documents..."
+            className="block w-full pl-4 sm:pl-12 pr-20 sm:pr-24 py-3.5 text-sm border border-black/[0.08] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 placeholder:text-[#969e9b] dark:bg-slate-900 dark:text-white dark:border-slate-700"
           />
           <button
             type="submit"
