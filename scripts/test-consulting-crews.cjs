@@ -29,7 +29,7 @@ async function main() {
       budget_range: '$500K-$750K',
       firm_name: 'Sterling Advisory',
     });
-    if (r.status === 200 && r.status__internal !== 'failed') {
+    if (r.status === 200 && r.raw_output && r.raw_output.length > 0 && !r.error) {
       console.log(`PASS (${r.status}) — crew=${r.crew}, output=${(r.raw_output||'').length} chars`);
       pass++;
     } else {
@@ -47,7 +47,7 @@ async function main() {
       question: 'How should Acme Bank position for open banking in APAC?',
       depth: 'standard',
     });
-    if (r.status === 200 && r.status__internal !== 'failed') {
+    if (r.status === 200 && r.raw_output && r.raw_output.length > 0 && !r.error) {
       console.log(`PASS (${r.status}) — crew=${r.crew}, output=${(r.raw_output||'').length} chars`);
       pass++;
     } else {
@@ -67,7 +67,7 @@ async function main() {
       end_date: '2026-10-31',
       team_size: 5,
     });
-    if (r.status === 200 && r.status__internal !== 'failed') {
+    if (r.status === 200 && r.raw_output && r.raw_output.length > 0 && !r.error) {
       console.log(`PASS (${r.status}) — crew=${r.crew}, output=${(r.raw_output||'').length} chars`);
       pass++;
     } else {
