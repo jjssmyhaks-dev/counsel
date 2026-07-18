@@ -11,7 +11,7 @@ function post(path, body) {
     const req = http.request(BASE + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Content-Length': data.length },
-      timeout: 120000,
+      timeout: 180000,
     }, res => {
       let buf = '';
       res.on('data', c => buf += c);
