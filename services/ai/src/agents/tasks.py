@@ -462,3 +462,63 @@ class ComplianceTasks:
             ),
             context=context or [],
         )
+
+
+
+# ---------------------------------------------------------------
+# CONSULTING TASKS (Proposal, Market Intel, Engagement)
+# ---------------------------------------------------------------
+
+class ProposalTasks:
+    def __init__(self, proposal_type, client_context, scope, timeline, budget_range, past_examples=None, firm_name=""):
+        self.proposal_type = proposal_type; self.client_context = client_context
+        self.scope = scope; self.timeline = timeline; self.budget_range = budget_range
+        self.past_examples = past_examples or []; self.firm_name = firm_name
+
+    def analyze_rfp(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"Analyze the following RFP/client brief for {self.proposal_type}. Extract: 1. Key requirements 2. Ghost criteria (unstated needs) 3. Evaluation factors 4. Disqualifiers 5. Win themes (3-4 differentiating narratives). CLIENT: {self.client_context} SCOPE: {self.scope} TIMELINE: {self.timeline} BUDGET: {self.budget_range}",
+            expected_output="RFP analysis: 1. requirements_summary 2. ghost_criteria 3. win_themes (3-4) 4. disqualifiers 5. evaluation_scorecard")
+
+    def write_proposal(self, agent, context=None, step_callback=None) -> Task:
+        examples = "\n---\n".join(self.past_examples[:2]) if self.past_examples else ""
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"Write a complete consulting {self.proposal_type} for {self.firm_name or 'our firm'}. Structure: 1. Executive Summary (1pg) 2. Situation Assessment 3. Proposed Methodology (phased with deliverables) 4. Team (roles + bios) 5. Timeline (Gantt with milestones) 6. Pricing (aligned with {self.budget_range}) 7. Why Us (differentiators, past work) 8. Next Steps (clear CTA). CLIENT: {self.client_context} SCOPE: {self.scope} EXAMPLES:\n{examples}",
+            expected_output="Complete proposal: 1. executive_summary 2. situation_assessment 3. methodology 4. team_section 5. timeline 6. pricing 7. differentiators 8. metadata")
+
+    def build_financials(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"Build financial model for this proposal. Include: 1. Fee breakdown by phase 2. Resource plan (team days x rates) 3. ROI projection (3-year) 4. Sensitivity analysis (best/base/worst) 5. Assumptions log. BUDGET: {self.budget_range} SCOPE: {self.scope}",
+            expected_output="Financial model: 1. fee_breakdown 2. resource_plan 3. roi_projection 4. sensitivity_table 5. key_metrics (NPV, payback, BCR)")
+
+
+class MarketIntelTasks:
+    def __init__(self, industry, company, question, depth="comprehensive"):
+        self.industry = industry; self.company = company; self.question = question; self.depth = depth
+
+    def research_market(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"Market research for {self.industry} / {self.company}. Question: {self.question}. Depth: {self.depth}. Cover: 1. Market size (TAM/SAM/SOM with growth rates) 2. Key trends (5-7) 3. Competitive landscape (5-8 mapped) 4. Customer segments 5. SWOT for {self.company} 6. Growth opportunities (whitespace, adjacencies). Cite sources.",
+            expected_output="Market report: 1. executive_summary 2. market_sizing 3. trends_analysis 4. competitive_landscape 5. swot 6. growth_recommendations")
+
+    def synthesize_strategy(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"Based on market research, develop strategy for {self.company} ({self.industry}). Deliver: 1. Strategic options (3-4 paths) 2. Framework application (Porter, BCG, etc.) 3. Trade-off analysis 4. Clear recommendation 5. Implementation roadmap (90d/6m/12m) 6. Success metrics (KPIs). Original question: {self.question}",
+            expected_output="Strategy doc: 1. strategic_options 2. trade_off_matrix 3. primary_recommendation 4. implementation_roadmap 5. kpi_dashboard 6. risk_mitigation")
+
+
+class EngagementTasks:
+    def __init__(self, project_name, client_name, scope, start_date, end_date, team_size=3):
+        self.project_name = project_name; self.client_name = client_name
+        self.scope = scope; self.start_date = start_date; self.end_date = end_date
+        self.team_size = team_size
+
+    def structure_engagement(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"Structure engagement for {self.project_name} ({self.client_name}). SCOPE: {self.scope} TIMELINE: {self.start_date} to {self.end_date} TEAM: {self.team_size} people. Deliver: 1. Work Breakdown Structure (phases, workstreams) 2. Resource plan (roles, allocation %) 3. Risk register (top 10) 4. Stakeholder map (power/interest) 5. Deliverable tracker 6. Communication plan.",
+            expected_output="Engagement setup: 1. wbs 2. resource_plan 3. risk_register 4. stakeholder_map 5. deliverable_tracker 6. communication_plan")
+
+    def status_report(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"Generate client status report for {self.project_name} ({self.client_name}). Include: 1. Executive summary (RAG status, 3 bullets) 2. Accomplishments this period 3. Planned next period 4. Key metrics (progress %, budget burn) 5. Risks & issues 6. Decisions required. Max 3 pages. Professional consulting format for C-suite.",
+            expected_output="Status report: 1. executive_summary (RAG) 2. accomplishments 3. planned 4. kpi_dashboard 5. risks 6. decisions_required")

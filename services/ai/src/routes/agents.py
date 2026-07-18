@@ -26,6 +26,9 @@ from ..agents.crews import (
     run_drafting_crew,
     run_research_crew,
     run_compliance_crew,
+    run_proposal_crew,
+    run_market_intel_crew,
+    run_engagement_crew,
 )
 
 logger = logging.getLogger(__name__)
@@ -80,6 +83,34 @@ class FullPipelineRequest(BaseModel):
     user_id: str = Field(..., description="User identifier")
     matter_id: Optional[str] = Field(None)
     playbook_rules: Optional[List[Dict[str, Any]]] = Field(None)
+
+
+# ── Consulting request models ──
+
+class ProposalAgentRequest(BaseModel):
+    proposal_type: str = Field(..., description="proposal, pitch_deck, SOW, or RFP_response")
+    client_context: str = Field(..., description="Client background and needs")
+    scope: str = Field(..., description="Project scope description")
+    timeline: str = Field(..., description="Project timeline")
+    budget_range: str = Field(..., description="Budget range")
+    past_examples: Optional[List[str]] = Field(None, description="Past proposals for voice/tone")
+    firm_name: str = Field("", description="Firm name for branding")
+
+
+class MarketIntelRequest(BaseModel):
+    industry: str = Field(..., description="Target industry")
+    company: str = Field(..., description="Target company")
+    question: str = Field(..., description="Research question")
+    depth: str = Field("comprehensive", description="quick, standard, or comprehensive")
+
+
+class EngagementRequest(BaseModel):
+    project_name: str = Field(..., description="Project name")
+    client_name: str = Field(..., description="Client name")
+    scope: str = Field(..., description="Project scope")
+    start_date: str = Field(..., description="Start date")
+    end_date: str = Field(..., description="End date")
+    team_size: int = Field(3, description="Team size")
 
 
 class AgentResponse(BaseModel):
@@ -310,3 +341,84 @@ async def agents_status():
         },
         "cloudflare": cf_health,
     }
+
+
+# ---------------------------------------------------------------
+# CONSULTING ROUTES
+# ---------------------------------------------------------------
+
+@router.post("/proposal", response_model=AgentResponse)
+async def generate_proposal(req: ProposalAgentRequest):
+    """Run the Proposal Generation crew.
+
+    Pipeline: RFPAnalyzer ? ProposalWriter ? FinancialModeler
+    """
+    try:
+        result = await run_proposal_crew(
+            proposal_type=req.proposal_type,
+            client_context=req.client_context,
+            scope=req.scope,
+            timeline=req.timeline,
+            budget_range=req.budget_range,
+            past_examples=req.past_examples,
+            firm_name=req.firm_name,
+        )
+        return AgentResponse(
+            crew=result.get("crew", "proposal"),
+            status=result.get("status", "completed"),
+            raw_output=result.get("raw_output"),
+            token_usage=result.get("token_usage"),
+        )
+    except Exception as e:
+        logger.error("Proposal crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="proposal", status="failed", error=str(e))
+
+
+@router.post("/market-intel", response_model=AgentResponse)
+async def market_intelligence(req: MarketIntelRequest):
+    """Run the Market Intelligence crew.
+
+    Pipeline: MarketAnalyst ? StrategyAdvisor
+    """
+    try:
+        result = await run_market_intel_crew(
+            industry=req.industry,
+            company=req.company,
+            question=req.question,
+            depth=req.depth,
+        )
+        return AgentResponse(
+            crew=result.get("crew", "market_intel"),
+            status=result.get("status", "completed"),
+            raw_output=result.get("raw_output"),
+            token_usage=result.get("token_usage"),
+        )
+    except Exception as e:
+        logger.error("Market intel crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="market_intel", status="failed", error=str(e))
+
+
+@router.post("/engagement", response_model=AgentResponse)
+async def manage_engagement(req: EngagementRequest):
+    """Run the Engagement Management crew.
+
+    Pipeline: EngagementManager ? StrategyAdvisor (status report)
+    """
+    try:
+        result = await run_engagement_crew(
+            project_name=req.project_name,
+            client_name=req.client_name,
+            scope=req.scope,
+            start_date=req.start_date,
+            end_date=req.end_date,
+            team_size=req.team_size,
+        )
+        return AgentResponse(
+            crew=result.get("crew", "engagement"),
+            status=result.get("status", "completed"),
+            raw_output=result.get("raw_output"),
+            token_usage=result.get("token_usage"),
+        )
+    except Exception as e:
+        logger.error("Engagement crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="engagement", status="failed", error=str(e))

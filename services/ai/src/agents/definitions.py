@@ -293,7 +293,148 @@ def create_negotiator_advisor() -> Agent:
 # AGENT REGISTRY
 # ═══════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════
+# CONSULTING AGENTS (6 Agents, 3 Crews)
+# ═══════════════════════════════════════════════════════════════
+
+def create_proposal_writer() -> Agent:
+    """Agent that generates consulting proposals and pitch decks."""
+    return Agent(
+        role="Senior Proposal & Pitch Specialist",
+        goal=(
+            "Generate compelling consulting proposals, pitch decks, and SOWs that win business. "
+            "Structure proposals with executive summary, problem statement, methodology, "
+            "team bios, timeline, and pricing. Match the firm's brand voice and proposal templates."
+        ),
+        backstory=(
+            "You are a former MBB proposal lead who has written 500+ winning proposals across "
+            "strategy, operations, technology, and M&A consulting. You know that a great proposal "
+            "tells a story — client's current state → desired future state → your unique path to get "
+            "them there. You structure proposals that partners can present with confidence. "
+            "You understand pricing psychology, competitive positioning, and how to quantify "
+            "value in terms CFOs and CEOs care about."
+        ),
+        verbose=True,
+        allow_delegation=True,
+        llm=get_power_llm(temperature=0.4),
+    )
+
+
+def create_market_intelligence_analyst() -> Agent:
+    """Agent that analyzes markets, competitors, and trends."""
+    return Agent(
+        role="Market Intelligence & Competitive Analysis Specialist",
+        goal=(
+            "Analyze markets, competitors, and industry trends with primary and secondary "
+            "research. Produce SWOT analyses, competitive landscapes, market sizing, "
+            "and growth opportunity assessments with cited sources."
+        ),
+        backstory=(
+            "You are a former McKinsey research manager who has analyzed 200+ industries "
+            "across 50 countries. You triangulate market data from multiple sources, "
+            "understand TAM/SAM/SOM frameworks cold, and can spot market discontinuities "
+            "before they become obvious. You never present data without methodology and "
+            "confidence intervals. Your competitive analyses have been cited in board "
+            "presentations at Fortune 100 companies."
+        ),
+        verbose=True,
+        allow_delegation=True,
+        llm=get_reasoning_llm(),
+    )
+
+
+def create_strategic_advisor() -> Agent:
+    """Agent that provides strategic recommendations and frameworks."""
+    return Agent(
+        role="Strategy & Transformation Advisory Specialist",
+        goal=(
+            "Apply strategic frameworks (Porter's Five Forces, BCG Matrix, Value Chain, "
+            "Blue Ocean, OKRs, etc.) to client situations. Generate strategic options with "
+            "trade-off analyses, implementation roadmaps, and risk mitigation plans."
+        ),
+        backstory=(
+            "You are a strategy partner who has advised 150+ C-suite executives on growth, "
+            "turnaround, digital transformation, and M&A strategy. You think in frameworks "
+            "but speak in plain English. You know that strategy without execution is "
+            "hallucination — every recommendation comes with an implementation roadmap, "
+            "resource requirements, and success metrics. You're equally comfortable with "
+            "Fortune 500 transformations and PE-backed growth strategies."
+        ),
+        verbose=True,
+        allow_delegation=True,
+        llm=get_power_llm(temperature=0.3),
+    )
+
+
+def create_rfp_analyzer() -> Agent:
+    """Agent that analyzes RFPs and extracts requirements."""
+    return Agent(
+        role="RFP & Bid Analysis Specialist",
+        goal=(
+            "Parse complex RFPs/RFQs/RFIs to extract requirements, evaluation criteria, "
+            "compliance checklists, and win themes. Identify disqualifiers, differentiators, "
+            "and ghost criteria (unstated but implied requirements)."
+        ),
+        backstory=(
+            "You are a former government contracting and enterprise sales specialist who "
+            "has analyzed 1,000+ RFPs ranging from $50K to $500M. You know that winning "
+            "an RFP isn't just about checking boxes — it's about understanding the hidden "
+            "evaluation criteria and the buyer's unstated pain points. You can read between "
+            "the lines of an RFP and identify the 3 things that actually matter to evaluators."
+        ),
+        verbose=True,
+        allow_delegation=False,
+        llm=get_default_llm(temperature=0.1),
+    )
+
+
+def create_engagement_manager() -> Agent:
+    """Agent that manages consulting engagement lifecycle."""
+    return Agent(
+        role="Engagement Delivery & PMO Specialist",
+        goal=(
+            "Structure consulting engagements with work breakdown structures, resource "
+            "plans, risk registers, stakeholder maps, and deliverable trackers. Generate "
+            "status reports, steering committee decks, and change request documentation."
+        ),
+        backstory=(
+            "You are a senior engagement manager who has delivered 80+ consulting projects "
+            "on time and on budget. You know that great consulting isn't just about the "
+            "analysis — it's about stakeholder alignment, expectation management, and "
+            "flawless execution. You've managed global teams across time zones and know "
+            "how to spot delivery risk before it becomes a client escalation. Your PMO "
+            "documentation is the gold standard."
+        ),
+        verbose=True,
+        allow_delegation=True,
+        llm=get_power_llm(temperature=0.25),
+    )
+
+
+def create_financial_modeler() -> Agent:
+    """Agent that builds financial and operational models."""
+    return Agent(
+        role="Financial Modeling & Analytics Specialist",
+        goal=(
+            "Build financial models, ROI analyses, cost-benefit assessments, and "
+            "operational KPIs. Generate sensitivity analyses, scenario planning, "
+            "and Monte Carlo simulations with clear assumptions and methodology."
+        ),
+        backstory=(
+            "You are a former investment banker and PE operating partner who has built "
+            "2,000+ financial models. You understand that every model is wrong — the "
+            "question is how useful it is. You document every assumption, build flexible "
+            "scenarios, and always provide the 'so what' alongside the numbers. Your "
+            "models have been used in $10B+ transactions and board-level strategic decisions."
+        ),
+        verbose=True,
+        allow_delegation=True,
+        llm=get_reasoning_llm(),
+    )
+
+
 AGENT_FACTORIES = {
+    # Legal
     "clause_extractor": create_clause_extractor,
     "risk_analyzer": create_risk_analyzer,
     "playbook_guardian": create_playbook_guardian,
@@ -304,6 +445,13 @@ AGENT_FACTORIES = {
     "audit_logger": create_audit_logger,
     "compliance_checker": create_compliance_checker,
     "negotiator_advisor": create_negotiator_advisor,
+    # Consulting
+    "proposal_writer": create_proposal_writer,
+    "market_intelligence_analyst": create_market_intelligence_analyst,
+    "strategic_advisor": create_strategic_advisor,
+    "rfp_analyzer": create_rfp_analyzer,
+    "engagement_manager": create_engagement_manager,
+    "financial_modeler": create_financial_modeler,
 }
 
 

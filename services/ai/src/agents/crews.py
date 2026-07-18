@@ -25,12 +25,21 @@ from .definitions import (
     create_audit_logger,
     create_compliance_checker,
     create_negotiator_advisor,
+    create_proposal_writer,
+    create_market_intelligence_analyst,
+    create_strategic_advisor,
+    create_rfp_analyzer,
+    create_engagement_manager,
+    create_financial_modeler,
 )
 from .tasks import (
     DocumentIntelligenceTasks,
     DraftingTasks,
     ResearchTasks,
     ComplianceTasks,
+    ProposalTasks,
+    MarketIntelTasks,
+    EngagementTasks,
 )
 from ..orchestrator.audit_agent import audit_trail, AuditAction
 from ..orchestrator.structured_logging import create_step_callback, metrics, write_event
@@ -293,3 +302,72 @@ async def run_full_contract_pipeline(
         "document_intelligence": di_result,
         "compliance": compliance_result,
     }
+
+
+# ---------------------------------------------------------------
+# CONSULTING CREWS (3 Crews, 6 Agents)
+# ---------------------------------------------------------------
+
+# -- Crew 5: Proposal Generation --
+
+@with_retry("proposal", max_retries=2)
+async def run_proposal_crew(
+    proposal_type: str,
+    client_context: str,
+    scope: str,
+    timeline: str,
+    budget_range: str,
+    past_examples: Optional[List[str]] = None,
+    firm_name: str = "",
+) -> Dict[str, Any]:
+    rfp = create_rfp_analyzer()
+    writer = create_proposal_writer()
+    modeler = create_financial_modeler()
+    tasks = ProposalTasks(proposal_type=proposal_type, client_context=client_context,
+                          scope=scope, timeline=timeline, budget_range=budget_range,
+                          past_examples=past_examples, firm_name=firm_name)
+    sc = create_step_callback("proposal")
+    t_rfp = tasks.analyze_rfp(agent=rfp, step_callback=sc)
+    t_write = tasks.write_proposal(agent=writer, context=[t_rfp], step_callback=sc)
+    t_fin = tasks.build_financials(agent=modeler, context=[t_rfp, t_write], step_callback=sc)
+    crew = Crew(agents=[rfp, writer, modeler], tasks=[t_rfp, t_write, t_fin], process=Process.sequential, verbose=True)
+    result = await crew.kickoff_async()
+    return {"crew": "proposal", "status": "completed", "raw_output": result.raw if hasattr(result, "raw") else str(result),
+            "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}
+
+
+# -- Crew 6: Market Intelligence --
+
+@with_retry("market_intel", max_retries=2)
+async def run_market_intel_crew(
+    industry: str, company: str, question: str, depth: str = "comprehensive",
+) -> Dict[str, Any]:
+    analyst = create_market_intelligence_analyst()
+    strategist = create_strategic_advisor()
+    tasks = MarketIntelTasks(industry=industry, company=company, question=question, depth=depth)
+    sc = create_step_callback("market_intel")
+    t_research = tasks.research_market(agent=analyst, step_callback=sc)
+    t_synthesize = tasks.synthesize_strategy(agent=strategist, context=[t_research], step_callback=sc)
+    crew = Crew(agents=[analyst, strategist], tasks=[t_research, t_synthesize], process=Process.sequential, verbose=True)
+    result = await crew.kickoff_async()
+    return {"crew": "market_intel", "status": "completed", "raw_output": result.raw if hasattr(result, "raw") else str(result),
+            "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}
+
+
+# -- Crew 7: Engagement Management --
+
+@with_retry("engagement", max_retries=2)
+async def run_engagement_crew(
+    project_name: str, client_name: str, scope: str, start_date: str, end_date: str, team_size: int = 3,
+) -> Dict[str, Any]:
+    mgr = create_engagement_manager()
+    strategist = create_strategic_advisor()
+    tasks = EngagementTasks(project_name=project_name, client_name=client_name, scope=scope,
+                            start_date=start_date, end_date=end_date, team_size=team_size)
+    sc = create_step_callback("engagement")
+    t_structure = tasks.structure_engagement(agent=mgr, step_callback=sc)
+    t_report = tasks.status_report(agent=strategist, context=[t_structure], step_callback=sc)
+    crew = Crew(agents=[mgr, strategist], tasks=[t_structure, t_report], process=Process.sequential, verbose=True)
+    result = await crew.kickoff_async()
+    return {"crew": "engagement", "status": "completed", "raw_output": result.raw if hasattr(result, "raw") else str(result),
+            "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}

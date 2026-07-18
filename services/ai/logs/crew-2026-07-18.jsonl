@@ -1,1 +1,5 @@
 {"event": "non_retryable_error", "crew": "document_intelligence", "error": "DocumentIntelligenceTasks.extract_clauses() got an unexpected keyword argument 'step_callback'", "error_type": "TypeError", "timestamp": "2026-07-18T09:38:36.972521+00:00"}
+{"event": "non_retryable_error", "crew": "market_intel", "error": "name 'create_market_intelligence_analyst' is not defined", "error_type": "NameError", "timestamp": "2026-07-18T13:49:54.256424+00:00"}
+{"event": "non_retryable_error", "crew": "proposal", "error": "name 'create_rfp_analyzer' is not defined", "error_type": "NameError", "timestamp": "2026-07-18T13:50:40.016425+00:00"}
+{"event": "non_retryable_error", "crew": "market_intel", "error": "name 'create_market_intelligence_analyst' is not defined", "error_type": "NameError", "timestamp": "2026-07-18T13:50:40.039929+00:00"}
+{"event": "non_retryable_error", "crew": "engagement", "error": "name 'create_engagement_manager' is not defined", "error_type": "NameError", "timestamp": "2026-07-18T13:50:40.051431+00:00"}
