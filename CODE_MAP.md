@@ -71,9 +71,9 @@
 | File | Description |
 |---|---|
 | `src/agents/cloudflare_llm.py` | `CloudflareLLM` — CrewAI-compatible bridge. Subclasses `BaseLLM` directly to bypass model-name validation. Synchronous `httpx` call() for thread-pool compatibility. Falls back to 70B model on failure. |
-| `src/agents/definitions.py` | 10 agent definitions — ClauseExtractor, RiskAnalyzer, PlaybookGuardian, LegalDrafter, CitationValidator, LegalResearcher, RAGSynthesizer, AuditLogger, ComplianceChecker, NegotiatorAdvisor. Each configured with Cloudflare Workers AI model (Llama 4 Scout 17B / Llama 3.3 70B / DeepSeek R1). |
-| `src/agents/crews.py` | 4 crew definitions + full pipeline orchestrator. All async with `kickoff_async()`. Wired with `@with_retry()` decorator, `step_callbacks` for structured logging, and auto audit trail logging after each run. |
-| `src/agents/tasks.py` | 10 CrewAI Task builders — clause extraction, risk analysis (1-10 scale), playbook compliance check, legal drafting, citation validation, legal research with RAG sources, memorandum synthesis, audit logging, regulatory compliance check (SOC 2/ISO 27001/GDPR), negotiation advice. |
+| `src/agents/definitions.py` | **16 agent definitions** — 10 Legal + 6 Consulting. Legal: ClauseExtractor, RiskAnalyzer, PlaybookGuardian, LegalDrafter, CitationValidator, LegalResearcher, RAGSynthesizer, AuditLogger, ComplianceChecker, NegotiatorAdvisor. Consulting: ProposalWriter, MarketIntelAnalyst, StrategyAdvisor, RFPAnalyzer, EngagementManager, FinancialModeler. All configured with Cloudflare Workers AI (Llama 4 Scout 17B / Llama 3.3 70B / DeepSeek R1). |
+| `src/agents/crews.py` | **7 crew definitions** + full pipeline orchestrator. Legal: C1 Document Intelligence, C2 Drafting, C3 Research & Discovery, C4 Compliance & Negotiation. Consulting: C5 Proposal Generation (RFPAnalyzer→ProposalWriter→FinancialModeler), C6 Market Intelligence (MarketIntelAnalyst→StrategyAdvisor), C7 Engagement Management (EngagementManager→StrategyAdvisor). All async with `kickoff_async()`. Wired with @with_retry(), step_callbacks, and auto audit trail logging. |
+| `src/agents/tasks.py` | **13 CrewAI Task builders** — 10 Legal + 3 Consulting. Legal: clause extraction, risk analysis (1-10 scale), playbook compliance check, legal drafting, citation validation, legal research with RAG sources, memorandum synthesis, audit logging, compliance check (SOC 2/ISO 27001/GDPR), negotiation advice. Consulting: ProposalTasks (RFP analysis, proposal writing, financial modeling), MarketIntelTasks (market research, strategy synthesis), EngagementTasks (engagement structuring, status reporting). |
 
 ### Orchestration & Observability
 
@@ -161,3 +161,4 @@
 | `e2e-auth-test.cjs` | Full auth E2E — register new firm → login → access dashboard → logout |
 | `start-ai.bat` | Windows batch launcher for Python AI service (`uvicorn src.main:app --port 8000`) |
 | `start-api.mjs` | Express API launcher script |
+| `test-consulting-crews.cjs` | Consulting crew test (C5 Proposal/C6 Market Intel/C7 Engagement) |
