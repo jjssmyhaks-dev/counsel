@@ -258,7 +258,7 @@ router.post(
 
       const firm = await prisma.firm.findUnique({
         where: { id: user.firmId },
-        select: { id: true, name: true, slug: true, plan: true },
+        select: { id: true, name: true, slug: true, plan: true, firmType: true, onboardingCompleted: true },
       });
 
       res.status(201).json({ token, user, firm });

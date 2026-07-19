@@ -50,6 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [firmType, setFirmType] = useState<string>('LEGAL');
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dark, setDark] = useState(false);
@@ -59,6 +60,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const u = getUser();
     if (!u) { router.replace('/login'); return; }
     setUser(u);
+    const ft = getFirmType();
+    setFirmType(ft || 'LEGAL');
 
     // Redirect to onboarding if first login
     const firm = getFirm();
@@ -108,12 +111,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Logo />
           <div>
             <h1 className={`${serif} text-white font-bold text-lg leading-tight tracking-[-0.02em]`}>Counsel</h1>
-            <p className="text-[#7ce3b6]/60 text-[11px]">Legal Intelligence</p>
+            <p className="text-[#7ce3b6]/60 text-[11px]">{firmType === 'CONSULTING' ? 'Consulting Intelligence' : 'Legal Intelligence'}</p>
           </div>
         </Link>
 
         <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
-          <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mb-2">Main</div>
+          <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mb-2">{firmType === 'CONSULTING' ? 'Consulting' : 'Main'}</div>
           {navItems.map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             return (
