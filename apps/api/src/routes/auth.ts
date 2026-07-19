@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs';
+﻿import bcrypt from 'bcryptjs';
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@counsel/database';
 import { z } from 'zod';
@@ -262,6 +262,81 @@ router.post(
       });
 
       res.status(201).json({ token, user, firm });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+
+// ─── POST /forgot-password ──────────────────────────────────────────────────
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+router.post(
+  '/forgot-password',
+  validate('body', forgotPasswordSchema),
+  async (req, res, next) => {
+    try {
+      const { email } = req.body;
+
+      const user = await prisma.user.findUnique({ where: { email } });
+
+      // Always return success — don't leak whether the email exists
+      if (!user) {
+        res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
+        return;
+      }
+
+      // Generate a short-lived reset token (15 min)
+      const resetToken = signToken(
+        { id: user.id, email: user.email, name: user.name, firmId: user.firmId, role: user.role },
+        '15m',
+      );
+
+      // In production: send email. In dev: return the token in response
+      res.json({
+        message: 'If an account with that email exists, a reset link has been sent.',
+        ...(process.env.NODE_ENV !== 'production' && { resetToken }),
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── POST /reset-password ───────────────────────────────────────────────────
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+router.post(
+  '/reset-password',
+  validate('body', resetPasswordSchema),
+  async (req, res, next) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      // Verify the reset token (allow expired for this specific check? No — enforce 15min expiry)
+      const payload = verifyToken(token);
+      if (!payload) {
+        res.status(400).json({ error: 'Reset link has expired. Please request a new one.' });
+        return;
+      }
+
+      // Update the password
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: payload.id },
+        data: { passwordHash },
+      });
+
+      // Revoke all refresh tokens for security
+      revokeRefreshTokens(payload.id);
+
+      res.json({ message: 'Password has been reset. You can now sign in with your new password.' });
     } catch (err) {
       next(err);
     }

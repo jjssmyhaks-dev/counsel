@@ -66,6 +66,9 @@ app.use((req, _res, next) => {
 // Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
 
+// ─── Request ID — inject tracing ID into every request ──────────────────────
+app.use(requestIdMiddleware);
+
 // Health check — before auth middleware so it's always accessible
 app.get('/', (_req, res) => {
   res.redirect('/api/docs');
@@ -116,9 +119,6 @@ app.use(
     message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } },
   }),
 );
-
-// ─── Request ID — inject tracing ID into every request ──────────────────────
-app.use(requestIdMiddleware);
 
 // ─── Auth middleware (applied to all routes except /auth/login) ─────────────
 app.use(authMiddleware);

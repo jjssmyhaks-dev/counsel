@@ -12,6 +12,8 @@ const publicPaths = [
   { method: 'POST', path: '/api/v1/auth/login' },
   { method: 'POST', path: '/api/v1/auth/register' },
   { method: 'POST', path: '/api/v1/auth/refresh' },
+  { method: 'POST', path: '/api/v1/auth/forgot-password' },
+  { method: 'POST', path: '/api/v1/auth/reset-password' },
   { method: 'GET', path: '/api/v1/auth/callback' },
   { method: 'POST', path: '/api/v1/auth/sso/authorize' },
   { method: 'POST', path: '/api/v1/auth/sso/create' },
