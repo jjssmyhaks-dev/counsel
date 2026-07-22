@@ -2,19 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/Logo';
 import Link from 'next/link';
 
 const serif = "font-serif";
-
-function Logo() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <path d="M6 16C6 10 10 6 16 6c0 6-4 10-10 10z" fill="#15b881" />
-      <path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#0a8a5f" />
-      <circle cx="16" cy="16" r="2.2" fill="#0c0a09" />
-    </svg>
-  );
-}
 
 function CheckIcon() {
   return (

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Logo } from '@/components/Logo';
 
 /* ── Design tokens ──
    brand: #15b881 / #0a8a5f / #7ce3b6
@@ -12,16 +13,6 @@ import { usePathname } from 'next/navigation';
 */
 
 const serif = "font-serif";
-
-function Logo() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <path d="M6 16C6 10 10 6 16 6c0 6-4 10-10 10z" fill="#15b881" />
-      <path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#0a8a5f" />
-      <circle cx="16" cy="16" r="2.2" fill="#0c0a09" />
-    </svg>
-  );
-}
 
 type MenuSection = {
   label: string;
@@ -204,7 +195,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2">
-              <Logo />
+              <Logo variant="dark" size={26} />
               <span className="text-[#0c0a09] font-semibold tracking-[-0.02em] text-[18px]">Counsel</span>
             </Link>
             <div className="hidden md:flex items-center gap-7">

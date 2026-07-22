@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Logo } from '@/components/Logo';
 import Navbar from '@/components/Navbar';
 import HeroPreview from '@/components/HeroPreview';
 import HowItWorks from '@/components/HowItWorks';
@@ -78,16 +79,6 @@ const posts = [
   { tag: "Product", date: "Jun 28, 2026", title: "Introducing Counsel Playbook Engine v2: 8× Faster Clause Matching" },
   { tag: "Guides", date: "Jun 15, 2026", title: "From Brief to Bench: AI-Assisted Legal Drafting Best Practices" },
 ];
-
-function Logo() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <path d="M6 16C6 10 10 6 16 6c0 6-4 10-10 10z" fill="#15b881" />
-      <path d="M26 16c0 6-4 10-10 10 0-6 4-10 10-10z" fill="#0a8a5f" />
-      <circle cx="16" cy="16" r="2.2" fill="#0c0a09" />
-    </svg>
-  );
-}
 
 function Star() {
   return (
