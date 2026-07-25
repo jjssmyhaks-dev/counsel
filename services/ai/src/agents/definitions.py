@@ -72,6 +72,7 @@ def create_clause_extractor() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
+        tools=[],  # No tools needed — text extraction is self-contained
         llm=get_default_llm(temperature=0.1),
     )
 
@@ -94,6 +95,7 @@ def create_risk_analyzer() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
+        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
         llm=get_power_llm(temperature=0.2),
     )
 
@@ -116,6 +118,7 @@ def create_playbook_guardian() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
+        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
         llm=get_power_llm(temperature=0.15),
     )
 
@@ -194,6 +197,7 @@ def create_legal_researcher() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
+        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
         llm=get_reasoning_llm(),
     )
 
@@ -217,6 +221,7 @@ def create_rag_synthesizer() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
+        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
         llm=get_power_llm(temperature=0.25),
     )
 
@@ -224,27 +229,6 @@ def create_rag_synthesizer() -> Agent:
 # ═══════════════════════════════════════════════════════════════
 # CREW 4: COMPLIANCE & NEGOTIATION
 # ═══════════════════════════════════════════════════════════════
-
-def create_audit_logger() -> Agent:
-    """Agent that ensures all AI actions are immutably logged."""
-    return Agent(
-        role="Compliance Audit Trail Specialist",
-        goal=(
-            "Maintain an immutable, cryptographically-verifiable audit trail of every "
-            "AI action. Every analysis, draft, search, and modification must be logged "
-            "with timestamp, user identity, action type, and SHA-256 hash."
-        ),
-        backstory=(
-            "You are a former SOC 2 auditor who has seen what happens when audit trails "
-            "fail. You understand that in legal technology, trust is everything — and "
-            "trust comes from verifiable records. You log every action as if it will be "
-            "reviewed by a federal judge. Nothing is ever deleted, only appended."
-        ),
-        verbose=True,
-        allow_delegation=False,
-        llm=get_default_llm(temperature=0.0),
-    )
-
 
 def create_compliance_checker() -> Agent:
     """Agent that validates outputs against regulatory requirements."""
@@ -263,6 +247,7 @@ def create_compliance_checker() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
+        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
         llm=get_default_llm(temperature=0.1),
     )
 
@@ -442,7 +427,6 @@ AGENT_FACTORIES = {
     "citation_validator": create_citation_validator,
     "legal_researcher": create_legal_researcher,
     "rag_synthesizer": create_rag_synthesizer,
-    "audit_logger": create_audit_logger,
     "compliance_checker": create_compliance_checker,
     "negotiator_advisor": create_negotiator_advisor,
     # Consulting

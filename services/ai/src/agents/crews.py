@@ -22,7 +22,6 @@ from .definitions import (
     create_citation_validator,
     create_legal_researcher,
     create_rag_synthesizer,
-    create_audit_logger,
     create_compliance_checker,
     create_negotiator_advisor,
     create_proposal_writer,
@@ -48,6 +47,39 @@ from ..orchestrator.retry import with_retry
 logger = logging.getLogger(__name__)
 
 
+def _serialize_output(result) -> str:
+    """Extract raw output from CrewAI result, handling pydantic dicts.
+
+    When output_pydantic is set on a Task, result.raw is a dict (the pydantic
+    model serialized), not a string. When not set, it's a plain string.
+    """
+    import json
+    raw = result.raw if hasattr(result, "raw") else str(result)
+    if isinstance(raw, dict):
+        return json.dumps(raw, default=str)
+    if isinstance(raw, str):
+        return raw
+    return str(raw)
+
+
+# ── Document truncation ──
+# All crews use the same truncation point for consistency across
+# a single pipeline run. Tasks receive pre-truncated text rather
+# than each slicing independently.
+_CLAUSE_EXTRACTION_CHARS = 15000
+_RISK_ANALYSIS_CHARS = 8000
+
+
+def _truncate_for_extraction(text: str) -> str:
+    """Truncate document text for clause extraction (first-pass)."""
+    return text[:_CLAUSE_EXTRACTION_CHARS]
+
+
+def _truncate_for_risk(text: str) -> str:
+    """Truncate document text for risk analysis (consistent with extraction)."""
+    return text[:_RISK_ANALYSIS_CHARS]
+
+
 # ═══════════════════════════════════════════════════════════════
 # CREW 1: DOCUMENT INTELLIGENCE
 # ═══════════════════════════════════════════════════════════════
@@ -68,8 +100,13 @@ async def run_document_intelligence(
     risk_analyzer = create_risk_analyzer()
     guardian = create_playbook_guardian()
 
+    # Pre-truncate consistently — tasks no longer slice independently
+    doc_for_extract = _truncate_for_extraction(document_text)
+    doc_for_risk = _truncate_for_risk(document_text)
+
     tasks = DocumentIntelligenceTasks(
-        document_text=document_text,
+        document_text=doc_for_extract,
+        risk_context_text=doc_for_risk,
         playbook_rules=playbook_rules,
     )
 
@@ -99,7 +136,7 @@ async def run_document_intelligence(
     return {
         "crew": "document_intelligence",
         "status": "completed",
-        "raw_output": result.raw if hasattr(result, "raw") else str(result),
+        "raw_output": _serialize_output(result),
         "token_usage": token_usage,
     }
 
@@ -147,7 +184,7 @@ async def run_drafting_crew(
         "crew": "drafting",
         "status": "completed",
         "draft_type": draft_type,
-        "raw_output": result.raw if hasattr(result, "raw") else str(result),
+        "raw_output": _serialize_output(result),
         "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
     }
 
@@ -193,7 +230,7 @@ async def run_research_crew(
         "crew": "research",
         "status": "completed",
         "query": query,
-        "raw_output": result.raw if hasattr(result, "raw") else str(result),
+        "raw_output": _serialize_output(result),
         "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
     }
 
@@ -211,14 +248,15 @@ async def run_compliance_crew(
     matter_id: Optional[str] = None,
     contract_issues: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
-    """Run the 3-agent compliance + negotiation pipeline.
+    """Run the 2-agent compliance + negotiation pipeline.
+
+    Audit logging is handled by the @with_retry decorator, which calls
+    audit_trail.log() on every attempt (success/failure/retry).
 
     Flow:
-      1. AuditLogger → log the action immutably
-      2. ComplianceChecker → validate against regulatory requirements
-      3. NegotiatorAdvisor → generate negotiation guidance (if contract issues)
+      1. ComplianceChecker → validate against regulatory requirements
+      2. NegotiatorAdvisor → generate negotiation guidance (if contract issues)
     """
-    logger_agent = create_audit_logger()
     checker = create_compliance_checker()
     advisor = create_negotiator_advisor()
 
@@ -232,13 +270,12 @@ async def run_compliance_crew(
     )
 
     sc = create_step_callback("compliance")
-    t_audit = tasks.audit_log(agent=logger_agent, step_callback=sc)
-    t_check = tasks.compliance_check(agent=checker, context=[t_audit], step_callback=sc)
+    t_check = tasks.compliance_check(agent=checker, step_callback=sc)
     t_advice = tasks.negotiation_advice(agent=advisor, context=[t_check], step_callback=sc)
 
     crew = Crew(
-        agents=[logger_agent, checker, advisor],
-        tasks=[t_audit, t_check, t_advice],
+        agents=[checker, advisor],
+        tasks=[t_check, t_advice],
         process=Process.sequential,
         verbose=True,
     )
@@ -247,7 +284,7 @@ async def run_compliance_crew(
     return {
         "crew": "compliance",
         "status": "completed",
-        "raw_output": result.raw if hasattr(result, "raw") else str(result),
+        "raw_output": _serialize_output(result),
         "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {},
     }
 
@@ -285,15 +322,18 @@ async def run_full_contract_pipeline(
         playbook_rules=playbook_rules,
     )
 
-    # Step 2: Compliance & Negotiation
-    logger.info("Starting Compliance crew...")
+    # Step 2: Parse risk_breakdown from DI result into contract_issues
+    contract_issues = _parse_risk_breakdown(di_result.get("raw_output", ""))
+
+    # Step 3: Compliance & Negotiation
+    logger.info("Starting Compliance crew with %d contract issues...", len(contract_issues))
     compliance_result = await run_compliance_crew(
         output_text=di_result.get("raw_output", ""),
         output_type="contract_analysis",
         firm_id=firm_id,
         user_id=user_id,
         matter_id=matter_id,
-        contract_issues=None,  # Will be populated from DI result
+        contract_issues=contract_issues,
     )
 
     return {
@@ -301,7 +341,108 @@ async def run_full_contract_pipeline(
         "status": "completed",
         "document_intelligence": di_result,
         "compliance": compliance_result,
+        "contract_issues_count": len(contract_issues),
     }
+
+
+
+
+def _parse_risk_breakdown(raw_output: str) -> List[Dict[str, Any]]:
+    """Extract contract_issues from DI raw_output risk_breakdown.
+
+    Attempts structured parsing first (pydantic RiskMatrix), then
+    falls back to JSON substring extraction for free-text outputs,
+    then to keyword-based clause-name extraction.
+    """
+    import json
+    import re
+    from .schemas import RiskMatrix
+
+    # Try pydantic parse first
+    try:
+        parsed = RiskMatrix.model_validate_json(raw_output)
+        issues = []
+        for item in parsed.risk_breakdown:
+            issues.append({
+                "clause_type": item.clause_type,
+                "risk_score": item.risk_score,
+                "deviation": item.rationale[:200] if item.rationale else "",
+                "required_value": "",
+                "actual_value": item.market_standard_comparison or "",
+            })
+        # Apply priority ordering from negotiation_priority
+        for i, clause_type in enumerate(parsed.negotiation_priority):
+            for issue in issues:
+                if issue["clause_type"] == clause_type:
+                    issue.setdefault("priority", i + 1)
+        return sorted(issues, key=lambda x: x.get("priority", 999))
+    except Exception:
+        pass
+
+    # Try JSON substring extraction (free-text LLM output often wraps JSON in ```json blocks)
+    json_match = re.search(r'\{[^{}]*"risk_breakdown"[^{}]*\[.*?\][^{}]*\}', raw_output, re.DOTALL)
+    if json_match:
+        try:
+            data = json.loads(json_match.group())
+            breakdown = data.get("risk_breakdown", [])
+            return [
+                {
+                    "clause_type": item.get("clause_type", "Unknown"),
+                    "risk_score": item.get("risk_score", 5),
+                    "deviation": item.get("rationale", "")[:200],
+                    "required_value": item.get("required_value", ""),
+                    "actual_value": item.get("actual_value", ""),
+                }
+                for item in breakdown
+            ]
+        except (json.JSONDecodeError, AttributeError):
+            pass
+
+    # If the output is itself a dict, try extracting directly
+    if isinstance(raw_output, dict):
+        breakdown = raw_output.get("risk_breakdown", [])
+        if breakdown:
+            return [
+                {
+                    "clause_type": item.get("clause_type", "Unknown"),
+                    "risk_score": item.get("risk_score", 5),
+                    "deviation": item.get("rationale", "")[:200],
+                }
+                for item in breakdown
+            ]
+
+    # Fallback: extract known clause types from flat text
+    logger.info("No structured risk_breakdown found; extracting clauses from raw text")
+    return _extract_clause_lines(raw_output)
+
+
+def _extract_clause_lines(raw_output: str) -> List[Dict[str, Any]]:
+    """Last-resort fallback: parse clause names from free-text raw_output."""
+    import re
+    known_clauses = [
+        "Indemnification", "Limitation of Liability", "Termination",
+        "Intellectual Property", "Confidentiality", "Governing Law",
+        "Force Majeure", "Payment Terms", "Representations and Warranties",
+        "Insurance", "Assignment", "Data Protection", "Privacy",
+        "Non-Compete", "Non-Solicit", "Severability", "Notices",
+        "Entire Agreement",
+    ]
+    issues = []
+    output_lower = raw_output.lower()
+    for clause in known_clauses:
+        if clause.lower() in output_lower:
+            # Try to find a risk score near the clause name
+            score_match = re.search(
+                rf'{re.escape(clause)}.*?(\d+(?:\.\d+)?)\s*(?:/10|out of 10)',
+                raw_output, re.IGNORECASE
+            )
+            risk_score = float(score_match.group(1)) if score_match else 5.0
+            issues.append({
+                "clause_type": clause,
+                "risk_score": risk_score,
+                "deviation": "Extracted from free-text output",
+            })
+    return issues
 
 
 # ---------------------------------------------------------------
@@ -332,7 +473,7 @@ async def run_proposal_crew(
     t_fin = tasks.build_financials(agent=modeler, context=[t_rfp, t_write], step_callback=sc)
     crew = Crew(agents=[rfp, writer, modeler], tasks=[t_rfp, t_write, t_fin], process=Process.sequential, verbose=True)
     result = await crew.kickoff_async()
-    return {"crew": "proposal", "status": "completed", "raw_output": result.raw if hasattr(result, "raw") else str(result),
+    return {"crew": "proposal", "status": "completed", "raw_output": _serialize_output(result),
             "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}
 
 
@@ -350,7 +491,7 @@ async def run_market_intel_crew(
     t_synthesize = tasks.synthesize_strategy(agent=strategist, context=[t_research], step_callback=sc)
     crew = Crew(agents=[analyst, strategist], tasks=[t_research, t_synthesize], process=Process.sequential, verbose=True)
     result = await crew.kickoff_async()
-    return {"crew": "market_intel", "status": "completed", "raw_output": result.raw if hasattr(result, "raw") else str(result),
+    return {"crew": "market_intel", "status": "completed", "raw_output": _serialize_output(result),
             "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}
 
 
@@ -369,5 +510,5 @@ async def run_engagement_crew(
     t_report = tasks.status_report(agent=strategist, context=[t_structure], step_callback=sc)
     crew = Crew(agents=[mgr, strategist], tasks=[t_structure, t_report], process=Process.sequential, verbose=True)
     result = await crew.kickoff_async()
-    return {"crew": "engagement", "status": "completed", "raw_output": result.raw if hasattr(result, "raw") else str(result),
+    return {"crew": "engagement", "status": "completed", "raw_output": _serialize_output(result),
             "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}

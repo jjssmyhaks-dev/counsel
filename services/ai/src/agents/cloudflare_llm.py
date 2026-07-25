@@ -26,17 +26,31 @@ class CloudflareLLM(BaseLLM):
     Subclasses BaseLLM directly — NOT the LLM pydantic model — to skip
     CrewAI's hardcoded provider-specific model-name validation.
 
+    Supports tool/function calling by registering tool definitions at init
+    or passing them per-call. When tools are provided and the model supports
+    native function calling, the call() method returns structured JSON.
+    Fallback: inject tool schemas into the system prompt for models that
+    don't have native tool support.
+
     Attributes:
         model: The Cloudflare model ID (e.g. @cf/meta/llama-4-scout-17b-16e-instruct).
         api_base: Cloudflare Workers AI run endpoint URL.
         api_token: Cloudflare API token.
+        tools: Optional list of tool/function definitions for tool calling.
     """
+
+    # Models that support Cloudflare's native tool calling
+    _NATIVE_TOOL_MODELS = {
+        "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+        "@cf/meta/llama-4-scout-17b-16e-instruct",
+    }
 
     def __init__(
         self,
         model: str = CF_DEFAULT_MODEL,
         temperature: float = 0.3,
         max_tokens: int = 4096,
+        tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs,
     ):
         # Bypass pydantic field injection — set attributes directly on the internal
@@ -45,6 +59,7 @@ class CloudflareLLM(BaseLLM):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self._tools = tools or []
 
         # Resolve Cloudflare credentials
         from ..config import settings
@@ -53,6 +68,14 @@ class CloudflareLLM(BaseLLM):
             f"https://api.cloudflare.com/client/v4/accounts/"
             f"{settings.cloudflare_account_id}/ai/run/"
         )
+
+    def supports_function_calling(self) -> bool:
+        """Required by CrewAI for Pydantic output parsing. Called as method."""
+        return bool(self._tools or self.model in self._NATIVE_TOOL_MODELS)
+
+    def supports_stop_words(self) -> bool:
+        """Required by CrewAI BaseLLM interface."""
+        return False
 
     # ──────────────────────────── CrewAI API ────────────────────────────
 
@@ -65,9 +88,16 @@ class CloudflareLLM(BaseLLM):
     ) -> str:
         """Synchronous chat completion as required by CrewAI's BaseLLM protocol.
 
+        When tools are provided (either at init or per-call), this method:
+        1. For native-tool models: includes tools in the Cloudflare API payload
+           and parses the structured tool_call response.
+        2. For non-native models: injects tool schemas into the system prompt
+           as context so the model can describe which tool it would call.
+
         This runs in whatever thread CrewAI assigns — must be fully synchronous.
         """
-        payload = self._build_payload(messages)
+        active_tools = tools or self._tools
+        payload = self._build_payload(messages, tools=active_tools)
         url = f"{self._api_base}{self.model}"
         headers = {
             "Authorization": f"Bearer {self._api_token}",
@@ -82,6 +112,12 @@ class CloudflareLLM(BaseLLM):
 
             result = data.get("result", {})
             text = result.get("response", "")
+
+            # Parse tool calls from response if present
+            if active_tools and "tool_calls" in result:
+                tool_calls_str = self._serialize_tool_calls(result["tool_calls"])
+                return tool_calls_str
+
             if not text:
                 logger.warning("Empty response from Cloudflare; payload received: %s...",
                                str(result)[:200])
@@ -104,12 +140,17 @@ class CloudflareLLM(BaseLLM):
     # ──────────────────────────── Internals ─────────────────────────────
 
     def _build_payload(
-        self, messages: Union[str, List[Dict[str, str]]]
+        self, messages: Union[str, List[Dict[str, str]]],
+        tools: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """Convert CrewAI message format to Cloudflare Workers AI format.
 
-        Cloudflare expects: {"messages": [{"role": ..., "content": ...}], ...}
+        Cloudflare expects: {"messages": [...], ...}
+        When tools are provided, injects them for native models or as
+        system-prompt context for non-native models.
         """
+        import json
+
         system_prompt: Optional[str] = None
         user_msgs: List[Dict[str, str]] = []
 
@@ -125,15 +166,63 @@ class CloudflareLLM(BaseLLM):
                     user_msgs.append({"role": role, "content": content})
 
         cf_messages: List[Dict[str, str]] = []
+
+        # Tool injection for non-native models: embed schemas in system prompt
+        tool_context = ""
+        if tools and self.model not in self._NATIVE_TOOL_MODELS:
+            tool_schemas = json.dumps(
+                [{"name": t.get("name", ""), "description": t.get("description", ""),
+                  "parameters": t.get("parameters", {})} for t in tools],
+                indent=2,
+            )
+            tool_context = (
+                "\n\nAVAILABLE TOOLS:\n" + tool_schemas + "\n\n"
+                "If you need to use a tool, respond with a JSON object in this format:\n"
+                '{"tool_call": {"name": "<tool_name>", "params": {...}}}\n'
+            )
+
         if system_prompt:
-            cf_messages.append({"role": "system", "content": system_prompt})
+            cf_messages.append({"role": "system", "content": system_prompt + tool_context})
+        elif tool_context:
+            cf_messages.append({"role": "system", "content": tool_context})
         cf_messages.extend(user_msgs)
 
-        return {
+        payload: Dict[str, Any] = {
             "messages": cf_messages,
             "max_tokens": int(self.max_tokens) if self.max_tokens else 4096,
             "temperature": float(self.temperature) if self.temperature else 0.3,
         }
+
+        # Native tool support: pass tools directly to the API
+        if tools and self.model in self._NATIVE_TOOL_MODELS:
+            payload["tools"] = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": t.get("name", ""),
+                        "description": t.get("description", ""),
+                        "parameters": t.get("parameters", {}),
+                    },
+                }
+                for t in tools
+            ]
+
+        return payload
+
+    @staticmethod
+    def _serialize_tool_calls(tool_calls: List[Dict[str, Any]]) -> str:
+        """Serialize tool call responses into a JSON string CrewAI can parse."""
+        import json
+        calls = []
+        for tc in tool_calls:
+            fn = tc.get("function", {})
+            calls.append({
+                "tool_call": {
+                    "name": fn.get("name", ""),
+                    "arguments": fn.get("arguments", {}),
+                }
+            })
+        return json.dumps({"tool_calls": calls}, indent=2)
 
 
 # ──────────────────────────── Factory helpers ───────────────────────────

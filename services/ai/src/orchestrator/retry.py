@@ -57,6 +57,19 @@ def with_retry(
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             from .structured_logging import write_event
+            from .audit_agent import audit_trail, AuditAction
+
+            # Map crew name to audit action type
+            _CREW_ACTION_MAP = {
+                "document_intelligence": AuditAction.CONTRACT_ANALYSIS_COMPLETED,
+                "drafting": AuditAction.DRAFT_GENERATED,
+                "research": AuditAction.RESEARCH_COMPLETED,
+                "compliance": AuditAction.QUALITY_GATE_CHECKED,
+                "proposal": AuditAction.DRAFT_GENERATED,
+                "market_intel": AuditAction.RESEARCH_COMPLETED,
+                "engagement": AuditAction.MEETING_ACTION_ITEMS_EXTRACTED,
+            }
+            audit_action = _CREW_ACTION_MAP.get(crew_name, AuditAction.OUTPUT_DELIVERED)
 
             last_exception = None
             for attempt in range(max_retries + 1):
@@ -64,6 +77,16 @@ def with_retry(
                     start = time.time()
                     result = await func(*args, **kwargs)
                     duration_ms = int((time.time() - start) * 1000)
+
+                    # Audit: successful completion
+                    audit_trail.log(
+                        action=audit_action,
+                        resource_id=crew_name,
+                        user_id="system",
+                        duration_ms=duration_ms,
+                        success=True,
+                        metadata={"attempt": attempt + 1, "retries": attempt},
+                    )
 
                     if attempt > 0:
                         write_event({
@@ -93,6 +116,15 @@ def with_retry(
                         )
                         await asyncio.sleep(delay)
                     else:
+                        # Audit: exhausted retries — log failure
+                        audit_trail.log(
+                            action=AuditAction.ERROR_OCCURRED,
+                            resource_id=crew_name,
+                            user_id="system",
+                            success=False,
+                            error_message=str(e)[:500],
+                            metadata={"attempts": max_retries + 1, "error_type": type(e).__name__},
+                        )
                         write_event({
                             "event": "retry_exhausted",
                             "crew": crew_name,
@@ -105,7 +137,15 @@ def with_retry(
                             crew_name, max_retries + 1, e,
                         )
                 except Exception as e:
-                    # Non-retryable exceptions — log and re-raise immediately
+                    # Non-retryable exceptions — audit, log, re-raise immediately
+                    audit_trail.log(
+                        action=AuditAction.ERROR_OCCURRED,
+                        resource_id=crew_name,
+                        user_id="system",
+                        success=False,
+                        error_message=str(e)[:500],
+                        metadata={"error_type": type(e).__name__, "attempt": attempt + 1},
+                    )
                     write_event({
                         "event": "non_retryable_error",
                         "crew": crew_name,

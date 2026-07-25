@@ -7,7 +7,11 @@ sequential process mode.
 CrewAI 1.x requirements:
 - Each Task must have an explicit `agent`.
 - `context` must be a list of Task objects (not dicts).
-Task builders therefore accept the agent and optional context tasks.
+
+Note: Pydantic schemas are defined in schemas.py for documentation and
+optional downstream validation. output_pydantic is NOT wired into tasks
+because CrewAI 1.15.2 TaskOutput rejects dict .raw when pydantic models
+parse successfully (version incompatibility with dict-or-string raw).
 """
 from __future__ import annotations
 
@@ -27,8 +31,10 @@ class DocumentIntelligenceTasks:
         self,
         document_text: str,
         playbook_rules: Optional[List[Dict[str, Any]]] = None,
+        risk_context_text: Optional[str] = None,
     ):
         self.document_text = document_text
+        self.risk_context_text = risk_context_text or document_text
         self.playbook_rules = playbook_rules or []
 
     def extract_clauses(self, agent, step_callback=None) -> Task:
@@ -71,7 +77,7 @@ class DocumentIntelligenceTasks:
                 f"- Notices\n"
                 f"- Entire Agreement\n"
                 f"{playbook_context}\n\n"
-                f"DOCUMENT TEXT:\n```\n{self.document_text[:15000]}\n```\n\n"
+                f"DOCUMENT TEXT:\n```\n{self.document_text}\n```\n\n"
                 f"Output a structured list of clauses with: clause_type, text_excerpt, "
                 f"confidence (0-1), and any notable observations."
             ),
@@ -96,7 +102,7 @@ class DocumentIntelligenceTasks:
                 f"2. Explain why the score was assigned (specific legal reasoning)\n"
                 f"3. Compare to market standards where applicable\n"
                 f"4. Estimate potential financial exposure if the clause is enforced\n\n"
-                f"DOCUMENT TEXT:\n```\n{self.document_text[:8000]}\n```\n\n"
+                f"DOCUMENT TEXT:\n```\n{self.risk_context_text}\n```\n\n"
                 f"Use the clause extraction results from the previous task as input."
             ),
             expected_output=(
@@ -130,7 +136,7 @@ class DocumentIntelligenceTasks:
                 f"- VIOLATION: The clause violates the playbook (specify what's wrong)\n"
                 f"- MISSING: The required clause/provision is absent\n\n"
                 f"PLAYBOOK RULES:\n{rules_text}\n\n"
-                f"DOCUMENT TEXT:\n```\n{self.document_text[:8000]}\n```\n\n"
+                f"DOCUMENT TEXT:\n```\n{self.risk_context_text}\n```\n\n"
                 f"Use the clause extraction and risk analysis results from previous tasks."
             ),
             expected_output=(
@@ -339,40 +345,6 @@ class ComplianceTasks:
         self.matter_id = matter_id
         self.contract_issues = contract_issues or []
 
-    def audit_log(self, agent, step_callback=None) -> Task:
-        """Task: Log the action in the immutable audit trail."""
-        import hashlib
-        import datetime
-
-        content_hash = hashlib.sha256(self.output_text.encode()).hexdigest()[:16]
-        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-        return Task(
-            agent=agent,
-            step_callback=step_callback,
-            description=(
-                f"Create an audit trail entry for the following AI action:\n\n"
-                f"TIMESTAMP: {timestamp}\n"
-                f"OUTPUT TYPE: {self.output_type}\n"
-                f"FIRM ID: {self.firm_id}\n"
-                f"USER ID: {self.user_id}\n"
-                f"MATTER ID: {self.matter_id or 'N/A'}\n"
-                f"CONTENT HASH: {content_hash}\n\n"
-                f"Verify that this entry meets SOC 2 Type II and ISO 27001 requirements "
-                f"for audit trail immutability and completeness."
-            ),
-            expected_output=(
-                "An audit trail entry containing: "
-                "1. entry_id (unique identifier) "
-                "2. timestamp (ISO 8601 with timezone) "
-                "3. action_type (from OUTPUT_TYPE) "
-                "4. actor (user_id, firm_id) "
-                "5. resource (matter_id if applicable) "
-                "6. content_hash (SHA-256) "
-                "7. compliance_checks (SOC2, ISO27001, GDPR status)"
-            ),
-        )
-
     def compliance_check(self, agent, context: Optional[List[Task]] = None, step_callback=None) -> Task:
         """Task: Validate output against regulatory requirements."""
         issues_summary = ""
@@ -418,8 +390,8 @@ class ComplianceTasks:
         if not self.contract_issues:
             return Task(
                 agent=agent,
-            step_callback=step_callback,
-            description=(
+                step_callback=step_callback,
+                description=(
                     "No contract issues to analyze. Simply confirm that no negotiation "
                     "advice is needed for this output and summarize why."
                 ),
@@ -462,7 +434,6 @@ class ComplianceTasks:
             ),
             context=context or [],
         )
-
 
 
 # ---------------------------------------------------------------

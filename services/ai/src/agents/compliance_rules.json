@@ -1,0 +1,98 @@
+[
+  {
+    "rule_name": "Limitation_of_Liability_Cap",
+    "description": "The limitation of liability cap must not exceed 1x fees paid.",
+    "required_value": "≤ 1x fees",
+    "acceptable_range": "1x – 2x fees",
+    "category": "financial",
+    "risk_weight": 9
+  },
+  {
+    "rule_name": "Indemnification_Scope",
+    "description": "Indemnification must be limited to third-party claims arising from performance. No broad uncapped indemnities.",
+    "required_value": "third-party only, capped",
+    "acceptable_range": "mutual, capped at 2x fees",
+    "category": "legal",
+    "risk_weight": 8
+  },
+  {
+    "rule_name": "IP_Ownership",
+    "description": "Firm retains ownership of pre-existing IP. Work product transfers on full payment.",
+    "required_value": "work-product transfers on payment",
+    "acceptable_range": "joint ownership with carve-out for pre-existing IP",
+    "category": "ip",
+    "risk_weight": 8
+  },
+  {
+    "rule_name": "Governing_Law",
+    "description": "Governing law must match the firm's primary jurisdiction or a neutral venue.",
+    "required_value": "firm's home state or Delaware",
+    "acceptable_range": "any US state with well-developed commercial law",
+    "category": "legal",
+    "risk_weight": 6
+  },
+  {
+    "rule_name": "Confidentiality_Duration",
+    "description": "Confidentiality obligations must survive for a reasonable period after termination.",
+    "required_value": "≥ 3 years post-termination",
+    "acceptable_range": "2–5 years",
+    "category": "legal",
+    "risk_weight": 5
+  },
+  {
+    "rule_name": "Non_Compete_Scope",
+    "description": "Non-compete must be reasonable in scope and duration. No blanket industry bans.",
+    "required_value": "12 months, same services only",
+    "acceptable_range": "12–18 months, reasonable scope",
+    "category": "legal",
+    "risk_weight": 7
+  },
+  {
+    "rule_name": "Termination_for_Convenience",
+    "description": "Contract must include termination for convenience with 30 days notice.",
+    "required_value": "30 days notice",
+    "acceptable_range": "30–90 days notice",
+    "category": "operational",
+    "risk_weight": 6
+  },
+  {
+    "rule_name": "Data_Protection_Compliance",
+    "description": "Data processing terms must reference applicable privacy regulations (GDPR, CCPA, etc.).",
+    "required_value": "GDPR + CCPA compliant DPA",
+    "acceptable_range": "standard DPA with regional compliance",
+    "category": "privacy",
+    "risk_weight": 7
+  },
+  {
+    "rule_name": "Insurance_Requirements",
+    "description": "Professional liability insurance must be maintained at specified minimums.",
+    "required_value": "≥ $2M per occurrence / $5M aggregate",
+    "acceptable_range": "$1M–$5M",
+    "category": "financial",
+    "risk_weight": 5
+  },
+  {
+    "rule_name": "Payment_Terms",
+    "description": "Payment within 30 days of invoice with interest on late payments.",
+    "required_value": "Net 30, 1.5% monthly late interest",
+    "acceptable_range": "Net 30–45",
+    "category": "financial",
+    "risk_weight": 4
+  },
+  {
+    "rule_name": "Dispute_Resolution",
+    "description": "Disputes must go through mediation before arbitration or litigation.",
+    "required_value": "mediation → binding arbitration",
+    "acceptable_range": "mediation → litigation in neutral venue",
+    "category": "legal",
+    "risk_weight": 5
+  },
+  {
+    "rule_name": "Assignment_Clause",
+    "description": "Assignment must require mutual consent; no unilateral assignment.",
+    "required_value": "mutual consent required",
+    "acceptable_range": "consent not unreasonably withheld",
+    "category": "legal",
+    "risk_weight": 4
+  }
+]
