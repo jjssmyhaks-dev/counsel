@@ -13,3 +13,5 @@ numpy>=2.1.0
 # CrewAI multi-agent framework
 crewai>=1.15.0
 crewai-tools>=1.15.0
+# Real financial computation (not LLM-estimated)
+numpy-financial>=1.0.0

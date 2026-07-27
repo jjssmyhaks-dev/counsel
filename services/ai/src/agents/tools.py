@@ -136,27 +136,40 @@ def _fallback_document_search(query: str, top_k: int) -> Dict[str, Any]:
 # Tool: Compliance Rules Lookup
 # ═══════════════════════════════════════════════════════════════
 
-def compliance_lookup(category: str = "", rule_name: str = "") -> str:
-    """Look up compliance/playbook rules by category or rule name.
+def compliance_lookup(category: str = "", rule_name: str = "", framework: str = "") -> str:
+    """Look up compliance/playbook rules by category, rule name, or framework.
 
     Use this to check contract provisions against the firm's negotiation
-    playbook. Returns matching rules with required values, acceptable
-    ranges, and risk weights.
+    playbook, or to look up regulatory requirements from GDPR/CCPA/SOC2/ISO27001.
 
     Args:
         category: Filter by category (financial, legal, ip, privacy, operational).
-                  Empty string returns all categories.
         rule_name: Filter by specific rule name (partial match supported).
-                   Empty string returns all rules in category.
+        framework: Look up regulatory framework rules instead. One of:
+                   GDPR, CCPA, SOC2, ISO27001.
 
     Returns:
         JSON string with matching compliance rules.
     """
+    # Regulatory framework lookup (new format)
+    if framework:
+        fw = framework.upper()
+        regulatory = _COMPLIANCE_RULES.get("regulatory_frameworks", {})
+        fw_rules = regulatory.get(fw, [])
+        return json.dumps({
+            "total_rules": len(fw_rules),
+            "framework": fw,
+            "filters": {"category": category or "all", "rule_name": rule_name or "all"},
+            "rules": fw_rules,
+        }, indent=2)
+
+    # Contract negotiation playbook (legacy format)
+    contract_rules = _COMPLIANCE_RULES.get("contract_negotiation", _COMPLIANCE_RULES)
     matches = []
     category_lower = category.lower() if category else ""
     name_lower = rule_name.lower() if rule_name else ""
 
-    for rule in _COMPLIANCE_RULES:
+    for rule in contract_rules:
         if category_lower and rule.get("category", "").lower() != category_lower:
             continue
         if name_lower and name_lower not in rule.get("rule_name", "").lower():
@@ -175,6 +188,91 @@ def compliance_lookup(category: str = "", rule_name: str = "") -> str:
         "filters": {"category": category or "all", "rule_name": rule_name or "all"},
         "rules": matches,
     }, indent=2)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Tool: Financial Calculator (Real NPV/IRR, not LLM-estimated)
+# ═══════════════════════════════════════════════════════════════
+
+def financial_calculator(cash_flows: str, discount_rate: str = "0.10") -> str:
+    """Compute NPV, IRR, and payback period from cash flow series.
+
+    Use this tool instead of estimating financial numbers yourself.
+    Returns real computed values using numpy-financial.
+
+    Args:
+        cash_flows: JSON array of numbers, e.g. "[-100000, 30000, 40000, 50000]".
+                    Period 0 = initial investment (negative).
+        discount_rate: Annual discount rate as decimal, e.g. "0.10" for 10%.
+
+    Returns:
+        JSON string with npv, irr, payback_period_years.
+    """
+    import json as _json
+    import numpy_financial as npf
+
+    try:
+        flows = _json.loads(cash_flows) if isinstance(cash_flows, str) else cash_flows
+        rate = float(discount_rate) if isinstance(discount_rate, str) else discount_rate
+
+        npv = npf.npv(rate, flows)
+        try:
+            irr_val = npf.irr(flows)
+        except Exception:
+            irr_val = None
+
+        # Payback period
+        cumulative = 0.0
+        payback = None
+        for i, cf in enumerate(flows):
+            cumulative += cf
+            if cumulative >= 0 and payback is None and i > 0:
+                # Linear interpolation for fractional year
+                prev_cum = cumulative - cf
+                fraction = abs(prev_cum) / (abs(prev_cum) + abs(cf)) if cf != 0 else 0
+                payback = i - 1 + fraction
+
+        return _json.dumps({
+            "npv": round(npv, 2),
+            "irr": round(irr_val, 4) if irr_val is not None else None,
+            "payback_period_years": round(payback, 2) if payback is not None else None,
+            "discount_rate": rate,
+            "periods": len(flows),
+        })
+    except Exception as e:
+        return _json.dumps({"error": f"Financial calculation failed: {str(e)}"})
+
+
+def sensitivity_analysis(cash_flows: str, discount_rate: str = "0.10", variance_pct: str = "0.20") -> str:
+    """Run best/base/worst case sensitivity analysis.
+
+    Args:
+        cash_flows: JSON array of base-case cash flows.
+        discount_rate: Annual discount rate.
+        variance_pct: Variance percentage (e.g. "0.20" for +/-20%).
+
+    Returns:
+        JSON with base_case, best_case, worst_case NPV/IRR/payback.
+    """
+    import json as _json
+
+    flows = _json.loads(cash_flows) if isinstance(cash_flows, str) else cash_flows
+    v = float(variance_pct) if isinstance(variance_pct, str) else variance_pct
+
+    base = _json.loads(financial_calculator(flows, discount_rate))
+
+    best_cf = [cf * (1 + v) if cf > 0 else cf for cf in flows]
+    worst_cf = [cf * (1 - v) if cf > 0 else cf for cf in flows]
+
+    best = _json.loads(financial_calculator(best_cf, discount_rate))
+    worst = _json.loads(financial_calculator(worst_cf, discount_rate))
+
+    return _json.dumps({
+        "base_case": base,
+        "best_case": {"npv": best.get("npv"), "irr": best.get("irr"), "payback_period_years": best.get("payback_period_years")},
+        "worst_case": {"npv": worst.get("npv"), "irr": worst.get("irr"), "payback_period_years": worst.get("payback_period_years")},
+        "variance_pct": v,
+    })
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -224,13 +322,16 @@ def document_reader(document_id: str) -> str:
 
 RESEARCH_TOOLS = [retrieval_search, document_reader]
 COMPLIANCE_TOOLS = [compliance_lookup, document_reader]
-ALL_TOOLS = [retrieval_search, compliance_lookup, document_reader]
+FINANCIAL_TOOLS = [financial_calculator, sensitivity_analysis]
+ALL_TOOLS = [retrieval_search, compliance_lookup, document_reader, financial_calculator, sensitivity_analysis]
 
 # Map tool names to functions for dynamic tool dispatch
 TOOL_BY_NAME = {
     "retrieval_search": retrieval_search,
     "compliance_lookup": compliance_lookup,
     "document_reader": document_reader,
+    "financial_calculator": financial_calculator,
+    "sensitivity_analysis": sensitivity_analysis,
 }
 
 
