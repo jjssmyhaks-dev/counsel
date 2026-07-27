@@ -1,0 +1,47 @@
+groups:
+  - name: mcp_alerts
+    rules:
+      - alert: MCPServerDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MCP server {{ $labels.instance }} is down"
+          description: "Server has been down for more than 2 minutes."
+
+      - alert: MCPHighErrorRate
+        expr: rate(mcp_requests_total{status="error"}[5m]) / rate(mcp_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} over last 5 minutes."
+
+      - alert: MCPCircuitBreakerOpen
+        expr: mcp_circuit_breaker_state >= 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit breaker OPEN for {{ $labels.service }}"
+          description: "External service is unreachable — requests are being rejected."
+
+      - alert: MCPHighLatency
+        expr: histogram_quantile(0.95, rate(mcp_request_duration_ms_bucket[5m])) > 2000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value }}ms (> 2000ms threshold)."
+
+      - alert: ExternalServiceDegraded
+        expr: mcp_circuit_breaker_state{service="cloudflare-workers-ai"} > 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cloudflare Workers AI is degraded"
+          description: "Falling back to text search. Check Cloudflare API status."

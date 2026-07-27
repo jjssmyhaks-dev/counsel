@@ -1,0 +1,77 @@
+{
+  "dashboard": {
+    "title": "Counsel MCP — Integration Health",
+    "uid": "counsel-mcp",
+    "panels": [
+      {
+        "title": "MCP Server Status",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "targets": [{ "expr": "count(up{job=\"mcp-servers\"})", "legendFormat": "Total" }],
+        "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+      },
+      {
+        "title": "Healthy Servers",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+        "targets": [{ "expr": "count(up{job=\"mcp-servers\"} == 1)", "legendFormat": "Healthy" }],
+        "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+      },
+      {
+        "title": "Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "targets": [
+          { "expr": "rate(mcp_requests_total[1m])", "legendFormat": "{{method}}" }
+        ]
+      },
+      {
+        "title": "Error Rate (%)",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "targets": [
+          { "expr": "rate(mcp_requests_total{status=\"error\"}[1m]) / rate(mcp_requests_total[1m]) * 100", "legendFormat": "{{service}}" }
+        ]
+      },
+      {
+        "title": "Latency P50/P95/P99 (ms)",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "targets": [
+          { "expr": "histogram_quantile(0.50, rate(mcp_request_duration_ms_bucket[1m]))", "legendFormat": "P50 {{service}}" },
+          { "expr": "histogram_quantile(0.95, rate(mcp_request_duration_ms_bucket[1m]))", "legendFormat": "P95 {{service}}" },
+          { "expr": "histogram_quantile(0.99, rate(mcp_request_duration_ms_bucket[1m]))", "legendFormat": "P99 {{service}}" }
+        ]
+      },
+      {
+        "title": "Circuit Breaker State",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "targets": [
+          { "expr": "mcp_circuit_breaker_state", "legendFormat": "{{service}} (0=OK, 1=Half, 2=Open)" }
+        ],
+        "fieldConfig": { "defaults": { "thresholds": { "steps": [
+          { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }
+        ] } } }
+      },
+      {
+        "title": "External API Calls",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+        "targets": [
+          { "expr": "rate(mcp_external_calls_total[1m])", "legendFormat": "{{service}} ({{status}})" }
+        ]
+      },
+      {
+        "title": "Active Connections",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+        "targets": [
+          { "expr": "mcp_active_connections", "legendFormat": "{{service}}" }
+        ]
+      }
+    ],
+    "schemaVersion": 27,
+    "tags": ["mcp", "counsel", "integrations"]
+  }
+}

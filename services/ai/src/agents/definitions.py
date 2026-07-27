@@ -418,6 +418,20 @@ def create_financial_modeler() -> Agent:
     )
 
 
+# ── MCP Tool Allocation Per Agent ────────────────────────────────────
+# Agents get MCP tools based on their role:
+#   postgres:   database CRUD (matters, documents, drafts, audit log, playbook)
+#   document:   semantic search + RAG
+#   cloudflare: LLM text generation + embeddings
+
+def _get_mcp_tools(*servers: str):
+    """Get MCP tools for given servers. Graceful fallback if MCP not running."""
+    try:
+        from .mcp_client import mcp_registry
+        return mcp_registry.get_crew_tools(list(servers))
+    except Exception:
+        return []  # Fallback: no MCP tools, agents still work
+
 AGENT_FACTORIES = {
     # Legal
     "clause_extractor": create_clause_extractor,

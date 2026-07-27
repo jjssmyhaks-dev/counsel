@@ -1,27 +1,115 @@
+# ── Counsel Platform Docker Compose (Full: API + Web + AI + MCP) ──
+# Usage: docker compose --profile full up -d
+
 version: "3.9"
 
-# ── Counsel Platform — Docker Compose ────────────────────────────
-# Start all three services in one command:
-#   docker compose up -d
-# Health check URLs:
-#   AI:    http://localhost:8000/health
-#   API:   http://localhost:3001/api/health
-#   Web:   http://localhost:3000
-
 services:
+  # ──────────── MCP Servers ────────────
+
+  mcp-registry:
+    build: services/mcp
+    image: counsel-mcp-registry
+    ports:
+      - "3100:3100"
+    environment:
+      - MCP_SERVER=registry
+    env_file:
+      - services/mcp/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3100/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-postgres:
+    build: services/mcp
+    image: counsel-mcp-postgres
+    ports:
+      - "3101:3101"
+    environment:
+      - MCP_SERVER=postgres-mcp
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3101/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-cloudflare:
+    build: services/mcp
+    image: counsel-mcp-cloudflare
+    ports:
+      - "3102:3102"
+    environment:
+      - MCP_SERVER=cloudflare-mcp
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-document:
+    build: services/mcp
+    image: counsel-mcp-document
+    ports:
+      - "3103:3103"
+    environment:
+      - MCP_SERVER=document-mcp
+      - DATABASE_URL=${DATABASE_URL}
+      - AI_SERVICE_URL=http://ai:8000
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+      ai:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3103/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  # ──────────── Core Services ────────────
+
   ai:
     build: services/ai
     ports:
       - "8000:8000"
     env_file:
       - services/ai/.env
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+    restart: unless-stopped
+    profiles: ["core", "full"]
 
   api:
     build:
@@ -41,6 +129,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    profiles: ["core", "full"]
 
   web:
     build:
@@ -60,8 +149,45 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    profiles: ["core", "full"]
 
-  # Optional: NGINX reverse proxy with SSL termination
+  # ──────────── Monitoring ────────────
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./services/mcp/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./services/mcp/prometheus/mcp_alerts.yml:/etc/prometheus/mcp_alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+    profiles: ["monitoring", "full"]
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "3030:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - ./services/mcp/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./services/mcp/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+    profiles: ["monitoring", "full"]
+
+  # ──────────── NGINX Reverse Proxy + SSL ────────────
+
   nginx:
     image: nginx:1.27-alpine
     ports:
@@ -73,5 +199,8 @@ services:
     depends_on:
       - web
     restart: unless-stopped
-    profiles:
-      - production
+    profiles: ["production", "full"]
+
+volumes:
+  prometheus_data:
+  grafana_data:
