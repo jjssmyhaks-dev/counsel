@@ -70,8 +70,14 @@ class CloudflareLLM(BaseLLM):
         )
 
     def supports_function_calling(self) -> bool:
-        """Required by CrewAI for Pydantic output parsing. Called as method."""
-        return bool(self._tools or self.model in self._NATIVE_TOOL_MODELS)
+        """CrewAI check for Pydantic output parsing.
+
+        Returns False because our tool calling goes through the native
+        Cloudflare Workers AI bridge (_build_payload), not through CrewAI's
+        pydantic validation layer. Returning True here causes CrewAI to try
+        parsing LLM output as Pydantic models which conflicts with our bridge.
+        """
+        return False
 
     def supports_stop_words(self) -> bool:
         """Required by CrewAI BaseLLM interface."""
