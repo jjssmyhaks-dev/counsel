@@ -41,6 +41,7 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+services/ai/logs/*.jsonl
 
 # Testing
 coverage/

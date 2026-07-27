@@ -11,13 +11,16 @@ A B2B AI suite that gives every employee at a legal or consulting firm an AI cop
 | Frontend | Next.js 15 (App Router) + Tailwind CSS (Lovable green-serif theme) |
 | Core API | Node.js + Express + TypeScript |
 | AI Service | Python FastAPI + CrewAI Multi-Agent (10 agents, 4 crews) + Cloudflare Workers AI (Llama 4 Scout 17B, Llama 3.3 70B, DeepSeek R1) |
+| MCP Servers | 18 Model Context Protocol servers (PostgreSQL, Cloudflare AI, Document RAG, Email, Calendar, Storage, E-Sign, Billing, Court, Communication, CRM, Workflow, OCR, Translation, Video, Time, Conflict) |
 | Embeddings | Cloudflare bge-base-en-v1.5 (768-dim) via pgvector HNSW |
 | Database | PostgreSQL + pgvector (vector search) |
 | ORM | Prisma with multi-tenant RLS |
 | Queue | Redis/BullMQ (async processing) |
-| Storage | Cloudflare R2 (document storage) |
+| Storage | S3 / GCS / SharePoint + Cloudflare R2 (document storage) |
+| Monitoring | Prometheus + Grafana (18 server dashboards, 6 alert rules) |
 | Extension | Chrome Manifest V3 (Gmail integration) |
-| Auth | JWT-based + WorkOS SSO (SAML/OIDC) |
+| Auth | JWT-based + WorkOS SSO (SAML/OIDC) + OAuth2 for integrations |
+| CI/CD | GitHub Actions — test → build → push → rolling deploy + Trivy security scan |
 
 ## 📁 Project Structure
 
@@ -38,16 +41,40 @@ counsel-platform/
 ├── packages/
 │   └── database/              # Prisma schema (16 models), migrations, seeds
 ├── services/
-│   └── ai/                    # Python AI/ML service
-│       ├── logs/               # Audit trail JSONL (date-rotated, 10 MB chunks)
-│       ├── scripts/            # Indexing + verification scripts
-│       └── src/
-│           ├── agents/         # CrewAI multi-agent crews (4 crews, 10 agents)
-│           │   ├── crews.py            # Crew definitions + full pipeline orchestrator
-│           │   ├── tasks.py            # Task builders (clause extraction, risk, etc.)
-│           │   ├── definitions.py      # Agent LLM configs (Cloudflare Workers AI)
-│           │   └── cloudflare_llm.py   # CrewAI-compatible Cloudflare LLM bridge
-│           ├── orchestrator/   # Pipeline orchestration + audit trail
+│   ├── ai/                    # Python AI/ML service
+│   │   ├── logs/               # Audit trail JSONL (date-rotated, 10 MB chunks)
+│   │   ├── scripts/            # Indexing + verification scripts
+│   │   └── src/
+│   │       ├── agents/         # CrewAI multi-agent crews (4 crews, 10 agents)
+│   │       │   ├── crews.py            # Crew definitions + full pipeline orchestrator
+│   │       │   ├── tasks.py            # Task builders (clause extraction, risk, etc.)
+│   │       │   ├── definitions.py      # Agent LLM configs (Cloudflare Workers AI)
+│   │       │   ├── cloudflare_llm.py   # CrewAI-compatible Cloudflare LLM bridge
+│   │       │   └── mcp_client.py       # MCP bridge: 18 servers → CrewAI tools
+│   │       ├── orchestrator/   # Pipeline orchestration + audit trail
+│   └── mcp/                   # Model Context Protocol servers (18 total)
+│       ├── shared/             # MCPServer factory, CircuitBreaker, Prometheus metrics, protocol
+│       ├── registry/           # :3100 — Service discovery + health aggregation
+│       ├── postgres-mcp/       # :3101 — Neon PostgreSQL (10 tools: CRUD, schema, audit)
+│       ├── cloudflare-mcp/     # :3102 — Cloudflare Workers AI (5 tools: text gen, embed, chat)
+│       ├── document-mcp/       # :3103 — pgvector RAG (5 tools: semantic search, chunks)
+│       ├── email-mcp/          # :3104 — Gmail + Outlook (6 tools)
+│       ├── calendar-mcp/       # :3105 — Google + Outlook Calendar (6 tools)
+│       ├── storage-mcp/        # :3106 — S3/GCS/SharePoint (6 tools)
+│       ├── esign-mcp/          # :3107 — DocuSign + HelloSign (6 tools)
+│       ├── billing-mcp/        # :3108 — Stripe (6 tools)
+│       ├── court-mcp/          # :3109 — CourtListener case law + statutes (6 tools)
+│       ├── communication-mcp/  # :3110 — Slack + Teams (6 tools)
+│       ├── crm-mcp/            # :3111 — Salesforce/Clio/HubSpot (6 tools)
+│       ├── workflow-mcp/       # :3112 — Zapier/n8n/Make (5 tools)
+│       ├── ocr-mcp/            # :3113 — AWS Textract + Azure DocIntel (6 tools)
+│       ├── translation-mcp/    # :3114 — DeepL + Azure Translator (5 tools)
+│       ├── video-mcp/          # :3115 — Zoom + Teams Meetings (5 tools)
+│       ├── time-mcp/           # :3116 — Harvest + Toggl (5 tools)
+│       ├── conflict-mcp/       # :3117 — Conflict of Interest check (5 tools)
+│       ├── prometheus/         # Prometheus config + 6 alert rules
+│       ├── grafana/            # Grafana dashboards + auto-provisioning
+│       └── tests/              # Integration tests + 100-call benchmark
 │           │   ├── router.py, pipeline_orchestrator.py
 │           │   ├── audit_agent.py       # In-memory audit trail singleton
 │           │   └── audit_persistence.py # JSONL file persistence with rotation
@@ -111,7 +138,27 @@ pip install -r requirements.txt
 uvicorn src.main:app --host 127.0.0.1 --port 8000
 ```
 
-**6. Index sample documents for RAG (optional):**
+**6. Start MCP servers (optional):**
+```bash
+# All 18 servers
+cd services/mcp
+npm install
+
+docker compose --profile mcp up -d    # MCP only
+docker compose --profile full up -d   # Everything including monitoring
+
+# Health checks
+curl http://127.0.0.1:3100/health   # Registry
+# ... through http://127.0.0.1:3117/health
+```
+
+**7. Install MCP dependencies:**
+```bash
+cd services/mcp
+npm install --legacy-peer-deps
+```
+
+**8. Index sample documents for RAG (optional):**
 ```bash
 cd services/ai
 python scripts/index_cf_embeddings.py
@@ -157,6 +204,72 @@ All crew runs are persisted to a JSONL audit log with date rotation (10 MB chunk
 - **Audit Trail:** Immutable append-only log of all AI actions. Stored in both `audit_log` table and JSONL files.
 - **Document Encryption:** Envelope encryption with per-firm data keys managed via Cloudflare R2 SSE-C.
 - **No Training on Customer Data:** All AI prompts are logged and scrubbed before reaching upstream providers.
+
+---
+
+## 🔌 MCP Servers (18 Total · 87 Tools)
+
+Model Context Protocol servers give AI agents real-world capabilities. Each server connects to a live API, uses circuit breakers to prevent cascading failures, and degrades gracefully when external services are down.
+
+### Tier 1 — Core (Built ✅)
+
+| Server | Port | Tools | Backend |
+|--------|------|-------|---------|
+| **Registry** | 3100 | 6 | Service discovery + health aggregation |
+| **PostgreSQL** | 3101 | 10 | Neon PostgreSQL · asyncpg parameterized |
+| **Cloudflare AI** | 3102 | 5 | Workers AI REST API · 3 model tiers |
+| **Document RAG** | 3103 | 5 | pgvector cosine + full-text fallback |
+
+### Tier 2 — Required (Built ✅)
+
+| Server | Port | Tools | Backend |
+|--------|------|-------|---------|
+| **Email** | 3104 | 6 | Gmail API + Microsoft Graph |
+| **Calendar** | 3105 | 6 | Google Calendar + Outlook |
+| **Storage** | 3106 | 6 | S3 + GCS + SharePoint |
+| **E-Signature** | 3107 | 6 | DocuSign + HelloSign |
+| **Billing** | 3108 | 6 | Stripe |
+| **Court Lookup** | 3109 | 6 | CourtListener · case law/statutes |
+| **Communication** | 3110 | 6 | Slack + Teams |
+| **CRM** | 3111 | 6 | Salesforce + Clio + HubSpot |
+
+### Tier 3 — Nice-to-Have (Built ✅)
+
+| Server | Port | Tools | Backend |
+|--------|------|-------|---------|
+| **Workflow** | 3112 | 5 | Zapier + n8n + Make |
+| **OCR** | 3113 | 6 | AWS Textract + Azure DocIntel |
+| **Translation** | 3114 | 5 | DeepL + Azure Translator |
+| **Video** | 3115 | 5 | Zoom + Teams Meetings |
+| **Time Tracking** | 3116 | 5 | Harvest + Toggl |
+| **Conflict Check** | 3117 | 5 | COI detection + watchlist |
+
+### CrewAI Integration
+
+Agents get MCP tools through `mcp_client.py`:
+
+```python
+from src.agents.mcp_client import mcp_registry
+
+# Per-crew tool allocation
+di_tools      = mcp_registry.get_crew_tools(["postgres", "document", "email", "esign"])
+drafting_tools = mcp_registry.get_crew_tools(["postgres", "cloudflare", "esign", "email", "court"])
+research_tools = mcp_registry.get_crew_tools(["postgres", "document", "cloudflare", "court", "crm"])
+
+agent = Agent(name="LegalResearcher", tools=research_tools, ...)
+```
+
+All servers share: circuit breaker (5 failures → OPEN), Prometheus metrics (6 per server), and graceful degradation with `degradeFallback()`.
+
+### Quick Start
+
+```bash
+docker compose --profile mcp up -d    # All 18 MCP servers
+docker compose --profile full up -d   # Including Prometheus + Grafana + API + Web
+
+# Health check all servers
+for port in $(seq 3100 3117); do curl -s http://localhost:$port/health | jq .status; done
+```
 
 ---
 
