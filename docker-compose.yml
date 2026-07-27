@@ -94,6 +94,346 @@ services:
     restart: unless-stopped
     profiles: ["mcp", "full"]
 
+  # ── Tier 2 — Required ──
+
+  mcp-email:
+    build: services/mcp
+    image: counsel-mcp-email
+    ports:
+      - "3104:3104"
+    environment:
+      - MCP_SERVER=email-mcp
+      - EMAIL_OAUTH_TOKEN=${EMAIL_OAUTH_TOKEN}
+      - GMAIL_OAUTH_TOKEN=${GMAIL_OAUTH_TOKEN}
+      - MS_GRAPH_TOKEN=${MS_GRAPH_TOKEN}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3104/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-calendar:
+    build: services/mcp
+    image: counsel-mcp-calendar
+    ports:
+      - "3105:3105"
+    environment:
+      - MCP_SERVER=calendar-mcp
+      - CALENDAR_OAUTH_TOKEN=${CALENDAR_OAUTH_TOKEN}
+      - GOOGLE_CALENDAR_TOKEN=${GOOGLE_CALENDAR_TOKEN}
+      - MS_GRAPH_TOKEN=${MS_GRAPH_TOKEN}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3105/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-storage:
+    build: services/mcp
+    image: counsel-mcp-storage
+    ports:
+      - "3106:3106"
+    environment:
+      - MCP_SERVER=storage-mcp
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_REGION=${AWS_REGION}
+      - GCS_BUCKET=${GCS_BUCKET}
+      - GCS_ACCESS_TOKEN=${GCS_ACCESS_TOKEN}
+      - MS_GRAPH_TOKEN=${MS_GRAPH_TOKEN}
+      - SHAREPOINT_SITE_ID=${SHAREPOINT_SITE_ID}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3106/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-esign:
+    build: services/mcp
+    image: counsel-mcp-esign
+    ports:
+      - "3107:3107"
+    environment:
+      - MCP_SERVER=esign-mcp
+      - DOCUSIGN_ACCESS_TOKEN=${DOCUSIGN_ACCESS_TOKEN}
+      - DOCUSIGN_ACCOUNT_ID=${DOCUSIGN_ACCOUNT_ID}
+      - DOCUSIGN_BASE_URL=${DOCUSIGN_BASE_URL}
+      - HELLOSIGN_API_KEY=${HELLOSIGN_API_KEY}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3107/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-billing:
+    build: services/mcp
+    image: counsel-mcp-billing
+    ports:
+      - "3108:3108"
+    environment:
+      - MCP_SERVER=billing-mcp
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3108/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-court:
+    build: services/mcp
+    image: counsel-mcp-court
+    ports:
+      - "3109:3109"
+    environment:
+      - MCP_SERVER=court-mcp
+      - COURTLISTENER_API_KEY=${COURTLISTENER_API_KEY}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3109/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-communication:
+    build: services/mcp
+    image: counsel-mcp-communication
+    ports:
+      - "3110:3110"
+    environment:
+      - MCP_SERVER=communication-mcp
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - MS_GRAPH_TOKEN=${MS_GRAPH_TOKEN}
+      - TEAMS_TEAM_ID=${TEAMS_TEAM_ID}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3110/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-crm:
+    build: services/mcp
+    image: counsel-mcp-crm
+    ports:
+      - "3111:3111"
+    environment:
+      - MCP_SERVER=crm-mcp
+      - SALESFORCE_ACCESS_TOKEN=${SALESFORCE_ACCESS_TOKEN}
+      - SALESFORCE_INSTANCE_URL=${SALESFORCE_INSTANCE_URL}
+      - CLIO_ACCESS_TOKEN=${CLIO_ACCESS_TOKEN}
+      - HUBSPOT_ACCESS_TOKEN=${HUBSPOT_ACCESS_TOKEN}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3111/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  # ── Tier 3 — Nice-to-Have ──
+
+  mcp-workflow:
+    build: services/mcp
+    image: counsel-mcp-workflow
+    ports:
+      - "3112:3112"
+    environment:
+      - MCP_SERVER=workflow-mcp
+      - N8N_API_KEY=${N8N_API_KEY}
+      - N8N_BASE_URL=${N8N_BASE_URL}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3112/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-ocr:
+    build: services/mcp
+    image: counsel-mcp-ocr
+    ports:
+      - "3113:3113"
+    environment:
+      - MCP_SERVER=ocr-mcp
+      - AWS_REGION=${AWS_REGION}
+      - AZURE_DOCUMENT_INTELLIGENCE_KEY=${AZURE_DOCUMENT_INTELLIGENCE_KEY}
+      - AZURE_DOCINTEL_ENDPOINT=${AZURE_DOCINTEL_ENDPOINT}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3113/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-translation:
+    build: services/mcp
+    image: counsel-mcp-translation
+    ports:
+      - "3114:3114"
+    environment:
+      - MCP_SERVER=translation-mcp
+      - DEEPL_API_KEY=${DEEPL_API_KEY}
+      - AZURE_TRANSLATOR_KEY=${AZURE_TRANSLATOR_KEY}
+      - AZURE_TRANSLATOR_REGION=${AZURE_TRANSLATOR_REGION}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3114/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-video:
+    build: services/mcp
+    image: counsel-mcp-video
+    ports:
+      - "3115:3115"
+    environment:
+      - MCP_SERVER=video-mcp
+      - ZOOM_ACCOUNT_ID=${ZOOM_ACCOUNT_ID}
+      - ZOOM_CLIENT_ID=${ZOOM_CLIENT_ID}
+      - ZOOM_CLIENT_SECRET=${ZOOM_CLIENT_SECRET}
+      - MS_GRAPH_TOKEN=${MS_GRAPH_TOKEN}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3115/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-time:
+    build: services/mcp
+    image: counsel-mcp-time
+    ports:
+      - "3116:3116"
+    environment:
+      - MCP_SERVER=time-mcp
+      - HARVEST_ACCESS_TOKEN=${HARVEST_ACCESS_TOKEN}
+      - HARVEST_ACCOUNT_ID=${HARVEST_ACCOUNT_ID}
+      - TOGGL_API_TOKEN=${TOGGL_API_TOKEN}
+      - TOGGL_WORKSPACE_ID=${TOGGL_WORKSPACE_ID}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3116/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-conflict:
+    build: services/mcp
+    image: counsel-mcp-conflict
+    ports:
+      - "3117:3117"
+    environment:
+      - MCP_SERVER=conflict-mcp
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3117/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
   # ──────────── Core Services ────────────
 
   ai:
