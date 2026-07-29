@@ -5,7 +5,7 @@ export interface Firm {
   name: string;
   slug: string;
   domain?: string;
-  firmType?: 'LEGAL' | 'CONSULTING' | 'HYBRID';
+  firmType?: 'LEGAL' | 'CONSULTING' | 'HYBRID' | 'CA';
   onboardingCompleted?: boolean;
   plan: 'free' | 'starter' | 'professional' | 'enterprise';
   seatCount?: number;

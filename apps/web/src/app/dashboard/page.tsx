@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getUser, getFirm } from '@/lib/auth';
+import { getUser, getFirm, getFirmType } from '@/lib/auth';
 import { api } from '@/lib/api';
 
 const serif = "font-serif";
@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [firm, setFirm] = useState<any>(null);
+  const [firmType, setFirmType] = useState<string>('LEGAL');
   const [documents, setDocuments] = useState<any[]>([]);
   const [stats, setStats] = useState({ documents: 0, matters: 0, drafts: 0, meetings: 0 });
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,15 @@ export default function DashboardPage() {
     const u = getUser(); const f = getFirm();
     if (!u) { router.replace('/login'); return; }
     setUser(u); setFirm(f);
+    const ft = getFirmType();
+    setFirmType(ft || 'LEGAL');
+
+    // Redirect CA firms to their own dashboard
+    if (ft === 'CA') {
+      router.replace('/dashboard/ca');
+      return;
+    }
+
     Promise.all([
       api.get('/documents?limit=5').catch(() => ({ data: null })),
       api.get('/matters?limit=1').catch(() => ({ data: null })),

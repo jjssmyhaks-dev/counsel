@@ -21,6 +21,14 @@ const navItems = [
   { href: '/dashboard/agent-tasks', label: 'Agent Tasks', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
 ];
 
+const caNavItems = [
+  { href: '/dashboard/ca', label: 'CA Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
+  { href: '/dashboard/ca/clients', label: 'Clients', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+  { href: '/dashboard/ca/compliance', label: 'Compliance', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+  { href: '/dashboard/ca/integrations', label: 'Integrations', icon: 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z' },
+  { href: '/dashboard/ca/reconciliation', label: 'Reconciliation', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+];
+
 const consultingNavItems = [
   { href: '/dashboard/proposals', label: 'Proposals', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
   { href: '/dashboard/market-intel', label: 'Market Intel', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
@@ -91,6 +99,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const pageTitle = getPageTitle(pathname);
   const isAdmin = user?.role === 'admin' || user?.role === 'partner';
+  const showLegalNav = firmType === 'LEGAL' || firmType === 'HYBRID';
 
   return (
     <div className="h-screen flex overflow-hidden bg-[#fefdfb] dark:bg-slate-950" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
@@ -106,12 +115,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Logo variant="light" size={26} />
           <div>
             <h1 className={`${serif} text-white font-bold text-lg leading-tight tracking-[-0.02em]`}>Counsel</h1>
-            <p className="text-[#7ce3b6]/60 text-[11px]">{firmType === 'CONSULTING' ? 'Consulting Intelligence' : 'Legal Intelligence'}</p>
+            <p className="text-[#7ce3b6]/60 text-[11px]">{firmType === 'CA' ? 'CA Practice Intelligence' : firmType === 'CONSULTING' ? 'Consulting Intelligence' : 'Legal Intelligence'}</p>
           </div>
         </Link>
 
         <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
-          <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mb-2">{firmType === 'CONSULTING' ? 'Consulting' : 'Main'}</div>
+          <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mb-2">{firmType === 'CA' ? 'General' : firmType === 'CONSULTING' ? 'Consulting' : 'Main'}</div>
           {navItems.map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             return (
@@ -126,6 +135,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             );
           })}
+
+{/* CA Firm */}
+          {firmType === 'CA' && (
+            <>
+              <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mt-6 mb-2">CA Practice</div>
+              {caNavItems.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                      isActive ? 'bg-[#15b881]/15 text-[#7ce3b6] border-l-[3px] border-[#15b881] pl-[9px]' : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
+                    }`}>
+                    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                    </svg>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </>
+          )}
 
 {/* Consulting */}
           <div className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] px-3 mt-6 mb-2">Consulting</div>
