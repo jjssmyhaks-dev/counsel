@@ -1,6 +1,8 @@
-# Counsel — AI Workforce Suite for Legal & Consulting Firms
+# Counsel — AI Workforce Suite for Legal, Consulting & CA Firms
 
-A B2B AI suite that gives every employee at a legal or consulting firm an AI copilot embedded in their existing workflow. Counsel ingests the firm's documents, learns its institutional voice, and delivers AI-powered contract analysis, research synthesis, drafting assistance, and meeting intelligence — all tenant-isolated, auditable, and secure.
+A B2B AI suite that gives every employee at a legal, consulting, or Chartered Accountancy firm an AI copilot embedded in their existing workflow. Counsel ingests the firm's documents, learns its institutional voice, and delivers AI-powered contract analysis, research synthesis, drafting assistance, meeting intelligence, GST/ITR reconciliation, audit automation, and compliance tracking — all tenant-isolated, auditable, and secure.
+
+**Two verticals, one platform:** Legal & Consulting (10 agents, 4 crews) | CA Firms (15 agents, 5 crews)
 
 ---
 
@@ -8,10 +10,10 @@ A B2B AI suite that gives every employee at a legal or consulting firm an AI cop
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15 (App Router) + Tailwind CSS (Lovable green-serif theme) |
+| Frontend | Next.js 15 (App Router) + Tailwind CSS (green-serif theme) |
 | Core API | Node.js + Express + TypeScript |
-| AI Service | Python FastAPI + CrewAI Multi-Agent (10 agents, 4 crews) + Cloudflare Workers AI (Llama 4 Scout 17B, Llama 3.3 70B, DeepSeek R1) |
-| MCP Servers | 18 Model Context Protocol servers (PostgreSQL, Cloudflare AI, Document RAG, Email, Calendar, Storage, E-Sign, Billing, Court, Communication, CRM, Workflow, OCR, Translation, Video, Time, Conflict) |
+| AI Service | Python FastAPI + CrewAI Multi-Agent (25 agents, 9 crews across 2 verticals) + Cloudflare Workers AI |
+| MCP Servers | 25 Model Context Protocol servers across 3 tiers |
 | Embeddings | Cloudflare bge-base-en-v1.5 (768-dim) via pgvector HNSW |
 | Database | PostgreSQL + pgvector (vector search) |
 | ORM | Prisma with multi-tenant RLS |
@@ -72,6 +74,13 @@ counsel-platform/
 │       ├── video-mcp/          # :3115 — Zoom + Teams Meetings (5 tools)
 │       ├── time-mcp/           # :3116 — Harvest + Toggl (5 tools)
 │       ├── conflict-mcp/       # :3117 — Conflict of Interest check (5 tools)
+│       ├── gsp-mcp/            # :3118 — GST Suvidha Provider (8 tools)
+│       ├── mca-mcp/            # :3119 — MCA21 V3 / ROC (6 tools)
+│       ├── udin-mcp/           # :3120 — UDIN tracking, ICAI (5 tools)
+│       ├── tally-mcp/          # :3121 — Tally connector (6 tools)
+│       ├── eri-mcp/            # :3122 — Income Tax ERI (6 tools)
+│       ├── books-mcp/          # :3123 — Zoho Books + QuickBooks (6 tools)
+│       ├── whatsapp-mcp/       # :3124 — WhatsApp Business API (6 tools)
 │       ├── prometheus/         # Prometheus config + 6 alert rules
 │       ├── grafana/            # Grafana dashboards + auto-provisioning
 │       └── tests/              # Integration tests + 100-call benchmark
@@ -175,7 +184,7 @@ The seed script provisions a demo firm with sample documents, matters, and users
 
 ## 🤖 CrewAI Multi-Agent System
 
-Four specialized crews, each a sequential pipeline of specialized agents powered by Cloudflare Workers AI:
+### Legal & Consulting Vertical (4 Crews, 10 Agents)
 
 | Crew | Agents | Endpoint | Status |
 |------|--------|----------|--------|
@@ -184,6 +193,22 @@ Four specialized crews, each a sequential pipeline of specialized agents powered
 | **Crew 3: Research & Discovery** | pgvector RAG → LegalResearcher → RAGSynthesizer | `POST /agents/research` | ✅ |
 | **Crew 4: Compliance & Negotiation** | AuditLogger → ComplianceChecker → NegotiatorAdvisor | `POST /agents/compliance` | ✅ |
 | **Full Pipeline** | All 4 crews chained | `POST /agents/pipeline/full` | ✅ |
+
+### CA Firm Vertical (5 Crews, 15 Agents)
+
+| Crew | Agents | Purpose | Status |
+|------|--------|---------|--------|
+| **Crew 9: Bookkeeping** | TransactionMatcher → VarianceAnalyzer → ReconciliationReporter | Bank-book reconciliation, variance analysis, reporting | ✅ |
+| **Crew 10: GST** | InputTaxReconciler → GSTRValidator → FilingPrepAdvisor | ITC matching, GSTR validation, filing prep (partner-review) | ✅ |
+| **Crew 11: Audit** | RiskAssessmentEngine → SamplingRecommendation → AuditReportCompiler | Risk assessment (SA 315), sampling (SA 530), report drafting | ✅ |
+| **Crew 12: Income Tax** | TDSReconciler → ITRDataAggregator → NoticeResponseDrafter | TDS reconciliation, ITR prep, notice responses | ✅ |
+| **Crew 13: ROC** | FilingDeadlineTracker → FormDataCompiler → ComplianceCalendarManager | MCA deadlines, form compilation, compliance calendar | ✅ |
+
+**Non-negotiable guardrails for all CA crews:**
+- No crew auto-files with any government portal (GSTN, ITD, MCA21). All data goes to partner-review.
+- Every filing-bound number carries provenance — source document, reconciliation, agent.
+- UDIN/DSC signing are always manual human actions.
+- PAN/GSTIN-linked data never used for model training.
 
 ### LLM Bridge
 
@@ -207,7 +232,7 @@ All crew runs are persisted to a JSONL audit log with date rotation (10 MB chunk
 
 ---
 
-## 🔌 MCP Servers (18 Total · 87 Tools)
+## 🔌 MCP Servers (25 Total · ~130 Tools)
 
 Model Context Protocol servers give AI agents real-world capabilities. Each server connects to a live API, uses circuit breakers to prevent cascading failures, and degrades gracefully when external services are down.
 
@@ -243,6 +268,18 @@ Model Context Protocol servers give AI agents real-world capabilities. Each serv
 | **Video** | 3115 | 5 | Zoom + Teams Meetings |
 | **Time Tracking** | 3116 | 5 | Harvest + Toggl |
 | **Conflict Check** | 3117 | 5 | COI detection + watchlist |
+
+### CA Vertical — Government & Accounting (Built ✅)
+
+| Server | Port | Tools | Backend |
+|--------|------|-------|---------|
+| **GSP (GST)** | 3118 | 8 | ClearTax / Masters India / WhiteBooks swap |
+| **MCA / ROC** | 3119 | 6 | MCA21 V3 — company data, filings, due dates |
+| **UDIN (ICAI)** | 3120 | 5 | UDIN tracking — read-only, ICAI portal |
+| **Tally** | 3121 | 6 | v1 manual XML export → v2 ODBC roadmap |
+| **Income Tax ERI** | 3122 | 6 | 26AS/AIS fetch, ITR status, notices |
+| **Books (Zoho/QB)** | 3123 | 6 | Zoho Books + QuickBooks Online |
+| **WhatsApp Business** | 3124 | 6 | Compliance nudges, doc requests, status updates |
 
 ### CrewAI Integration
 
