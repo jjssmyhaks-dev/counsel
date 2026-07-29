@@ -29,5 +29,8 @@
     "ioredis": "^5.11.1",
     "stripe": "^22.3.2",
     "ws": "^8.21.1"
+  },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "^16.2.12"
   }
 }
