@@ -28,6 +28,7 @@ import clientRoutes from './routes/clients';
 import engagementRoutes from './routes/engagements';
 import filingRoutes from './routes/filings';
 import complianceCalendarRoutes from './routes/compliance-calendar';
+import publicRoutes from './routes/public';
 
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -123,6 +124,9 @@ app.use(
     message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } },
   }),
 );
+
+// ─── Public routes (no auth) — landing page stats ───────────────────────────
+app.use('/api/v1/public', publicRoutes);
 
 // ─── Auth middleware (applied to all routes except /auth/login) ─────────────
 app.use(authMiddleware);

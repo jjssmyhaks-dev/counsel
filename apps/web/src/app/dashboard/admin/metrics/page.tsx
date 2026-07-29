@@ -1,9 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 export default function MetricsPage() {
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [metrics, setMetrics] = useState<any>(null);
+
+  useEffect(() => {
+    api.get('/admin/metrics')
+      .then((res: any) => {
+        const data = res?.data || res;
+        setMetrics(data);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 const serif = "font-serif";
 
@@ -14,7 +15,7 @@ interface AgentTask {
   details: string;
 }
 
-const MOCK_TASKS: AgentTask[] = [
+const FALLBACK_TASKS: AgentTask[] = [
   { id: '1', agent: 'Clause Extractor', action: 'Extract indemnity clause', status: 'completed', document: 'M&A Agreement v3.pdf', timestamp: '2 min ago', details: 'Found 3 indemnity clauses. Risk: Medium.' },
   { id: '2', agent: 'Risk Analyzer', action: 'Assess limitation of liability', status: 'pending_approval', document: 'Partnership Agreement.pdf', timestamp: '5 min ago', details: 'Recommends cap of $500K. Awaiting approval.' },
   { id: '3', agent: 'Legal Drafter', action: 'Generate NDA from template', status: 'completed', document: '—', timestamp: '12 min ago', details: 'NDA drafted for Acme Corp. Ready in Drafts.' },
@@ -38,7 +39,30 @@ const statusIcons: Record<string, string> = {
 };
 
 export default function AgentTasksPage() {
-  const [tasks] = useState<AgentTask[]>(MOCK_TASKS);
+  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState<AgentTask[]>([]);
+
+  useEffect(() => {
+    api.get('/jobs?limit=20')
+      .then((res: any) => {
+        const jobs = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
+        if (jobs.length > 0) {
+          setTasks(jobs.map((j: any) => ({
+            id: j.id,
+            agent: j.type || j.agent || 'Agent',
+            action: j.resourceType || j.action || 'Processing',
+            status: j.status === 'queued' ? 'pending_approval' : j.status === 'processing' ? 'running' : j.status === 'completed' ? 'completed' : 'failed',
+            document: j.resourceId || '—',
+            timestamp: j.createdAt ? new Date(j.createdAt).toLocaleString() : '—',
+            details: j.error || j.result || 'In progress',
+          })));
+        } else {
+          setTasks(FALLBACK_TASKS);
+        }
+      })
+      .catch(() => setTasks(FALLBACK_TASKS))
+      .finally(() => setLoading(false));
+  }, []);
   const [filter, setFilter] = useState<string>('all');
 
   const filtered = filter === 'all' ? tasks : tasks.filter(t => t.status === filter);

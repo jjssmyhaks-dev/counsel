@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
 import Navbar from '@/components/Navbar';
@@ -7,78 +9,9 @@ import ScaleSection from '@/components/ScaleSection';
 import CustomerStories from '@/components/CustomerStories';
 import ProductShowcase from '@/components/ProductShowcase';
 import Footer from '@/components/Footer';
-
-/* ── Design tokens from Lovable build ──
-   brand: #15b881 (mint green) / #0a8a5f (dark green) / #7ce3b6 (light)
-   dark: #0c0a09
-   bg: #fefdfb / #faf8f5
-   muted: #717d79 / #969e9b
-   serif headings throughout
-*/
+import { LandingStats, useLandingData, getTickerItems } from '@/components/LandingStats';
 
 const serif = "font-serif";
-const firms = [
-  "O'Melveny & Myers", "Skadden Arps", "Latham & Watkins", "Kirkland & Ellis",
-  "Baker McKenzie", "DLA Piper", "White & Case", "Gibson Dunn",
-];
-
-const tickerItems = [
-  { n: "1.2M", l: "Documents analyzed" },
-  { n: "450K", l: "Search queries" },
-  { n: "89M", l: "API requests" },
-  { n: "34K", l: "Drafts generated" },
-  { n: "2.3M", l: "Meeting minutes" },
-];
-
-const iconPaths: Record<string, string> = {
-  agent: "M12 2a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5zM5 22v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2",
-  sync: "M21 12a9 9 0 1 1-3-6.7M21 4v5h-5",
-  shield: "M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z",
-  plug: "M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0V8zM12 18v4",
-  team: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
-  code: "M16 18l6-6-6-6M8 6l-6 6 6 6",
-};
-
-const features = [
-  { t: "Agent-native platform", d: "Purpose-built AI agents that read, write, and reason over legal documents. No retrofits, no compromises.", icon: "agent" },
-  { t: "Self-updating knowledge base", d: "New case law, regulations, and client files sync in real time. Your knowledge is never stale.", icon: "sync" },
-  { t: "Enterprise-grade security", d: "Row-level access control, tenant isolation, and immutable audit trails. SOC 2 Type II certified.", icon: "shield" },
-  { t: "Works with your stack", d: "Gmail extension, WorkOS SSO, REST API, webhooks. Plug into your existing tools in minutes.", icon: "plug" },
-  { t: "Team + AI collaboration", d: "Share matters, co-annotate analyses, assign AI tasks. Humans in the loop, AI on the clock.", icon: "team" },
-  { t: "API-first architecture", d: "Custom playbooks, custom models, custom integrations. Build on our platform or alongside it.", icon: "code" },
-];
-
-const howSteps = [
-  { n: "01", t: "Connect your firm", d: "SSO in one click. Import matters, templates, and playbooks from your existing DMS in minutes." },
-  { n: "02", t: "Deploy your agents", d: "Pick from 40+ pre-trained legal agents or fine-tune your own on your firm's precedent library." },
-  { n: "03", t: "Ship work 10× faster", d: "Review contracts in minutes, draft briefs in hours, close matters in days — not weeks." },
-];
-
-const stories = [
-  { name: "Sterling & Associates", bar: "bg-[#15b881]", metric: "94%", label: "Faster turnaround", desc: "Contract review that took 3 weeks now completes in 4 hours. 200+ matters processed monthly with AI-driven clause extraction." },
-  { name: "Greenfield Capital", bar: "bg-[#0a8a5f]", metric: "40K+", label: "Documents indexed", desc: "Full regulatory compliance research automated from weeks to hours with RAG-powered synthesis." },
-  { name: "NovaTech Inc.", bar: "bg-[#0c0a09]", metric: "3.2×", label: "Deal throughput", desc: "AI drafting generates first-pass motions, briefs, and memos in the firm's voice." },
-  { name: "Arcadian Corp", bar: "bg-[#ff5a00]", metric: "99.7%", label: "Audit compliance", desc: "Every AI action logged immutably. SOC 2 Type II and ISO 27001 ready." },
-];
-
-const startups = [
-  { tag: "AI / Legal", name: "LexCheck", desc: "AI contract review startup built on Counsel's clause extraction and playbook APIs." },
-  { tag: "Research", name: "CaseText", desc: "Legal research platform using Counsel's RAG pipeline for cited, verifiable answers." },
-  { tag: "AI / Agent", name: "Harvey", desc: "AI-native law firm using Counsel for document analysis, drafting, and meeting intelligence." },
-  { tag: "SaaS", name: "Docketwise", desc: "Immigration law platform leveraging Counsel's form recognition and clause matching." },
-];
-
-const testimonials = [
-  { name: "Sarah Chen", role: "Managing Partner, Sterling & Associates", quote: "Counsel has transformed how our associates handle due diligence. What used to take weeks now takes hours, with better accuracy." },
-  { name: "Marcus Webb", role: "General Counsel, NovaTech Inc.", quote: "The AI doesn't replace our lawyers — it makes them superhuman. Contract review that took 3 days now takes 20 minutes with higher precision." },
-  { name: "Priya Kapoor", role: "Chief Innovation Officer, DLA Piper", quote: "We evaluated 7 platforms. Counsel was the only one that understood legal workflows, not just generic AI. The playbook engine saves us millions annually." },
-];
-
-const posts = [
-  { tag: "Research", date: "Jul 9, 2026", title: "How AI Is Reshaping Legal Due Diligence in 2026" },
-  { tag: "Product", date: "Jun 28, 2026", title: "Introducing Counsel Playbook Engine v2: 8× Faster Clause Matching" },
-  { tag: "Guides", date: "Jun 15, 2026", title: "From Brief to Bench: AI-Assisted Legal Drafting Best Practices" },
-];
 
 function Star() {
   return (
@@ -102,7 +35,36 @@ const scaleStats = [
   { n: "99.99%", t: "Uptime", s: "across all services" },
 ];
 
+// Marketing content — these are product narrative, not live data
+const startups = [
+  { tag: "AI / Legal", name: "LexCheck", desc: "AI contract review platform built on Counsel's clause extraction and playbook APIs." },
+  { tag: "Research", name: "CaseText", desc: "Legal research platform using Counsel's RAG pipeline for cited, verifiable answers." },
+  { tag: "AI / Agent", name: "Harvey", desc: "AI law firm using Counsel for document analysis, drafting, and meeting intelligence." },
+  { tag: "SaaS", name: "Docketwise", desc: "Immigration law platform leveraging Counsel's form recognition and clause matching." },
+];
+
+const testimonials = [
+  { name: "Sarah Chen", role: "Managing Partner, Sterling & Associates", quote: "Counsel has transformed how our associates handle due diligence. What used to take weeks now takes hours, with better accuracy." },
+  { name: "Marcus Webb", role: "General Counsel, NovaTech Inc.", quote: "The AI doesn't replace our lawyers — it makes them superhuman. Contract review that took 3 days now takes 20 minutes with higher precision." },
+  { name: "Priya Kapoor", role: "Chief Innovation Officer, DLA Piper", quote: "We evaluated 7 platforms. Counsel was the only one that understood legal workflows, not just generic AI. The playbook engine saves us millions annually." },
+];
+
+const posts = [
+  { tag: "Research", date: "Jul 9, 2026", title: "How AI Is Reshaping Legal Due Diligence in 2026" },
+  { tag: "Product", date: "Jun 28, 2026", title: "Introducing Counsel Playbook Engine v2: 8× Faster Clause Matching" },
+  { tag: "Guides", date: "Jun 15, 2026", title: "From Brief to Bench: AI-Assisted Legal Drafting Best Practices" },
+];
+
 export default function Landing() {
+  const landingData = useLandingData();
+  const tickerItems = getTickerItems(landingData);
+
+  const defaultFirms = [
+    "O'Melveny & Myers", "Skadden Arps", "Latham & Watkins", "Kirkland & Ellis",
+    "Baker McKenzie", "DLA Piper", "White & Case", "Gibson Dunn",
+  ];
+  const displayFirms = landingData.firms.length > 0 ? landingData.firms.map((f: any) => f.name) : defaultFirms;
+
   return (
     <div className="min-h-screen bg-[#fefdfb] text-[#0c0a09] antialiased selection:bg-[#15b881]/20" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <style>{`@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
@@ -134,7 +96,7 @@ export default function Landing() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[#15b881]/25 bg-[#eaf7f0] px-3 py-1.5 text-[12px] text-[#0a8a5f]">
                 <span>Agent traffic</span>
-                <span className="font-semibold tabular-nums">64.8595%</span>
+                <span className="font-semibold tabular-nums">{landingData.agentTraffic}%</span>
                 <span aria-hidden>›</span>
               </div>
               <h1 className={`${serif} mt-6 text-[3.25rem] md:text-[4.5rem] lg:text-[5.5rem] font-normal tracking-[-0.02em] leading-[1.02] text-[#0c0a09]`}>
@@ -196,7 +158,7 @@ export default function Landing() {
             <Link href="/resources#cases" className="text-[#0a8a5f] hover:underline">Read customer stories →</Link>
           </div>
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
-            {firms.map((f) => (
+            {displayFirms.map((f: string) => (
               <div key={f} className="text-center text-[15px] font-medium text-[#0c0a09]/40 tracking-[-0.01em]">{f}</div>
             ))}
           </div>

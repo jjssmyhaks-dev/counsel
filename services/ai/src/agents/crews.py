@@ -14,6 +14,20 @@ from typing import Any, Dict, List, Optional
 
 from crewai import Crew, Process
 
+# ── Memory (persistent context across runs) ──
+try:
+    from crewai.memory import Memory
+    from crewai.memory.storage import LanGraphStorage
+    _crew_memory = Memory(
+        storage={
+            "short_term": None,  # Episode-specific memory
+            "long_term": LanGraphStorage(),  # Persistent across runs
+            "entity": LanGraphStorage(),  # Entity/relationship memory
+        }
+    )
+except Exception:
+    _crew_memory = None  # Memory not available — graceful fallback
+
 from .definitions import (
     create_clause_extractor,
     create_risk_analyzer,
@@ -120,6 +134,7 @@ async def run_document_intelligence(
         tasks=[t_extract, t_risks, t_playbook],
         process=Process.sequential,
         verbose=True,
+        memory=_crew_memory is not None,
     )
 
     result = await crew.kickoff_async()
@@ -177,6 +192,7 @@ async def run_drafting_crew(
         tasks=[t_draft, t_citations],
         process=Process.sequential,
         verbose=True,
+        memory=_crew_memory is not None,
     )
 
     result = await crew.kickoff_async()
@@ -223,6 +239,7 @@ async def run_research_crew(
         tasks=[t_research, t_synthesize],
         process=Process.sequential,
         verbose=True,
+        memory=_crew_memory is not None,
     )
 
     result = await crew.kickoff_async()
@@ -278,6 +295,7 @@ async def run_compliance_crew(
         tasks=[t_check, t_advice],
         process=Process.sequential,
         verbose=True,
+        memory=_crew_memory is not None,
     )
 
     result = await crew.kickoff_async()
@@ -471,7 +489,7 @@ async def run_proposal_crew(
     t_rfp = tasks.analyze_rfp(agent=rfp, step_callback=sc)
     t_write = tasks.write_proposal(agent=writer, context=[t_rfp], step_callback=sc)
     t_fin = tasks.build_financials(agent=modeler, context=[t_rfp, t_write], step_callback=sc)
-    crew = Crew(agents=[rfp, writer, modeler], tasks=[t_rfp, t_write, t_fin], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[rfp, writer, modeler], tasks=[t_rfp, t_write, t_fin], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "proposal", "status": "completed", "raw_output": _serialize_output(result),
             "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}
@@ -489,7 +507,7 @@ async def run_market_intel_crew(
     sc = create_step_callback("market_intel")
     t_research = tasks.research_market(agent=analyst, step_callback=sc)
     t_synthesize = tasks.synthesize_strategy(agent=strategist, context=[t_research], step_callback=sc)
-    crew = Crew(agents=[analyst, strategist], tasks=[t_research, t_synthesize], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[analyst, strategist], tasks=[t_research, t_synthesize], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "market_intel", "status": "completed", "raw_output": _serialize_output(result),
             "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}
@@ -508,7 +526,7 @@ async def run_engagement_crew(
     sc = create_step_callback("engagement")
     t_structure = tasks.structure_engagement(agent=mgr, step_callback=sc)
     t_report = tasks.status_report(agent=strategist, context=[t_structure], step_callback=sc)
-    crew = Crew(agents=[mgr, strategist], tasks=[t_structure, t_report], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[mgr, strategist], tasks=[t_structure, t_report], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "engagement", "status": "completed", "raw_output": _serialize_output(result),
             "token_usage": dict(result.token_usage) if hasattr(result, "token_usage") and result.token_usage else {}}
@@ -539,7 +557,7 @@ async def run_ca_bookkeeping_reconciliation(client_name: str = "Client", period:
     t_match = tasks.match_transactions(agent=matcher, step_callback=sc)
     t_var = tasks.analyze_variances(agent=analyzer, context=[t_match], step_callback=sc)
     t_report = tasks.compile_report(agent=reporter, context=[t_match, t_var], step_callback=sc)
-    crew = Crew(agents=[matcher, analyzer, reporter], tasks=[t_match, t_var, t_report], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[matcher, analyzer, reporter], tasks=[t_match, t_var, t_report], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "ca_bookkeeping_reconciliation", "status": "completed", **_serialize_ca_output(result)}
 
@@ -556,7 +574,7 @@ async def run_ca_gst(client_name: str = "Client", gstin: str = "", period: str =
     t_itc = tasks.reconcile_itc(agent=itc, step_callback=sc)
     t_val = tasks.validate_returns(agent=validator, context=[t_itc], step_callback=sc)
     t_prep = tasks.prep_filing_package(agent=prep, context=[t_itc, t_val], step_callback=sc)
-    crew = Crew(agents=[itc, validator, prep], tasks=[t_itc, t_val, t_prep], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[itc, validator, prep], tasks=[t_itc, t_val, t_prep], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "ca_gst", "status": "completed", **_serialize_ca_output(result)}
 
@@ -573,7 +591,7 @@ async def run_ca_audit(client_name: str = "Client", year: str = "2025-26", engag
     t_risk = tasks.assess_risks(agent=risk, step_callback=sc)
     t_sample = tasks.recommend_samples(agent=sample, context=[t_risk], step_callback=sc)
     t_report = tasks.compile_audit_report(agent=compiler, context=[t_risk, t_sample], step_callback=sc)
-    crew = Crew(agents=[risk, sample, compiler], tasks=[t_risk, t_sample, t_report], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[risk, sample, compiler], tasks=[t_risk, t_sample, t_report], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "ca_audit", "status": "completed", **_serialize_ca_output(result)}
 
@@ -590,7 +608,7 @@ async def run_ca_income_tax(client_name: str = "Client", pan: str = "", assessme
     t_tds = tasks.reconcile_tds(agent=tds, step_callback=sc)
     t_itr = tasks.aggregate_itr_data(agent=itr, context=[t_tds], step_callback=sc)
     t_notice = tasks.draft_notice_response(agent=notice, context=[t_tds, t_itr], step_callback=sc)
-    crew = Crew(agents=[tds, itr, notice], tasks=[t_tds, t_itr, t_notice], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[tds, itr, notice], tasks=[t_tds, t_itr, t_notice], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "ca_income_tax", "status": "completed", **_serialize_ca_output(result)}
 
@@ -607,7 +625,7 @@ async def run_ca_roc(client_name: str = "Client", cin: str = "", step_callback=N
     t_deadlines = tasks.track_deadlines(agent=tracker, step_callback=sc)
     t_forms = tasks.compile_form_data(agent=compiler, context=[t_deadlines], step_callback=sc)
     t_calendar = tasks.manage_calendar(agent=calendar, context=[t_deadlines, t_forms], step_callback=sc)
-    crew = Crew(agents=[tracker, compiler, calendar], tasks=[t_deadlines, t_forms, t_calendar], process=Process.sequential, verbose=True)
+    crew = Crew(agents=[tracker, compiler, calendar], tasks=[t_deadlines, t_forms, t_calendar], process=Process.sequential, verbose=True, memory=_crew_memory is not None)
     result = await crew.kickoff_async()
     return {"crew": "ca_roc", "status": "completed", **_serialize_ca_output(result)}
 

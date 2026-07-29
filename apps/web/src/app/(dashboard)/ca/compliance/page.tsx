@@ -1,28 +1,28 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 interface Item { id: string; type: string; client: string; title: string; dueDate: string; status: string; severity: string; }
 
+function extractList(res: any): any[] {
+  if (Array.isArray(res)) return res;
+  if (res?.data?.data) return res.data.data;
+  if (Array.isArray(res?.data)) return res.data;
+  return [];
+}
+
 export default function CACompliancePage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [filter, setFilter] = useState('all');
   const [view, setView] = useState<'list'|'calendar'>('list');
 
   useEffect(() => {
-    setTimeout(() => {
-      setItems([
-        { id:'1',type:'GST',client:'ABC Pvt Ltd',title:'GSTR-3B — July 2026',dueDate:'2026-08-20',status:'upcoming',severity:'warning' },
-        { id:'2',type:'GST',client:'DEF Ltd',title:'GSTR-1 — July 2026',dueDate:'2026-08-11',status:'upcoming',severity:'warning' },
-        { id:'3',type:'Income Tax',client:'DEF Ltd',title:'TDS Return 26Q — Q1 2026-27',dueDate:'2026-07-31',status:'overdue',severity:'critical' },
-        { id:'4',type:'ROC',client:'XYZ Corp',title:'AOC-4 — FY 2025-26',dueDate:'2026-09-30',status:'upcoming',severity:'normal' },
-        { id:'5',type:'ROC',client:'XYZ Corp',title:'MGT-7 — FY 2025-26',dueDate:'2026-09-30',status:'upcoming',severity:'normal' },
-        { id:'6',type:'Audit',client:'GHI & Co',title:'Tax Audit Report — Form 3CD',dueDate:'2026-09-15',status:'upcoming',severity:'warning' },
-        { id:'7',type:'Income Tax',client:'ABC Pvt Ltd',title:'ITR-6 — AY 2026-27',dueDate:'2026-09-30',status:'upcoming',severity:'normal' },
-        { id:'8',type:'ROC',client:'LMN India',title:'DIR-3 KYC — FY 2025-26',dueDate:'2026-09-30',status:'upcoming',severity:'normal' },
-      ]);
-      setLoading(false);
-    }, 600);
+    api.get('/compliance-calendar')
+      .then((res: any) => setItems(extractList(res)))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = items.filter(i => filter === 'all' || i.type.toLowerCase() === filter.toLowerCase());
@@ -31,7 +31,8 @@ export default function CACompliancePage() {
 
   const statusBadge = (s: string) => s === 'overdue' ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50';
 
-  if (loading) return <div className="p-6"><div className="h-8 w-48 skeleton-bg rounded animate-pulse mb-4" /><div className="h-64 skeleton-bg rounded-lg animate-pulse" /></div>;
+  if (loading) return <div className="p-6"><div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-4" /><div className="h-64 bg-gray-200 rounded-lg animate-pulse" /></div>;
+  if (error && !items.length) return <div className="p-6 max-w-7xl mx-auto"><div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">{error}</div></div>;
 
   return (
     <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4">
@@ -43,7 +44,6 @@ export default function CACompliancePage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-2">
         {['all','GST','Income Tax','ROC','Audit','TDS'].map(f => (
           <button key={f} onClick={()=>setFilter(f)} className={`text-sm px-3 py-1 rounded-full border ${filter===f?'bg-green-700 text-white border-green-700':'bg-white text-gray-600 hover:border-green-300'}`}>
@@ -52,7 +52,6 @@ export default function CACompliancePage() {
         ))}
       </div>
 
-      {/* List View */}
       {view === 'list' && (
         <div className="bg-white rounded-lg border shadow-sm divide-y">
           {filtered.map(i => (
@@ -70,7 +69,6 @@ export default function CACompliancePage() {
         </div>
       )}
 
-      {/* Calendar View placeholder */}
       {view === 'calendar' && (
         <div className="bg-white rounded-lg border shadow-sm p-20 text-center text-gray-400">
           <p className="text-lg">📅 Calendar View</p>
@@ -78,7 +76,6 @@ export default function CACompliancePage() {
         </div>
       )}
 
-      {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[{label:'Overdue',count:items.filter(i=>i.severity==='critical').length,color:'text-red-600'},
           {label:'This Week',count:items.filter(i=>i.severity==='warning').length,color:'text-yellow-600'},

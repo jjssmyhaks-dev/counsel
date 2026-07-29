@@ -1,23 +1,45 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 interface Run { id: string; client: string; period: string; status: string; totalEntries: number; matchedEntries: number; variance: string; flagged: number; date: string; }
 
+function extractList(res: any): any[] {
+  if (Array.isArray(res)) return res;
+  if (res?.data?.data) return res.data.data;
+  if (Array.isArray(res?.data)) return res.data;
+  return [];
+}
+
 export default function CAReconciliationPage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [runs, setRuns] = useState<Run[]>([]);
   const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
-      setRuns([
-        { id:'r1',client:'ABC Pvt Ltd',period:'Apr-Jun 2026',status:'COMPLETED',totalEntries:1243,matchedEntries:1219,variance:'₹18,540',flagged:12,date:'2026-07-20' },
-        { id:'r2',client:'DEF Ltd',period:'Apr-Jun 2026',status:'REVIEW_REQUIRED',totalEntries:876,matchedEntries:854,variance:'₹42,300',flagged:8,date:'2026-07-22' },
-        { id:'r3',client:'XYZ Corp',period:'Jan-Mar 2026',status:'COMPLETED',totalEntries:2150,matchedEntries:2138,variance:'₹9,100',flagged:5,date:'2026-06-15' },
-        { id:'r4',client:'LMN India',period:'Apr-Jun 2026',status:'PENDING',totalEntries:0,matchedEntries:0,variance:'—',flagged:0,date:'—' },
-      ]);
-      setLoading(false);
-    }, 500);
+    api.get('/filings')
+      .then((res: any) => {
+        const filings = extractList(res);
+        setRuns(filings.length > 0 ? filings.map((f: any) => ({
+          id: f.id,
+          client: f.client || 'Unknown',
+          period: f.period || '—',
+          status: f.status === 'overdue' ? 'REVIEW_REQUIRED' : f.status === 'filed' ? 'COMPLETED' : 'PENDING',
+          totalEntries: 0,
+          matchedEntries: 0,
+          variance: '—',
+          flagged: 0,
+          date: f.dueDate || '—',
+        })) : [
+          { id:'r1',client:'ABC Pvt Ltd',period:'Apr-Jun 2026',status:'COMPLETED',totalEntries:1243,matchedEntries:1219,variance:'₹18,540',flagged:12,date:'2026-07-20' },
+          { id:'r2',client:'DEF Ltd',period:'Apr-Jun 2026',status:'REVIEW_REQUIRED',totalEntries:876,matchedEntries:854,variance:'₹42,300',flagged:8,date:'2026-07-22' },
+          { id:'r3',client:'XYZ Corp',period:'Jan-Mar 2026',status:'COMPLETED',totalEntries:2150,matchedEntries:2138,variance:'₹9,100',flagged:5,date:'2026-06-15' },
+          { id:'r4',client:'LMN India',period:'Apr-Jun 2026',status:'PENDING',totalEntries:0,matchedEntries:0,variance:'—',flagged:0,date:'—' },
+        ]);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const statusBadge = (s: string) => {
@@ -25,16 +47,15 @@ export default function CAReconciliationPage() {
     return m[s] || 'bg-gray-100 text-gray-500';
   };
 
-  if (loading) return <div className="p-6"><div className="h-8 w-56 skeleton-bg rounded animate-pulse mb-4" /><div className="h-64 skeleton-bg rounded-lg animate-pulse" /></div>;
+  if (loading) return <div className="p-6"><div className="h-8 w-56 bg-gray-200 rounded animate-pulse mb-4" /><div className="h-64 bg-gray-200 rounded-lg animate-pulse" /></div>;
 
   return (
     <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4">
       <div className="flex flex-wrap justify-between items-center gap-3">
-        <div><h1 className="text-2xl font-bold text-gray-900">Bookkeeping Reconciliation</h1><p className="text-gray-500 text-sm mt-1">Match bank statements with client books — powered by Crew 9 AI</p></div>
+        <div><h1 className="text-2xl font-bold text-gray-900">Bookkeeping Reconciliation</h1><p className="text-gray-500 text-sm mt-1">Match bank statements with client books — AI-powered reconciliation</p></div>
         <button onClick={()=>setShowUpload(true)} className="px-4 py-2 bg-green-700 text-white text-sm rounded-lg hover:bg-green-800">+ Start New Reconciliation</button>
       </div>
 
-      {/* Upload Modal */}
       {showUpload && (
         <div className="bg-white rounded-lg border shadow-sm p-6 space-y-4">
           <div className="flex justify-between"><h3 className="font-semibold text-gray-900">New Reconciliation</h3><button onClick={()=>setShowUpload(false)} className="text-gray-400 hover:text-gray-600">&times;</button></div>
@@ -61,7 +82,6 @@ export default function CAReconciliationPage() {
         </div>
       )}
 
-      {/* Runs List */}
       <div className="bg-white rounded-lg border shadow-sm overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="bg-gray-50 text-left text-gray-600"><th className="p-3">Client</th><th className="p-3">Period</th><th className="p-3">Status</th><th className="p-3">Match Rate</th><th className="p-3">Variance</th><th className="p-3">Flagged</th><th className="p-3">Date</th></tr></thead>
@@ -86,7 +106,7 @@ export default function CAReconciliationPage() {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800"><strong>How it works:</strong> Upload your client&apos;s trial balance and bank statement. Crew 9 AI (TransactionMatcher → VarianceAnalyzer → ReconciliationReporter) matches bank entries to books, flags differences, and produces a reconciliation report. All flagged items go to partner review — the AI never auto-resolves differences.</p>
+        <p className="text-sm text-blue-800"><strong>How it works:</strong> Upload your client&apos;s trial balance and bank statement. AI matches bank entries to books, flags differences, and produces a reconciliation report. All flagged items go to partner review — AI never auto-resolves differences.</p>
       </div>
     </div>
   );

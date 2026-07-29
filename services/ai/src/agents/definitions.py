@@ -49,6 +49,24 @@ from crewai import Agent, Task, Crew, Process
 
 from .cloudflare_llm import get_default_llm, get_power_llm, get_reasoning_llm
 
+# Import MCP tool registry for real tool access
+_has_mcp_tools = False
+_tool_registry = None
+try:
+    from .mcp_client import mcp_registry as _tool_registry
+    _has_mcp_tools = True
+except Exception:
+    pass
+
+def _get_crew_tools(*servers: str):
+    """Get MCP tools for an agent, gracefully falling back to empty list."""
+    if _has_mcp_tools and _tool_registry:
+        try:
+            return _tool_registry.get_crew_tools(list(servers))
+        except Exception:
+            pass
+    return []
+
 
 # ═══════════════════════════════════════════════════════════════
 # CREW 1: DOCUMENT INTELLIGENCE
@@ -95,7 +113,7 @@ def create_risk_analyzer() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
-        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
+        tools=_get_crew_tools("cloudflare", "document"),  # MCP: AI generation + document search
         llm=get_power_llm(temperature=0.2),
     )
 
@@ -118,7 +136,7 @@ def create_playbook_guardian() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
-        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
+        tools=_get_crew_tools("cloudflare", "document"),  # MCP: AI generation + document search
         llm=get_power_llm(temperature=0.15),
     )
 
@@ -197,7 +215,7 @@ def create_legal_researcher() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
-        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
+        tools=_get_crew_tools("cloudflare", "document"),  # MCP: AI generation + document search
         llm=get_reasoning_llm(),
     )
 
@@ -221,7 +239,7 @@ def create_rag_synthesizer() -> Agent:
         ),
         verbose=True,
         allow_delegation=True,
-        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
+        tools=_get_crew_tools("cloudflare", "document"),  # MCP: AI generation + document search
         llm=get_power_llm(temperature=0.25),
     )
 
@@ -247,7 +265,7 @@ def create_compliance_checker() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        tools=[],  # Tool-calling via CloudflareLLM bridge, not CrewAI tool infra
+        tools=_get_crew_tools("cloudflare", "document"),  # MCP: AI generation + document search
         llm=get_default_llm(temperature=0.1),
     )
 
