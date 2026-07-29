@@ -1,25 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 const serif = "font-serif";
 
 export default function UsagePage() {
+  const [loading, setLoading] = useState(true);
   const [billing, setBilling] = useState<'monthly' | 'annually'>('monthly');
+  const [usageData, setUsageData] = useState({ plan: 'Starter', documentsUsed: 0, documentsLimit: 50, agentsUsed: 0, agentsLimit: 5, storageUsed: '0 GB', storageLimit: '5 GB', apiCalls: 0, apiCallsLimit: 1000, daysLeft: 14, trialActive: true });
 
-  const usage = {
-    plan: 'Starter',
-    documentsUsed: 34,
-    documentsLimit: 50,
-    agentsUsed: 2,
-    agentsLimit: 5,
-    storageUsed: '1.2 GB',
-    storageLimit: '5 GB',
-    apiCalls: 845,
-    apiCallsLimit: 1000,
-    daysLeft: 9,
-    trialActive: true,
-  };
+  useEffect(() => {
+    api.get('/usage')
+      .then((res: any) => {
+        const d = res?.data || res;
+        if (d && typeof d === 'object') {
+          setUsageData(prev => ({ ...prev, ...d }));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const usage = usageData;
 
   const percent = (used: number, limit: number) => Math.min((used / limit) * 100, 100);
 

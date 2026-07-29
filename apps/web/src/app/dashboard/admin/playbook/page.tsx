@@ -88,11 +88,10 @@ export default function PlaybookPage() {
   function handleSave() {
     setSaving(true);
     setSaveMessage('');
-    setTimeout(() => {
-      setSaving(false);
-      setSaveMessage('Playbook rules saved successfully.');
-      setTimeout(() => setSaveMessage(''), 3000);
-    }, 800);
+    api.patch('/playbook/rules', { rules })
+      .then(() => setSaveMessage('Playbook rules saved successfully.'))
+      .catch((err) => setSaveMessage('Error: ' + err.message))
+      .finally(() => { setSaving(false); setTimeout(() => setSaveMessage(''), 3000); });
   }
 
   return (
