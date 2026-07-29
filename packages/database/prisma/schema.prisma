@@ -1,12 +1,12 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
-  engineType       = "library"
+  engineType      = "library"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
   extensions = [pgvector(map: "vector", schema: "public")]
 }
 
@@ -196,16 +196,16 @@ enum ReconciliationStatus {
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Firm {
-  id                  String    @id @default(uuid()) @db.Uuid
+  id                  String       @id @default(uuid()) @db.Uuid
   name                String
-  slug                String    @unique
-  firmType            FirmType  @default(LEGAL) @map("firm_type")
+  slug                String       @unique
+  firmType            FirmType     @default(LEGAL) @map("firm_type")
   firmVertical        FirmVertical @default(LEGAL) @map("firm_vertical")
-  onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
-  plan                String    @default("free")
-  seatCount           Int       @default(5) @map("seat_count")
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
+  onboardingCompleted Boolean      @default(false) @map("onboarding_completed")
+  plan                String       @default("free")
+  seatCount           Int          @default(5) @map("seat_count")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
 
   users          User[]
   matters        Matter[]
@@ -221,35 +221,35 @@ model Firm {
   jobs           Job[]
 
   // CA vertical
-  clients             Client[]
-  engagements         Engagement[]
-  filings             Filing[]
-  complianceItems     ComplianceItem[]
-  reconciliations     Reconciliation[]
-  dscKeys             DSCKey[]
+  clients         Client[]
+  engagements     Engagement[]
+  filings         Filing[]
+  complianceItems ComplianceItem[]
+  reconciliations Reconciliation[]
+  dscKeys         DSCKey[]
 
   @@map("firms")
 }
 
 model User {
-  id           String    @id @default(uuid()) @db.Uuid
-  firmId       String    @map("firm_id") @db.Uuid
-  email        String    @unique
+  id           String   @id @default(uuid()) @db.Uuid
+  firmId       String   @map("firm_id") @db.Uuid
+  email        String   @unique
   name         String
-  passwordHash String?   @map("password_hash")
-  role         UserRole  @default(READONLY)
-  avatarUrl    String?   @map("avatar_url")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  passwordHash String?  @map("password_hash")
+  role         UserRole @default(READONLY)
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  firm           Firm               @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  firm           Firm                @relation(fields: [firmId], references: [id], onDelete: Cascade)
   sessions       Session[]
   accounts       Account[]
-  createdMatters Matter[]           @relation("MatterCreatedBy")
-  uploadedDocs   Document[]         @relation("DocumentUploadedBy")
-  createdBriefs  ResearchBrief[]    @relation("BriefCreatedBy")
-  createdDrafts  Draft[]            @relation("DraftCreatedBy")
-  kbQueries      KbQuery[]          @relation("KbQueryCreatedBy")
+  createdMatters Matter[]            @relation("MatterCreatedBy")
+  uploadedDocs   Document[]          @relation("DocumentUploadedBy")
+  createdBriefs  ResearchBrief[]     @relation("BriefCreatedBy")
+  createdDrafts  Draft[]             @relation("DraftCreatedBy")
+  kbQueries      KbQuery[]           @relation("KbQueryCreatedBy")
   auditLogs      AuditLog[]
   actionItems    MeetingActionItem[] @relation("ActionItemOwner")
 
@@ -329,11 +329,11 @@ model Document {
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt @map("updated_at")
 
-  firm      Firm             @relation(fields: [firmId], references: [id], onDelete: Cascade)
-  matter    Matter?          @relation(fields: [matterId], references: [id], onDelete: SetNull)
+  firm       Firm            @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  matter     Matter?         @relation(fields: [matterId], references: [id], onDelete: SetNull)
   uploadedBy User            @relation("DocumentUploadedBy", fields: [uploadedById], references: [id])
-  chunks    DocumentChunk[]
-  analyses  Analysis[]
+  chunks     DocumentChunk[]
+  analyses   Analysis[]
 
   @@index([firmId])
   @@index([matterId])
@@ -342,15 +342,15 @@ model Document {
 }
 
 model DocumentChunk {
-  id           String @id @default(uuid()) @db.Uuid
-  documentId   String @map("document_id") @db.Uuid
-  firmId       String @map("firm_id") @db.Uuid
-  chunkIndex   Int    @map("chunk_index")
+  id           String                     @id @default(uuid()) @db.Uuid
+  documentId   String                     @map("document_id") @db.Uuid
+  firmId       String                     @map("firm_id") @db.Uuid
+  chunkIndex   Int                        @map("chunk_index")
   text         String
-  sectionTitle String?  @map("section_title")
-  pageNumber   Int?     @map("page_number")
+  sectionTitle String?                    @map("section_title")
+  pageNumber   Int?                       @map("page_number")
   embedding    Unsupported("vector(768)")
-  metadata     Json   @default("{}")
+  metadata     Json                       @default("{}")
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   firm     Firm     @relation(fields: [firmId], references: [id], onDelete: Cascade)
@@ -404,18 +404,18 @@ model ResearchBrief {
 }
 
 model Draft {
-  id          String      @id @default(uuid()) @db.Uuid
-  firmId      String      @map("firm_id") @db.Uuid
-  matterId    String?     @map("matter_id") @db.Uuid
-  type        DraftType
-  title       String
-  content     String      @default("")
-  status      DraftStatus @default(DRAFT)
+  id           String      @id @default(uuid()) @db.Uuid
+  firmId       String      @map("firm_id") @db.Uuid
+  matterId     String?     @map("matter_id") @db.Uuid
+  type         DraftType
+  title        String
+  content      String      @default("")
+  status       DraftStatus @default(DRAFT)
   instructions String?
-  modelUsed   String?     @map("model_used")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-  createdById String      @map("created_by_id") @db.Uuid
+  modelUsed    String?     @map("model_used")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  createdById  String      @map("created_by_id") @db.Uuid
 
   firm      Firm    @relation(fields: [firmId], references: [id], onDelete: Cascade)
   matter    Matter? @relation(fields: [matterId], references: [id], onDelete: SetNull)
@@ -438,10 +438,10 @@ model Meeting {
   status      MeetingStatus @default(PENDING)
   createdAt   DateTime      @default(now()) @map("created_at")
 
-  firm         Firm                @relation(fields: [firmId], references: [id], onDelete: Cascade)
-  matter       Matter?             @relation(fields: [matterId], references: [id], onDelete: SetNull)
-  actionItems  MeetingActionItem[]
-  decisions    MeetingDecision[]
+  firm        Firm                @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  matter      Matter?             @relation(fields: [matterId], references: [id], onDelete: SetNull)
+  actionItems MeetingActionItem[]
+  decisions   MeetingDecision[]
 
   @@index([firmId])
   @@index([matterId])
@@ -557,26 +557,27 @@ model Job {
 // ─── CA Vertical Models ──────────────────────────────────────────────────────
 
 model Client {
-  id          String    @id @default(uuid()) @db.Uuid
-  firmId      String    @map("firm_id") @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
+  firmId      String   @map("firm_id") @db.Uuid
   name        String
-  pan         String?   @map("pan")
-  gstin       String?   @map("gstin")
-  tan         String?   @map("tan")
-  cin         String?   @map("cin")
-  contactName String?   @map("contact_name")
+  pan         String?  @map("pan")
+  gstin       String?  @map("gstin")
+  tan         String?  @map("tan")
+  cin         String?  @map("cin")
+  contactName String?  @map("contact_name")
   email       String?
   phone       String?
   address     String?
-  status      String    @default("active")
+  status      String   @default("active")
   notes       String?
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  firm         Firm          @relation(fields: [firmId], references: [id], onDelete: Cascade)
-  engagements  Engagement[]
-  filings      Filing[]
+  firm            Firm             @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  engagements     Engagement[]
+  filings         Filing[]
   reconciliations Reconciliation[]
+  complianceItems ComplianceItem[]
 
   @@unique([firmId, pan])
   @@unique([firmId, gstin])
@@ -594,15 +595,15 @@ model Engagement {
   description String?
   startDate   DateTime         @map("start_date")
   endDate     DateTime?        @map("end_date")
-  fee         Decimal?         @db.Decimal(12, 2) @map("fee")
+  fee         Decimal?         @map("fee") @db.Decimal(12, 2)
   signingCAId String?          @map("signing_ca_id") @db.Uuid
   metadata    Json?
   createdAt   DateTime         @default(now()) @map("created_at")
   updatedAt   DateTime         @updatedAt @map("updated_at")
 
-  firm       Firm      @relation(fields: [firmId], references: [id], onDelete: Cascade)
-  client     Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  filings    Filing[]
+  firm    Firm     @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  client  Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  filings Filing[]
 
   @@index([firmId])
   @@index([clientId])
@@ -676,7 +677,7 @@ model Reconciliation {
   bankStmtRef     String?              @map("bank_stmt_ref")
   totalEntries    Int?                 @map("total_entries")
   matchedEntries  Int?                 @map("matched_entries")
-  varianceAmount  Decimal?             @db.Decimal(15, 2) @map("variance_amount")
+  varianceAmount  Decimal?             @map("variance_amount") @db.Decimal(15, 2)
   flaggedItems    Json?                @map("flagged_items")
   result          Json?
   agentCrew       String?              @map("agent_crew")
@@ -696,17 +697,17 @@ model Reconciliation {
 }
 
 model DSCKey {
-  id          String   @id @default(uuid()) @db.Uuid
-  firmId      String   @map("firm_id") @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  label       String
-  certSerial  String   @map("cert_serial")
-  issuedBy    String   @map("issued_by")
-  validFrom   DateTime @map("valid_from")
-  validUntil  DateTime @map("valid_until")
-  isActive    Boolean  @default(true) @map("is_active")
-  publicKeyHash String? @map("public_key_hash")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid()) @db.Uuid
+  firmId        String   @map("firm_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  label         String
+  certSerial    String   @map("cert_serial")
+  issuedBy      String   @map("issued_by")
+  validFrom     DateTime @map("valid_from")
+  validUntil    DateTime @map("valid_until")
+  isActive      Boolean  @default(true) @map("is_active")
+  publicKeyHash String?  @map("public_key_hash")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
 

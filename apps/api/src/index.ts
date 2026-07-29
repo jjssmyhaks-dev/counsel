@@ -5,6 +5,7 @@ import helmet from 'helmet';
 
 import { authMiddleware } from './middleware/auth';
 import { requestIdMiddleware } from './middleware/requestId';
+import { requestLogger, log } from './lib/logger';
 import { tenantMiddleware } from './middleware/tenant';
 import { errorHandler } from './middleware/errorHandler';
 import { initWorkOS } from './lib/workos';
@@ -54,10 +55,20 @@ app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
 // Security headers (CSP, HSTS, XSS filter, etc.)
 app.use(helmet());
 
-// CORS — allow all origins in dev
+// CORS — single-origin in production, configurable via CORS_ORIGIN
+// In production, set CORS_ORIGIN=https://app.counsel.ai or comma-separated list
+// Default allows localhost:3000; set CORS_ORIGIN=* for open access (not recommended)
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+  : ['http://localhost:3000'];
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: (origin, cb) => {
+      // Allow requests with no origin (curl, server-to-server, mobile apps)
+      if (!origin) return cb(null, true);
+      if (corsOrigins.includes('*') || corsOrigins.includes(origin)) return cb(null, true);
+      cb(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
   }),
 );
@@ -70,6 +81,9 @@ app.use((req, _res, next) => {
 
 // Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
+
+// ─── Structured JSON logging — request lifecycle ────────────────────────────
+app.use(requestLogger);
 
 // ─── Request ID — inject tracing ID into every request ──────────────────────
 app.use(requestIdMiddleware);

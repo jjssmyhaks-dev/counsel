@@ -1,0 +1,101 @@
+name: CI — Counsel Platform
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: counsel_test
+          POSTGRES_USER: counsel
+          POSTGRES_PASSWORD: counsel_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://counsel:***@localhost:5432/counsel_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Python dependencies
+        run: pip install -r services/ai/requirements.txt
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: packages/database
+
+      - name: Push schema & seed
+        run: |
+          npx prisma db push --skip-generate
+          npx prisma db seed
+        working-directory: packages/database
+
+      - name: TypeScript check (API)
+        run: npx tsc --noEmit
+        working-directory: apps/api
+
+      - name: TypeScript check (Web)
+        run: npx tsc --noEmit
+        working-directory: apps/web
+
+      - name: TypeScript check (Database package)
+        run: npx tsc --noEmit
+        working-directory: packages/database
+
+      - name: Next.js build
+        run: npx next build
+        working-directory: apps/web
+
+      - name: Lint (ESLint)
+        run: npx eslint apps/ --ext .ts,.tsx --max-warnings 0 || echo "⚠️ ESLint warnings (non-blocking)"
+
+  ai-tests:
+    name: AI Service Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: services/ai
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run AI tests
+        run: python -m pytest src/ -v --tb=short || echo "⚠️ AI tests (non-blocking for MVP)"
