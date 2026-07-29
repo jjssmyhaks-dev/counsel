@@ -24,7 +24,7 @@ const AGENTS: Omit<AgentTrust, 'trust'>[] = [
   { id: 'researcher', name: 'Research Agent', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
 ];
 
-const STEPS = [
+const STEPS_LEGAL = [
   { id: 'welcome', title: 'Welcome to Counsel', subtitle: "Let's get your firm set up in under 2 minutes", icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
   { id: 'plan', title: 'Choose Your Plan', subtitle: 'Pick the plan that fits your firm — no card required', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
   { id: 'upload', title: 'Upload Your First Contract', subtitle: 'Drop a contract or legal document to kick off analysis', icon: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' },
@@ -33,6 +33,20 @@ const STEPS = [
   { id: 'connect', title: 'Connect Your Inbox', subtitle: 'Install the Counsel Chrome Extension for Gmail drafting', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
   { id: 'done', title: "You're All Set", subtitle: 'Start analyzing documents, drafting, and researching', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
 ];
+
+const STEPS_CA = [
+  { id: 'welcome', title: 'Welcome to Counsel for CA', subtitle: "Let's get your CA practice set up in under 2 minutes", icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+  { id: 'plan', title: 'Choose Your Plan', subtitle: 'Pick the plan that fits your practice — no card required', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { id: 'upload', title: 'Upload Your First Trial Balance', subtitle: 'Drop a Tally XML, Zoho Books export, or CSV to kick off reconciliation', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+  { id: 'integrations', title: 'Connect Your Tools', subtitle: 'Link Tally, GST, MCA, and client communication channels', icon: 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z' },
+  { id: 'trust', title: 'Configure Agent Trust', subtitle: 'Control how much autonomy each agent has', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+  { id: 'connect', title: 'Connect Your Inbox', subtitle: 'Install the Counsel Chrome Extension for Gmail drafting', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+  { id: 'done', title: "You're All Set", subtitle: 'Start reconciling accounts, tracking compliance, and managing clients', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+];
+
+function getSteps(firmType: string) {
+  return firmType === 'CA' ? STEPS_CA : STEPS_LEGAL;
+}
 
 const PLAN_DATA: { id: PlanTier; name: string; price: string; features: string[]; highlight: boolean }[] = [
   { id: 'starter', name: 'Starter', price: 'Free', features: ['50 documents/month', 'Standard playbook', '12 clause types', '1 user'], highlight: false },
@@ -54,20 +68,22 @@ const TRUST_LEVELS: { id: TrustLevel; label: string; desc: string; color: string
 
 export default function OnboardingWizard() {
   const router = useRouter();
+  const firm = getFirm();
   const [step, setStep] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [plan, setPlan] = useState<PlanTier>('starter');
-  const [integrations, setIntegrations] = useState<Set<string>>(new Set());
+  const [selectedIntegrations, setSelectedIntegrations] = useState<Set<string>>(new Set());
   const [agentTrusts, setAgentTrusts] = useState<AgentTrust[]>(
     AGENTS.map(a => ({ ...a, trust: 'propose_only' as TrustLevel }))
   );
 
-  const firm = getFirm();
+  const firmType = firm?.firmType || 'LEGAL';
+  const STEPS = firmType === 'CA' ? STEPS_CA : STEPS_LEGAL;
 
   const toggleIntegration = (id: string) => {
-    const next = new Set(integrations);
+    const next = new Set(selectedIntegrations);
     if (next.has(id)) next.delete(id); else next.add(id);
-    setIntegrations(next);
+    setSelectedIntegrations(next);
   };
 
   const setTrust = (agentId: string, level: TrustLevel) => {
@@ -84,10 +100,14 @@ export default function OnboardingWizard() {
   }, []);
 
   const handleComplete = useCallback(() => {
-    const firm = getFirm();
-    if (firm) { firm.onboardingCompleted = true; localStorage.setItem('counsel_firm', JSON.stringify(firm)); }
-    router.push('/dashboard');
-  }, [router]);
+    const f = getFirm();
+    if (f) { f.onboardingCompleted = true; localStorage.setItem('counsel_firm', JSON.stringify(f)); }
+    if (firmType === 'CA') {
+      router.push('/dashboard/ca');
+    } else {
+      router.push('/dashboard');
+    }
+  }, [router, firmType]);
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
@@ -122,9 +142,11 @@ export default function OnboardingWizard() {
           {step === 0 && (
             <div className="bg-white rounded-2xl border border-black/[0.04] p-5 space-y-3">
               {[
-                { label: 'Firm Type', value: firm?.firmType === 'CONSULTING' ? 'Consulting' : 'Legal' },
+                { label: 'Firm Type', value: firmType === 'CA' ? 'CA / Accounting' : firmType === 'CONSULTING' ? 'Consulting' : 'Legal' },
                 { label: 'Firm Name', value: firm?.name || 'Your Firm' },
-                { label: "What you'll do", value: 'Document analysis · AI drafting · Research · Meeting processing' },
+                { label: "What you'll do", value: firmType === 'CA'
+                  ? 'GST · Income Tax · Audit · ROC · Bookkeeping Reconciliation'
+                  : 'Document analysis · AI drafting · Research · Meeting processing' },
               ].map(row => (
                 <div key={row.label} className="flex justify-between items-center py-2 border-b border-black/[0.02] last:border-0">
                   <span className="text-[13px] text-[#717d79]">{row.label}</span>
@@ -176,7 +198,7 @@ export default function OnboardingWizard() {
           {step === 3 && (
             <div className="space-y-3">
               {INTEGRATIONS.map(int => {
-                const selected = integrations.has(int.id);
+                const selected = selectedIntegrations.has(int.id);
                 return (
                   <button key={int.id} onClick={() => toggleIntegration(int.id)}
                     className={`w-full text-left p-4 rounded-xl border-2 transition-all ${selected ? 'border-[#15b881] bg-[#eaf7f0]' : 'border-black/[0.06] bg-white hover:border-[#15b881]/30'}`}>

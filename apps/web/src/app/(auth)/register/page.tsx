@@ -19,7 +19,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firmName, setFirmName] = useState('');
-  const [firmType, setFirmType] = useState<'LEGAL' | 'CONSULTING'>('LEGAL');
+  const [firmType, setFirmType] = useState<'LEGAL' | 'CONSULTING' | 'CA'>('LEGAL');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -136,6 +136,7 @@ export default function RegisterPage() {
                 {[
                   { value: 'LEGAL' as const, label: '🏛️ Legal Firm', sub: 'Document analysis, drafting, case research' },
                   { value: 'CONSULTING' as const, label: '📊 Consulting Firm', sub: 'Proposals, market intel, engagement mgmt' },
+                  { value: 'CA' as const, label: '🧾 CA / Accounting Firm', sub: 'GST, IT, Audit, ROC, Bookkeeping' },
                 ].map((opt) => (
                   <button
                     key={opt.value}

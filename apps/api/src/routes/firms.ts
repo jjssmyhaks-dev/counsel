@@ -37,6 +37,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 const updateFirmSchema = z.object({
   name: z.string().min(1).optional(),
   plan: z.enum(['free', 'pro', 'enterprise']).optional(),
+  firmType: z.enum(['LEGAL', 'CONSULTING', 'HYBRID', 'CA']).optional(),
   seatCount: z.number().int().min(1).optional(),
 });
 
