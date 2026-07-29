@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getFirm, getUser } from '@/lib/auth';
-
-const serif = 'font-serif';
+import { api } from '@/lib/api';
 import type { Firm, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,12 +51,10 @@ export default function SettingsPage() {
  function handleSave() {
  setSaving(true);
  setSaveMessage('');
- setTimeout(() => {
- setSaving(false);
- setEditing(false);
- setSaveMessage('Firm profile updated successfully.');
- setTimeout(() => setSaveMessage(''), 3000);
- }, 800);
+ api.patch('/firms', { name: firmName, domain: firmDomain, settings: { features } })
+   .then(() => setSaveMessage('Firm profile updated successfully.'))
+   .catch((err) => setSaveMessage('Error: ' + err.message))
+   .finally(() => { setSaving(false); setEditing(false); setTimeout(() => setSaveMessage(''), 3000); });
  }
 
  function toggleFeature(key: keyof Exclude<Firm['settings'], undefined>['features']) {

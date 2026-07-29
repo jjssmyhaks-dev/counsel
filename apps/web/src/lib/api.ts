@@ -20,6 +20,7 @@ import type {
   CreateMatterRequest,
   CreateDraftRequest,
   CreateResearchRequest,
+  Job,
 } from './types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -636,6 +637,94 @@ const MOCK_DECISIONS: MeetingDecision[] = [
   },
 ];
 
+const MOCK_CLIENTS = [
+  { id: 'client-001', name: 'ABC Pvt Ltd', pan: 'AABCA1234E', gstin: '27AABCA1234E1Z5', lastEngagement: 'GST Filing Q1 2026', status: 'Active', email: 'accounts@abc.com' },
+  { id: 'client-002', name: 'XYZ Corporation', pan: 'AAACX5678P', gstin: '07AAACX5678P2Z4', lastEngagement: 'Statutory Audit FY25', status: 'Active', email: 'finance@xyz.com' },
+  { id: 'client-003', name: 'DEF Limited', pan: 'AABCD9012Q', gstin: '29AABCD9012Q3Z9', lastEngagement: 'ITR Filing AY 2025-26', status: 'Active', email: 'tax@def.in' },
+  { id: 'client-004', name: 'GHI & Associates', pan: 'AACGH3456R', gstin: '24AACGH3456R4Z8', lastEngagement: 'ROC AOC-4 Filing', status: 'Inactive', email: 'compliance@ghi.co' },
+  { id: 'client-005', name: 'LMN India Pvt Ltd', pan: 'AAELM7890S', gstin: '09AAELM7890S5Z2', lastEngagement: 'TDS Return Q4', status: 'Active', email: 'contact@lmn.in' },
+];
+
+const MOCK_COMPLIANCE_ITEMS = [
+  { id: 'comp-001', type: 'GST', client: 'ABC Pvt Ltd', title: 'GSTR-3B — July 2026', dueDate: '2026-08-20', status: 'upcoming', severity: 'warning' },
+  { id: 'comp-002', type: 'GST', client: 'DEF Ltd', title: 'GSTR-1 — July 2026', dueDate: '2026-08-11', status: 'upcoming', severity: 'warning' },
+  { id: 'comp-003', type: 'Income Tax', client: 'DEF Ltd', title: 'TDS Return 26Q — Q1 2026-27', dueDate: '2026-07-31', status: 'overdue', severity: 'critical' },
+  { id: 'comp-004', type: 'ROC', client: 'XYZ Corp', title: 'AOC-4 — FY 2025-26', dueDate: '2026-09-30', status: 'upcoming', severity: 'normal' },
+  { id: 'comp-005', type: 'ROC', client: 'XYZ Corp', title: 'MGT-7 — FY 2025-26', dueDate: '2026-09-30', status: 'upcoming', severity: 'normal' },
+  { id: 'comp-006', type: 'Audit', client: 'GHI & Co', title: 'Tax Audit Report — Form 3CD', dueDate: '2026-09-15', status: 'upcoming', severity: 'warning' },
+  { id: 'comp-007', type: 'Income Tax', client: 'ABC Pvt Ltd', title: 'ITR-6 — AY 2026-27', dueDate: '2026-09-30', status: 'upcoming', severity: 'normal' },
+  { id: 'comp-008', type: 'ROC', client: 'LMN India', title: 'DIR-3 KYC — FY 2025-26', dueDate: '2026-09-30', status: 'upcoming', severity: 'normal' },
+];
+
+const MOCK_FILINGS = [
+  { id: 'filing-001', type: 'GSTR-3B', period: 'July 2026', dueDate: '2026-08-20', status: 'pending', client: 'ABC Pvt Ltd' },
+  { id: 'filing-002', type: 'GSTR-1', period: 'July 2026', dueDate: '2026-08-11', status: 'pending', client: 'DEF Ltd' },
+  { id: 'filing-003', type: 'ITR', period: 'AY 2026-27', dueDate: '2026-09-30', status: 'filed', client: 'ABC Pvt Ltd' },
+  { id: 'filing-004', type: 'TDS', period: 'Q1 2026-27', dueDate: '2026-07-31', status: 'overdue', client: 'DEF Ltd' },
+  { id: 'filing-005', type: 'GSTR-9', period: 'FY 2024-25', dueDate: '2026-12-31', status: 'pending', client: 'XYZ Corp' },
+];
+
+const MOCK_ADMIN_METRICS = {
+  activeUsers: 24,
+  totalDocuments: 347,
+  aiJobsRun: 1293,
+  storageUsed: '12.4 GB',
+  apiCallsToday: 847,
+};
+
+const MOCK_ENGAGEMENTS = [
+  { id: 'eng-001', client: 'ABC Pvt Ltd', project: 'Statutory Audit FY 2025-26', status: 'in_progress', startDate: '2026-04-01', endDate: '2026-09-30', value: '₹3,50,000', leadPartner: 'Rajesh Mehta' },
+  { id: 'eng-002', client: 'XYZ Corporation', project: 'GST Compliance & Advisory', status: 'active', startDate: '2026-01-01', endDate: '2027-03-31', value: '₹6,00,000', leadPartner: 'Priya Sharma' },
+  { id: 'eng-003', client: 'DEF Limited', project: 'Transfer Pricing Study', status: 'pending', startDate: '2026-08-01', endDate: '2026-10-31', value: '₹4,50,000', leadPartner: 'Rajesh Mehta' },
+  { id: 'eng-004', client: 'LMN India Pvt Ltd', project: 'ROC Annual Filing Package', status: 'completed', startDate: '2026-05-01', endDate: '2026-07-15', value: '₹1,25,000', leadPartner: 'Priya Sharma' },
+  { id: 'eng-005', client: 'GHI & Associates', project: 'Tax Due Diligence', status: 'in_progress', startDate: '2026-06-15', endDate: '2026-08-31', value: '₹8,00,000', leadPartner: 'Amit Gupta' },
+];
+
+const MOCK_FIRMS: Firm[] = [
+  MOCK_FIRM,
+  {
+    id: 'firm-ca-001',
+    name: 'Mehta & Associates',
+    slug: 'mehta-associates',
+    domain: 'mehta-ca.com',
+    firmType: 'CA',
+    onboardingCompleted: true,
+    plan: 'professional',
+    seatCount: 15,
+    createdAt: '2023-06-01T08:00:00Z',
+    settings: {
+      defaultLanguage: 'en',
+      timezone: 'Asia/Kolkata',
+      features: {
+        documentAnalysis: true,
+        research: true,
+        drafting: true,
+        knowledgeBase: true,
+        meetings: true,
+      },
+    },
+  },
+];
+
+const MOCK_JOBS: Job[] = [
+  { id: 'job-001', type: 'document_analysis', status: 'completed', resourceId: 'doc-001', resourceType: 'document', progress: 100, createdAt: '2026-07-10T09:15:00Z', updatedAt: '2026-07-10T09:25:00Z' },
+  { id: 'job-002', type: 'research', status: 'processing', resourceId: 'research-002', resourceType: 'research', progress: 65, createdAt: '2026-07-12T09:00:00Z', updatedAt: '2026-07-12T09:05:00Z' },
+  { id: 'job-003', type: 'draft_generation', status: 'completed', resourceId: 'draft-002', resourceType: 'draft', progress: 100, createdAt: '2026-07-09T09:00:00Z', updatedAt: '2026-07-09T09:12:00Z' },
+  { id: 'job-004', type: 'meeting_transcription', status: 'queued', resourceId: 'meeting-003', resourceType: 'meeting', progress: 0, createdAt: '2026-07-12T17:01:00Z', updatedAt: '2026-07-12T17:01:00Z' },
+  { id: 'job-005', type: 'document_analysis', status: 'failed', resourceId: 'doc-006', resourceType: 'document', progress: 42, error: 'File exceeds maximum size limit of 4MB', createdAt: '2026-07-11T10:05:00Z', updatedAt: '2026-07-11T10:06:00Z' },
+];
+
+const MOCK_USAGE = {
+  plan: 'professional',
+  documentsUsed: 347,
+  documentsLimit: 1000,
+  apiCallsUsed: 12453,
+  apiCallsLimit: 50000,
+  storageUsed: '12.4 GB',
+  storageLimit: '50 GB',
+  billingCycle: '2026-08-01',
+};
+
 const MOCK_AUDIT_LOGS: AuditLog[] = [
   {
     id: 'log-001',
@@ -918,6 +1007,15 @@ function getMockResponse<T>(path: string, body?: unknown): T | undefined {
   if (path === '/playbook/rules') return mockGetPlaybookRules() as unknown as T;
   if (path === '/admin/users') return mockGetUsers() as unknown as T;
   if (path === '/admin/audit') return mockGetAuditLogs() as unknown as T;
+  if (path === '/clients') return mockGetClients() as unknown as T;
+  if (path === '/compliance-calendar') return mockGetComplianceItems() as unknown as T;
+  if (path === '/filings') return mockGetFilings() as unknown as T;
+  if (path === '/admin/metrics') return mockGetAdminMetrics() as unknown as T;
+  if (path === '/engagements') return mockGetEngagements() as unknown as T;
+  if (path === '/firms') return mockGetFirms() as unknown as T;
+  if (path === '/settings') return mockGetSettings() as unknown as T;
+  if (path === '/jobs') return mockGetJobs() as unknown as T;
+  if (path === '/usage') return mockGetUsage() as unknown as T;
 
   // POST routes
   if (path === '/drafts' && body) {
@@ -942,6 +1040,9 @@ function getMockResponse<T>(path: string, body?: unknown): T | undefined {
   if (path.startsWith('/meetings/') && path.endsWith('/decisions')) {
     const id = path.split('/meetings/')[1].split('/decisions')[0];
     return mockGetDecisions(id) as unknown as T;
+  }
+  if (path === '/chat-copilot/message' && body) {
+    return mockChatCopilotMessage(body as { message: string }) as unknown as T;
   }
 
   return undefined;
@@ -1150,6 +1251,136 @@ export async function mockKbQuery(req: KbQueryRequest): Promise<KbAnswer> {
     confidence: 'low',
     sources: [],
     metadata: { message: 'No confident match found in the knowledge base. Try rephrasing your question or consult the relevant playbook.' },
+  };
+}
+
+export async function mockGetClients() {
+  await MOCK_DELAY();
+  return MOCK_CLIENTS;
+}
+
+export async function mockGetComplianceItems() {
+  await MOCK_DELAY();
+  return MOCK_COMPLIANCE_ITEMS;
+}
+
+export async function mockGetFilings() {
+  await MOCK_DELAY();
+  return MOCK_FILINGS;
+}
+
+export async function mockGetAdminMetrics() {
+  await MOCK_DELAY();
+  return MOCK_ADMIN_METRICS;
+}
+
+export async function mockGetEngagements() {
+  await MOCK_DELAY();
+  return MOCK_ENGAGEMENTS;
+}
+
+export async function mockGetFirms() {
+  await MOCK_DELAY();
+  return MOCK_FIRMS;
+}
+
+export async function mockGetSettings() {
+  await MOCK_DELAY();
+  return MOCK_FIRM.settings;
+}
+
+export async function mockGetJobs(): Promise<Job[]> {
+  await MOCK_DELAY();
+  return MOCK_JOBS;
+}
+
+export async function mockGetUsage() {
+  await MOCK_DELAY();
+  return MOCK_USAGE;
+}
+
+export async function mockChatCopilotMessage(body: { message: string }) {
+  await MOCK_DELAY();
+  const msg = body.message?.toLowerCase() || '';
+
+  if (msg.includes('document') || msg.includes('analysis')) {
+    return {
+      response: `Based on your request regarding document analysis, I can help you with the following:
+
+1. **Upload & Analysis**: Upload any document (PDF, DOCX) and our AI will identify key clauses, risks, and suggest improvements.
+
+2. **Recent Analyses**: You have 5 documents currently being analyzed or completed. The Quantum Dynamics Merger Agreement has 5 flagged clauses with medium overall risk.
+
+3. **Playbook Matching**: Documents are automatically checked against your firm's playbook rules. The indemnification and non-compete rules would apply to M&A documents.
+
+Would you like me to start analyzing a specific document or review the existing analysis results?`,
+    };
+  }
+
+  if (msg.includes('draft') || msg.includes('letter') || msg.includes('memo') || msg.includes('write')) {
+    return {
+      response: `I can help you draft legal documents. Here are your options:
+
+**📝 Draft Types Available:**
+- **Demand Letters** — Formal legal demands
+- **Legal Memos** — Internal analysis and research memos
+- **Briefs** — Court filings and submissions
+- **Reports** — Compliance audits and summaries
+- **Emails** — Client communications
+
+**Current Drafts in Progress:**
+- Demand Letter — Quantum Merger (draft)
+- GDPR Compliance Report — NovaTech (generating)
+
+What type of document would you like me to draft? Just describe what you need and I'll get started!`,
+    };
+  }
+
+  if (msg.includes('research') || msg.includes('find') || msg.includes('search')) {
+    return {
+      response: `I can help you with legal research! Here's what I can do:
+
+**🔍 Research Capabilities:**
+- Case law and precedent search
+- Statutory interpretation
+- Regulatory compliance research
+- Jurisdictional analysis
+
+**Recent Research:**
+- Delaware Merger Agreement Precedent Review (completed)
+- FRCP Amendments & E-Discovery (in progress)
+- NY Commercial Lease Force Majeure (completed)
+
+What legal question would you like me to research?`,
+    };
+  }
+
+  if (msg.includes('meeting') || msg.includes('schedule') || msg.includes('calendar')) {
+    return {
+      response: `Here's your meeting overview:
+
+**📅 Upcoming Meetings:**
+- Brighton Lease Strategy Call — Jul 13, 15:00 (60 min)
+
+**✅ Recent Meetings:**
+- Quantum Merger Strategy Session — Jul 12 (7 action items, 3 decisions)
+- Evergreen Patent Claim Construction — Jul 11 (12 action items, 5 decisions)
+
+Would you like me to schedule a new meeting, summarize a past one, or help with action items?`,
+    };
+  }
+
+  return {
+    response: `I'm your Counsel AI assistant. I can help you with:
+
+📄 **Document Analysis** — Upload and analyze legal documents for risks and clauses
+✍️ **Drafting** — Generate letters, memos, briefs, and reports
+🔍 **Legal Research** — Search case law, statutes, and precedents
+📋 **Matter Management** — Track cases, deadlines, and client matters
+📅 **Meetings** — Schedule, transcribe, and extract action items
+📚 **Knowledge Base** — Query your firm's institutional knowledge
+
+What would you like help with today?`,
   };
 }
 

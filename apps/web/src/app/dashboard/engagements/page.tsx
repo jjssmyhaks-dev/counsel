@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 
 const serif = 'font-serif';
@@ -33,7 +33,18 @@ const statusColors: Record<string, string> = {
 };
 
 export default function EngagementsPage() {
-  const [engagements] = useState<Engagement[]>(mockEngagements);
+  const [loading, setLoading] = useState(true);
+  const [engagements, setEngagements] = useState<Engagement[]>(mockEngagements);
+
+  useEffect(() => {
+    api.get('/engagements')
+      .then((res: any) => {
+        const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : null));
+        if (data && data.length) setEngagements(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 

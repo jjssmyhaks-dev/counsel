@@ -1,30 +1,32 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 interface Client { id: string; name: string; pan: string; gstin: string; lastEngagement: string; status: string; email: string; }
+
+function extractList(res: any): any[] {
+  if (Array.isArray(res)) return res;
+  if (res?.data?.data) return res.data.data;
+  if (Array.isArray(res?.data)) return res.data;
+  return [];
+}
 
 export default function CAClientsPage() {
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    setTimeout(() => {
-      setClients([
-        { id:'1',name:'ABC Pvt Ltd',pan:'AABCA1234E',gstin:'27AABCA1234E1Z5',lastEngagement:'GST Filing Q1 2026',status:'Active',email:'accounts@abc.com' },
-        { id:'2',name:'XYZ Corporation',pan:'AAACX5678P',gstin:'07AAACX5678P2Z4',lastEngagement:'Statutory Audit FY25',status:'Active',email:'finance@xyz.com' },
-        { id:'3',name:'DEF Limited',pan:'AABCD9012Q',gstin:'29AABCD9012Q3Z9',lastEngagement:'ITR Filing AY 2025-26',status:'Active',email:'tax@def.in' },
-        { id:'4',name:'GHI & Associates',pan:'AACGH3456R',gstin:'24AACGH3456R4Z8',lastEngagement:'ROC AOC-4 Filing',status:'Inactive',email:'compliance@ghi.co' },
-        { id:'5',name:'LMN India Pvt Ltd',pan:'AAELM7890S',gstin:'09AAELM7890S5Z2',lastEngagement:'TDS Return Q4',status:'Active',email:'contact@lmn.in' },
-      ]);
-      setLoading(false);
-    }, 600);
+    api.get('/clients')
+      .then((res: any) => setClients(extractList(res)))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.pan.includes(search.toUpperCase()) || c.gstin.includes(search));
 
   if (loading) return <div className="p-6"><div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-4" /><div className="h-64 bg-gray-200 rounded-lg animate-pulse" /></div>;
-
   return (
     <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4">
       <div className="flex flex-wrap justify-between items-center gap-3">

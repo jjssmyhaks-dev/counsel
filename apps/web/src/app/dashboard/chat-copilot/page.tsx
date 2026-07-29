@@ -31,23 +31,27 @@ export default function ChatCopilotPage() {
     setInput('');
     setSending(true);
 
-    // Simulate AI response
-    await new Promise(r => setTimeout(r, 1200));
-    const responses = [
-      "I've analyzed the document. Here are the key findings: 3 high-risk clauses found in the indemnification section. I recommend reviewing sections 4.2 and 4.5.",
-      "Let me draft that for you. I'll generate a standard NDA with your firm's playbook preferences — mutual non-disclosure, 3-year term, California governing law.",
-      "Based on my research, here's what I found: *Smith v. Jones (2023)* sets precedent for this scenario. The court ruled that reasonable accommodation must be provided within 30 days.",
-      "I've scheduled the follow-up meeting and extracted these action items from the transcript: 1) Review contract by Friday, 2) Send client update by Monday, 3) Finalize budget by Wednesday.",
-      "Your usage this month: 45/50 documents processed. You're at 90% of your plan cap. Consider upgrading to Growth for unlimited documents.",
-    ];
-    const assistantMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      text: responses[Math.floor(Math.random() * responses.length)],
-      timestamp: 'just now',
-      hasActions: Math.random() > 0.5,
-    };
-    setMessages(prev => [...prev, assistantMsg]);
+    // Call AI chat endpoint
+    try {
+      const res: any = await api.post('/chat-copilot/message', { message: input });
+      const replyText = res?.response || res?.data?.response || 'I received your message. How else can I help?';
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        text: replyText,
+        timestamp: 'just now',
+        hasActions: Math.random() > 0.5,
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+    } catch {
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        text: 'Sorry, I had trouble processing that request. Please try again.',
+        timestamp: 'just now',
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+    }
     setSending(false);
   };
 

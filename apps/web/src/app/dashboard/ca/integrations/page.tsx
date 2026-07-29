@@ -8,13 +8,8 @@ interface IntegrationCard {
 type ActiveModal = { card: IntegrationCard; step: number } | null;
 
 export default function CAIntegrationsPage() {
-  const [loading, setLoading] = useState(true);
-  const [cards, setCards] = useState<IntegrationCard[]>([]);
-  const [modal, setModal] = useState<ActiveModal>(null);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setCards([
+  const [loading, setLoading] = useState(false);
+  const [cards, setCards] = useState<IntegrationCard[]>([
         { id:'tally',name:'Tally',category:'Accounting',description:'Connect your Tally data. Pull trial balance, ledgers, vouchers for automatic reconciliation.',status:'disconnected',icon:'📊',provider:'Tally Solutions',
           setupSteps: ['Step 1: Export your Tally data as XML. Go to Tally → Export → XML format.','Step 2: Upload the XML file here. Counsel parses trial balance, ledgers, and vouchers automatically.','Step 3: Map your Tally accounts to the chart of accounts. Counsel suggests mappings — you confirm.','Your Tally data is now connected. Upload new exports anytime for reconciliation.'] },
         { id:'gsp',name:'GSP (GST Filing)',category:'Government',description:'Fetch GSTR-2A/2B data, check filing status. Works with ClearTax, Masters India, or WhiteBooks.',status:'disconnected',icon:'🧾',provider:'ClearTax / Masters India / WhiteBooks',
@@ -32,9 +27,9 @@ export default function CAIntegrationsPage() {
         { id:'quickbooks',name:'QuickBooks',category:'Accounting',description:'Pull data from QuickBooks Online for reconciliation and tax prep.',status:'disconnected',icon:'📗',provider:'Intuit',
           setupSteps: ['Step 1: Get your Realm ID and OAuth token from Intuit Developer.','Step 2: Enter credentials in Counsel.','Step 3: Authorize the connection in QuickBooks.','Read-only sync complete. Ready for reconciliation.'] },
       ]);
-      setLoading(false);
-    }, 700);
-  }, []);
+  const [modal, setModal] = useState<ActiveModal>(null);
+
+  // static config data — no useEffect / setTimeout needed
 
   const gov = cards.filter(c => c.category === 'Government');
   const acc = cards.filter(c => c.category === 'Accounting');

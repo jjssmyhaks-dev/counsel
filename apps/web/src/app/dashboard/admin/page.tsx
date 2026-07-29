@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,11 +26,27 @@ const mockActivity = [
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const [activity, setActivity] = useState(mockActivity);
+  const [metrics, setMetrics] = useState({ activeUsers: 12, totalDocuments: 247, aiJobsRun: 1204, storageUsed: '8.2 GB', apiCallsToday: 847 });
+
+  useEffect(() => {
+    api.get('/admin/metrics').then((res: any) => {
+      if (res) setMetrics(prev => ({ ...prev, ...(res.data || res) }));
+    }).catch(() => {});
+    api.get('/admin/audit?limit=10').then((res: any) => {
+      const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : null);
+      if (data) {
+        setActivity(data.map((a: any) => ({
+          id: a.id, user: a.userName, action: a.action, detail: a.details, resource: a.resource, time: a.createdAt,
+        })));
+      }
+    }).catch(() => {});
+  }, []);
 
   const stats = [
-    { label: 'Total Users', value: '12', icon: '👥', color: 'bg-[#eaf7f0]/40 text-[#15b881]' },
-    { label: 'Total Documents', value: '247', icon: '📄', color: 'bg-green-50 text-green-600' },
-    { label: 'Queries This Month', value: '1,204', icon: '💡', color: 'bg-purple-50 text-purple-600' },
+    { label: 'Total Users', value: String(metrics.activeUsers), icon: '👥', color: 'bg-[#eaf7f0]/40 text-[#15b881]' },
+    { label: 'Total Documents', value: String(metrics.totalDocuments), icon: '📄', color: 'bg-green-50 text-green-600' },
+    { label: 'Queries This Month', value: String(metrics.aiJobsRun), icon: '💡', color: 'bg-purple-50 text-purple-600' },
     { label: 'Active Matters', value: '12', icon: '📋', color: 'bg-amber-50 text-amber-600' },
   ];
 
@@ -125,7 +142,7 @@ export default function AdminDashboardPage() {
         <h3 className="font-semibold text-[#0c0a09] mb-3">Recent Activity</h3>
         <Card padding="none">
           <div className="divide-y divide-black/[0.04]">
-            {mockActivity.map((entry) => (
+            {activity.map((entry) => (
               <div key={entry.id} className="flex items-center gap-4 px-5 py-3 hover:bg-[#fefdfb] transition-colors">
                 <div className="w-8 h-8 rounded-full bg-[#eaf7f0] text-[#0a8a5f] flex items-center justify-center text-xs font-bold flex-shrink-0">
                   {entry.user.split(' ').map((n) => n[0]).join('')}

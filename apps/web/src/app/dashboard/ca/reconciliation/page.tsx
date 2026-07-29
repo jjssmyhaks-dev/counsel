@@ -1,23 +1,45 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 interface Run { id: string; client: string; period: string; status: string; totalEntries: number; matchedEntries: number; variance: string; flagged: number; date: string; }
 
+function extractList(res: any): any[] {
+  if (Array.isArray(res)) return res;
+  if (res?.data?.data) return res.data.data;
+  if (Array.isArray(res?.data)) return res.data;
+  return [];
+}
+
 export default function CAReconciliationPage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [runs, setRuns] = useState<Run[]>([]);
   const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
-      setRuns([
-        { id:'r1',client:'ABC Pvt Ltd',period:'Apr-Jun 2026',status:'COMPLETED',totalEntries:1243,matchedEntries:1219,variance:'₹18,540',flagged:12,date:'2026-07-20' },
-        { id:'r2',client:'DEF Ltd',period:'Apr-Jun 2026',status:'REVIEW_REQUIRED',totalEntries:876,matchedEntries:854,variance:'₹42,300',flagged:8,date:'2026-07-22' },
-        { id:'r3',client:'XYZ Corp',period:'Jan-Mar 2026',status:'COMPLETED',totalEntries:2150,matchedEntries:2138,variance:'₹9,100',flagged:5,date:'2026-06-15' },
-        { id:'r4',client:'LMN India',period:'Apr-Jun 2026',status:'PENDING',totalEntries:0,matchedEntries:0,variance:'—',flagged:0,date:'—' },
-      ]);
-      setLoading(false);
-    }, 500);
+    api.get('/filings')
+      .then((res: any) => {
+        const filings = extractList(res);
+        setRuns(filings.length > 0 ? filings.map((f: any) => ({
+          id: f.id,
+          client: f.client || 'Unknown',
+          period: f.period || '—',
+          status: f.status === 'overdue' ? 'REVIEW_REQUIRED' : f.status === 'filed' ? 'COMPLETED' : 'PENDING',
+          totalEntries: 0,
+          matchedEntries: 0,
+          variance: '—',
+          flagged: 0,
+          date: f.dueDate || '—',
+        })) : [
+          { id:'r1',client:'ABC Pvt Ltd',period:'Apr-Jun 2026',status:'COMPLETED',totalEntries:1243,matchedEntries:1219,variance:'₹18,540',flagged:12,date:'2026-07-20' },
+          { id:'r2',client:'DEF Ltd',period:'Apr-Jun 2026',status:'REVIEW_REQUIRED',totalEntries:876,matchedEntries:854,variance:'₹42,300',flagged:8,date:'2026-07-22' },
+          { id:'r3',client:'XYZ Corp',period:'Jan-Mar 2026',status:'COMPLETED',totalEntries:2150,matchedEntries:2138,variance:'₹9,100',flagged:5,date:'2026-06-15' },
+          { id:'r4',client:'LMN India',period:'Apr-Jun 2026',status:'PENDING',totalEntries:0,matchedEntries:0,variance:'—',flagged:0,date:'—' },
+        ]);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const statusBadge = (s: string) => {
