@@ -434,6 +434,164 @@ services:
     restart: unless-stopped
     profiles: ["mcp", "full"]
 
+  # ── CA Vertical MCPs ──
+
+  mcp-gsp:
+    build: services/mcp
+    image: counsel-mcp-gsp
+    ports:
+      - "3118:3118"
+    environment:
+      - MCP_SERVER=gsp-mcp
+      - GSP_OAUTH_TOKEN=${GSP_OAUTH_TOKEN}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3118/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-mca:
+    build: services/mcp
+    image: counsel-mcp-mca
+    ports:
+      - "3119:3119"
+    environment:
+      - MCP_SERVER=mca-mcp
+      - MCA_API_KEY=${MCA_API_KEY}
+      - MCA21_API_BASE=${MCA21_API_BASE}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3119/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-udin:
+    build: services/mcp
+    image: counsel-mcp-udin
+    ports:
+      - "3120:3120"
+    environment:
+      - MCP_SERVER=udin-mcp
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3120/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-tally:
+    build: services/mcp
+    image: counsel-mcp-tally
+    ports:
+      - "3121:3121"
+    environment:
+      - MCP_SERVER=tally-mcp
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3121/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-eri:
+    build: services/mcp
+    image: counsel-mcp-eri
+    ports:
+      - "3122:3122"
+    environment:
+      - MCP_SERVER=eri-mcp
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3122/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-books:
+    build: services/mcp
+    image: counsel-mcp-books
+    ports:
+      - "3123:3123"
+    environment:
+      - MCP_SERVER=books-mcp
+      - ZOHO_OAUTH_TOKEN=${ZOHO_OAUTH_TOKEN}
+      - ZOHO_ORGANIZATION_ID=${ZOHO_ORGANIZATION_ID}
+      - QUICKBOOKS_ACCESS_TOKEN=${QUICKBOOKS_ACCESS_TOKEN}
+      - QUICKBOOKS_REALM_ID=${QUICKBOOKS_REALM_ID}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3123/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
+  mcp-whatsapp:
+    build: services/mcp
+    image: counsel-mcp-whatsapp
+    ports:
+      - "3124:3124"
+    environment:
+      - MCP_SERVER=whatsapp-mcp
+      - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
+    env_file:
+      - services/mcp/.env
+    depends_on:
+      mcp-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3124/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    profiles: ["mcp", "full"]
+
   # ──────────── Core Services ────────────
 
   ai:

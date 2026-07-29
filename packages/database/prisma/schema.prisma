@@ -16,6 +16,13 @@ enum FirmType {
   LEGAL
   CONSULTING
   HYBRID
+  CA
+}
+
+enum FirmVertical {
+  LEGAL
+  CONSULTING
+  CA
 }
 
 enum UserRole {
@@ -110,6 +117,82 @@ enum JobStatus {
   FAILED
 }
 
+// ─── CA Vertical Enums ──────────────────────────────────────────────────────
+
+enum EngagementType {
+  GST_FILING
+  INCOME_TAX_FILING
+  ROC_FILING
+  TDS_FILING
+  AUDIT
+  BOOKKEEPING
+  RECONCILIATION
+  ADVISORY
+}
+
+enum EngagementStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  TERMINATED
+}
+
+enum FilingType {
+  GSTR_1
+  GSTR_3B
+  GSTR_9
+  GSTR_9C
+  ITR_1
+  ITR_2
+  ITR_3
+  ITR_4
+  ITR_5
+  ITR_6
+  ITR_7
+  TDS_RETURN
+  AOC_4
+  MGT_7
+  DIR_3_KYC
+  E_INVOICE
+  E_WAY_BILL
+  UDIN
+}
+
+enum FilingStatus {
+  DRAFT
+  PARTNER_REVIEW
+  READY_TO_FILE
+  FILED
+  REJECTED
+  OVERDUE
+}
+
+enum ComplianceItemType {
+  GST_RETURN
+  INCOME_TAX_RETURN
+  TDS_RETURN
+  ROC_FILING
+  AUDIT_REPORT
+  TAX_AUDIT
+  GST_AUDIT
+  UDIN_GENERATION
+}
+
+enum ComplianceStatus {
+  UPCOMING
+  DUE_THIS_WEEK
+  OVERDUE
+  COMPLETED
+}
+
+enum ReconciliationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REVIEW_REQUIRED
+  FAILED
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Firm {
@@ -117,6 +200,7 @@ model Firm {
   name                String
   slug                String    @unique
   firmType            FirmType  @default(LEGAL) @map("firm_type")
+  firmVertical        FirmVertical @default(LEGAL) @map("firm_vertical")
   onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
   plan                String    @default("free")
   seatCount           Int       @default(5) @map("seat_count")
@@ -135,6 +219,14 @@ model Firm {
   auditLogs      AuditLog[]
   playbooks      Playbook[]
   jobs           Job[]
+
+  // CA vertical
+  clients             Client[]
+  engagements         Engagement[]
+  filings             Filing[]
+  complianceItems     ComplianceItem[]
+  reconciliations     Reconciliation[]
+  dscKeys             DSCKey[]
 
   @@map("firms")
 }
@@ -460,4 +552,165 @@ model Job {
   @@index([status])
   @@index([type])
   @@map("jobs")
+}
+
+// ─── CA Vertical Models ──────────────────────────────────────────────────────
+
+model Client {
+  id          String    @id @default(uuid()) @db.Uuid
+  firmId      String    @map("firm_id") @db.Uuid
+  name        String
+  pan         String?   @map("pan")
+  gstin       String?   @map("gstin")
+  tan         String?   @map("tan")
+  cin         String?   @map("cin")
+  contactName String?   @map("contact_name")
+  email       String?
+  phone       String?
+  address     String?
+  status      String    @default("active")
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  firm         Firm          @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  engagements  Engagement[]
+  filings      Filing[]
+  reconciliations Reconciliation[]
+
+  @@unique([firmId, pan])
+  @@unique([firmId, gstin])
+  @@index([firmId])
+  @@map("clients")
+}
+
+model Engagement {
+  id          String           @id @default(uuid()) @db.Uuid
+  firmId      String           @map("firm_id") @db.Uuid
+  clientId    String           @map("client_id") @db.Uuid
+  type        EngagementType   @map("type")
+  status      EngagementStatus @default(ACTIVE) @map("status")
+  name        String           @map("name")
+  description String?
+  startDate   DateTime         @map("start_date")
+  endDate     DateTime?        @map("end_date")
+  fee         Decimal?         @db.Decimal(12, 2) @map("fee")
+  signingCAId String?          @map("signing_ca_id") @db.Uuid
+  metadata    Json?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  firm       Firm      @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  client     Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  filings    Filing[]
+
+  @@index([firmId])
+  @@index([clientId])
+  @@index([status])
+  @@map("engagements")
+}
+
+model Filing {
+  id              String       @id @default(uuid()) @db.Uuid
+  firmId          String       @map("firm_id") @db.Uuid
+  clientId        String       @map("client_id") @db.Uuid
+  engagementId    String?      @map("engagement_id") @db.Uuid
+  type            FilingType   @map("type")
+  status          FilingStatus @default(DRAFT) @map("status")
+  period          String       @map("period")
+  dueDate         DateTime     @map("due_date")
+  filedDate       DateTime?    @map("filed_date")
+  filedBy         String?      @map("filed_by") @db.Uuid
+  dscUsed         String?      @map("dsc_used") @db.Uuid
+  udin            String?      @map("udin")
+  data            Json?        @map("data")
+  provenance      Json?        @map("provenance")
+  partnerReviewBy String?      @map("partner_review_by") @db.Uuid
+  partnerReviewAt DateTime?    @map("partner_review_at")
+  notes           String?
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  firm       Firm        @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  client     Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  engagement Engagement? @relation(fields: [engagementId], references: [id], onDelete: SetNull)
+
+  @@index([firmId])
+  @@index([clientId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("filings")
+}
+
+model ComplianceItem {
+  id          String             @id @default(uuid()) @db.Uuid
+  firmId      String             @map("firm_id") @db.Uuid
+  clientId    String?            @map("client_id") @db.Uuid
+  type        ComplianceItemType @map("type")
+  status      ComplianceStatus   @default(UPCOMING) @map("status")
+  title       String
+  description String?
+  dueDate     DateTime           @map("due_date")
+  completedAt DateTime?          @map("completed_at")
+  severity    String             @default("normal") @map("severity")
+  metadata    Json?
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  firm   Firm    @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([firmId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("compliance_items")
+}
+
+model Reconciliation {
+  id              String               @id @default(uuid()) @db.Uuid
+  firmId          String               @map("firm_id") @db.Uuid
+  clientId        String               @map("client_id") @db.Uuid
+  status          ReconciliationStatus @default(PENDING) @map("status")
+  period          String               @map("period")
+  trialBalanceRef String?              @map("trial_balance_ref")
+  bankStmtRef     String?              @map("bank_stmt_ref")
+  totalEntries    Int?                 @map("total_entries")
+  matchedEntries  Int?                 @map("matched_entries")
+  varianceAmount  Decimal?             @db.Decimal(15, 2) @map("variance_amount")
+  flaggedItems    Json?                @map("flagged_items")
+  result          Json?
+  agentCrew       String?              @map("agent_crew")
+  provenanceTrack Json?                @map("provenance_track")
+  reviewedBy      String?              @map("reviewed_by") @db.Uuid
+  reviewedAt      DateTime?            @map("reviewed_at")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  firm   Firm   @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([firmId])
+  @@index([clientId])
+  @@index([status])
+  @@map("reconciliations")
+}
+
+model DSCKey {
+  id          String   @id @default(uuid()) @db.Uuid
+  firmId      String   @map("firm_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  label       String
+  certSerial  String   @map("cert_serial")
+  issuedBy    String   @map("issued_by")
+  validFrom   DateTime @map("valid_from")
+  validUntil  DateTime @map("valid_until")
+  isActive    Boolean  @default(true) @map("is_active")
+  publicKeyHash String? @map("public_key_hash")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@unique([firmId, certSerial])
+  @@index([firmId])
+  @@map("dsc_keys")
 }

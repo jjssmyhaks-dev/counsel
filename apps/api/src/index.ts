@@ -24,6 +24,10 @@ import billingRoutes, { webhookRouter as billingWebhook } from './routes/billing
 import docsRoutes from './routes/docs';
 import auditRoutes from './routes/audit';
 import userRoutes from './routes/users';
+import clientRoutes from './routes/clients';
+import engagementRoutes from './routes/engagements';
+import filingRoutes from './routes/filings';
+import complianceCalendarRoutes from './routes/compliance-calendar';
 
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -141,6 +145,10 @@ app.use('/api/v1/billing', billingRoutes);
 app.use('/api/v1/billing', billingWebhook);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/clients', clientRoutes);
+app.use('/api/v1/engagements', engagementRoutes);
+app.use('/api/v1/filings', filingRoutes);
+app.use('/api/v1/compliance-calendar', complianceCalendarRoutes);
 
 // ─── Global error handler (must be last) ────────────────────────────────────
 app.use(errorHandler);
