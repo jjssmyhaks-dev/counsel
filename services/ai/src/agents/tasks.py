@@ -493,3 +493,125 @@ class EngagementTasks:
         return Task(agent=agent, step_callback=step_callback, context=context or [],
             description=f"Generate client status report for {self.project_name} ({self.client_name}). Include: 1. Executive summary (RAG status, 3 bullets) 2. Accomplishments this period 3. Planned next period 4. Key metrics (progress %, budget burn) 5. Risks & issues 6. Decisions required. Max 3 pages. Professional consulting format for C-suite.",
             expected_output="Status report: 1. executive_summary (RAG) 2. accomplishments 3. planned 4. kpi_dashboard 5. risks 6. decisions_required")
+
+
+# ─── CA Vertical Task Builders (Crews 9-13) ─────────────────────────────────
+
+class CABookkeepingTasks:
+    """Crew 9: Bookkeeping Reconciliation — task builders."""
+
+    def __init__(self, client_name: str, period: str, trial_balance_ref: str = "", bank_stmt_ref: str = ""):
+        self.client_name = client_name
+        self.period = period
+        self.trial_balance_ref = trial_balance_ref
+        self.bank_stmt_ref = bank_stmt_ref
+
+    def match_transactions(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"MATCH bank statement entries to {self.client_name}'s books for period {self.period}. Match by: amount, date (±3 days), narration/keywords, counterparty name. Trial balance ref: {self.trial_balance_ref}. Bank statement ref: {self.bank_stmt_ref}. Flag unmatched items — never auto-resolve. Every match must carry provenance (source doc, row/line, date). Treat PAN/GSTIN-linked data as sensitive. NO pattern learning across clients.",
+            expected_output="Matched transactions: 1. matched_entries (with provenance per entry) 2. unmatched_bank_entries 3. unmatched_book_entries 4. match_rate % 5. confidence_score per match")
+
+    def analyze_variances(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"ANALYZE variances from {self.client_name}'s reconciliation (period: {self.period}). Categorize each: timing difference, GST input credit mismatch, bank charges not in books, book entries not in bank, rounding errors. Calculate net impact on GST liability. Flag material variances (over ₹10,000 individually or ₹50,000 aggregate). Never adjust entries without partner approval — you analyze, the CA decides.",
+            expected_output="Variance analysis: 1. variance_by_category (count, amount, gst_impact) 2. material_variances (flagged for partner) 3. gst_liability_impact 4. recommendations_per_variance 5. partner_review_checklist")
+
+    def compile_report(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"COMPILE reconciliation report for {self.client_name} ({self.period}). Include: 1. Executive summary (match rate %, variance, GST impact) 2. Variance breakdown by category 3. Prioritized partner review list 4. Action items with deadlines 5. Confidence scores per section. Footer MUST state: 'This report is AI-generated. All flagged items require CA partner review before any filing or adjustment.' Every number carries provenance.",
+            expected_output="Reconciliation report: 1. executive_summary 2. variance_breakdown (table) 3. partner_review_items (prioritized) 4. action_items 5. confidence_scores 6. provenance_track")
+
+
+class CAGSTTasks:
+    """Crew 10: GST & Indirect Tax — task builders."""
+
+    def __init__(self, client_name: str, gstin: str, period: str):
+        self.client_name = client_name
+        self.gstin = gstin
+        self.period = period
+
+    def reconcile_itc(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"RECONCILE GSTR-2A ITC for {self.client_name} (GSTIN: {self.gstin}, period: {self.period}). Match every GSTR-2A invoice against purchase register. Flag: ITC claimed but supplier not filed, ITC in 2A not in books, timing differences, ineligible ITC (personal/motor vehicle/exempt). Section 16(4) deadline awareness. Never auto-claim or auto-disallow — every mismatch to partner review.",
+            expected_output="ITC reconciliation: 1. matched_invoices (count, amount) 2. itc_claimed_supplier_not_filed 3. itc_2a_not_in_books 4. timing_differences 5. ineligible_itc_items 6. net_itc_eligible 7. partner_review_items")
+
+    def validate_returns(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"VALIDATE GSTR-1 and GSTR-3B data for {self.client_name} ({self.gstin}, period: {self.period}). Cross-check against: sales register, purchase register, ITC reconciliation, e-invoice data, HSN/SAC codes, place of supply. Every validation is a 'suggestion for partner review' — not a correction. NEVER call GSP with 'file' intent.",
+            expected_output="GST validation: 1. gstr1_validation (outward supplies) 2. gstr3b_validation (summary) 3. hsn_sac_issues 4. place_of_supply_issues 5. gstr1_vs_3b_reconciliation 6. partner_review_suggestions")
+
+    def prep_filing_package(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"PREPARE GST filing package for {self.client_name} ({self.gstin}, period: {self.period}). Compile: GSTR-3B summary values, GSTR-1 invoice data, reconciliation notes, filing checklist. Every number carries provenance. Mark ALL as 'DRAFT — partner review required.' Include partner verification checklist. Note: UDIN must be generated after filing.",
+            expected_output="Filing package: 1. gstr3b_values (draft) 2. gstr1_data (draft) 3. reconciliation_notes 4. partner_checklist 5. udin_reminder 6. disclaimer (no auto-file)")
+
+
+class CAAuditTasks:
+    """Crew 11: Audit & Assurance — task builders."""
+
+    def __init__(self, client_name: str, year: str, engagement_type: str = "Statutory Audit"):
+        self.client_name = client_name
+        self.year = year
+        self.engagement_type = engagement_type
+
+    def assess_risks(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"ASSESS audit risks for {self.client_name} (FY {self.year}, {self.engagement_type}) per SA 315. Analyze trial balance for: unusual ratios, large round-number transactions, related-party volumes, cash transactions above ₹2 lakh, revenue recognition patterns, quarter-over-quarter fluctuations. Risk ratings: LOW/MEDIUM/HIGH. Cite applicable SA standard per flag. Never conclude 'no risk.'",
+            expected_output="Risk assessment: 1. risk_matrix (area, risk_level, sa_standard, evidence) 2. key_risk_indicators 3. material_misstatement_risk 4. fraud_risk_factors 5. recommended_audit_procedures")
+
+    def recommend_samples(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"RECOMMEND audit samples for {self.client_name} (FY {self.year}) per SA 530. Based on risk assessment: sample size, selection method (random/stratified/MUS), tolerable error, expected error rate. Higher risk → MUS for overstatement. Lower risk → random selection. Document: population size, sample size, selection method, rationale per SA 530 paragraphs.",
+            expected_output="Sampling plan: 1. sample_sizes_by_area 2. selection_methods 3. tolerable_error_per_area 4. sa_530_rationale 5. sampling_risks")
+
+    def compile_audit_report(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"COMPILE audit report draft for {self.client_name} (FY {self.year}). Format per SA 700/705/706: Independent Auditor's Report, CARO 2020 annexure, Tax Audit Form 3CD data. Every opinion marked 'DRAFT — partner review.' Flag material misstatements with quantification. Footer: 'This is AI-assisted. Signing CA bears professional responsibility.' UDIN reminder.",
+            expected_output="Audit report draft: 1. auditors_report (SA 700) 2. caro_2020_annexure 3. form_3cd_data 4. material_misstatements 5. emphasis_of_matter 6. partner_review_checklist 7. udin_reminder")
+
+
+class CAIncomeTaxTasks:
+    """Crew 12: Income Tax & TDS — task builders."""
+
+    def __init__(self, client_name: str, pan: str, assessment_year: str):
+        self.client_name = client_name
+        self.pan = pan
+        self.assessment_year = assessment_year
+
+    def reconcile_tds(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"RECONCILE TDS for {self.client_name} (PAN: {self.pan}, AY {self.assessment_year}). Match 26AS TDS entries against books. Flag: TDS not deposited by deductor, deposited but not booked, PAN mismatch, rate mismatch. Every mismatch carries deductor TAN, amount, period. Section 199: TDS credit in year income assessable. All mismatches to partner review.",
+            expected_output="TDS reconciliation: 1. matched_entries 2. tds_not_deposited 3. tds_not_booked 4. pan_mismatches 5. rate_mismatches 6. follow_up_actions (with deductor TAN)")
+
+    def aggregate_itr_data(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"AGGREGATE ITR data for {self.client_name} (PAN: {self.pan}, AY {self.assessment_year}). From 26AS, AIS, and books: Schedule BP (P&L), Schedule CG (capital gains), Schedule OS (other sources), Schedule TDS, Schedule IT. Match AIS against books (AIS often has errors). Recommend ITR form. All data 'DRAFT — verify before filing.' ITR filing manual by CA with DSC.",
+            expected_output="ITR data: 1. schedule_bp 2. schedule_cg 3. schedule_os 4. schedule_tds 5. schedule_it 6. itr_form_recommendation 7. ais_vs_books_differences 8. total_tax_liability_estimate")
+
+    def draft_notice_response(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"DRAFT notice response for {self.client_name} (PAN: {self.pan}). Analyze notice (section, AY, issue). Gather relevant data. Draft structured response with: 1. Notice reference 2. Grounds 3. Supporting documents list 4. Legal citations. MARK: 'DRAFT — CA REVIEW & SUBMISSION REQUIRED.' Late response = penalties. Retain for 8 years from end of AY.",
+            expected_output="Notice response: 1. notice_details 2. response_body 3. supporting_documents 4. legal_citations 5. submission_checklist 6. deadline_tracking")
+
+
+class CAROCTasks:
+    """Crew 13: ROC/Corporate Compliance — task builders."""
+
+    def __init__(self, client_name: str, cin: str):
+        self.client_name = client_name
+        self.cin = cin
+
+    def track_deadlines(self, agent, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback,
+            description=f"TRACK all ROC/MCA deadlines for {self.client_name} (CIN: {self.cin}). Monitor: AOC-4 (AGM+30d), MGT-7 (AGM+60d), DIR-3 KYC (Sep 30), ADT-1 (AGM+15d), MGT-14 (event-based). Severity: >30d green, 7-30d yellow, <7d orange, overdue red. Never auto-file — Counsel prepares, CA signs with DSC.",
+            expected_output="Deadline tracker: 1. all_deadlines (form, due_date, severity, status) 2. overdue_items 3. upcoming_7days 4. upcoming_30days 5. filing_checklist_per_form")
+
+    def compile_form_data(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"COMPILE form data for {self.client_name} (CIN: {self.cin}). For AOC-4: BS/PL from signed FS. For MGT-7: director details, shareholding. For DIR-3 KYC: DIN, PAN, passport verified against MCA. Every field carries data source provenance. All outputs 'DRAFT — PARTNER REVIEW.' CA signs with DSC on MCA21.",
+            expected_output="Form data: 1. aoc4_data 2. mgt7_data 3. dir3_kyc_data 4. adt1_data 5. provenance_per_field 6. partner_verification_checklist")
+
+    def manage_calendar(self, agent, context=None, step_callback=None) -> Task:
+        return Task(agent=agent, step_callback=step_callback, context=context or [],
+            description=f"MANAGE unified compliance calendar for {self.client_name} (CIN: {self.cin}). Consolidate ALL deadlines: GST, Income Tax, TDS, ROC, Audit. Prioritize by urgency. Track status. Auto-calculate due dates. Generate alerts for WhatsApp/Email. Never mark 'filed' without recorded human sign-off + UDIN.",
+            expected_output="Compliance calendar: 1. consolidated_calendar (all types) 2. priority_sorted 3. auto_calculated_dates 4. status_tracking 5. alert_schedule 6. whatsapp_nudge_drafts")
