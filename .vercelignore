@@ -1,0 +1,44 @@
+# Vercel deployment — files to exclude from upload
+# These are development artifacts or not needed at build time.
+
+# Build caches
+.next/
+
+# Editor
+.vscode/
+.idea/
+
+# Tests
+**/__tests__/
+
+# Dev scripts
+scripts/*.cjs
+scripts/*.py
+!scripts/vercel-*
+ecosystem.config.cjs
+
+# Non-web packages
+packages/database/prisma/
+!packages/database/prisma/schema.prisma
+apps/api/
+services/
+
+# Python
+**/venv/
+**/.venv/
+**/*.py
+**/__pycache__/
+
+# Docs
+docs/
+
+# Logs
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitmodules
