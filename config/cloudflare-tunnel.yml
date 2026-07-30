@@ -1,0 +1,32 @@
+# Cloudflare Tunnel for Counsel Platform
+# 
+# What this does:
+#   - Creates a secure tunnel from your Oracle VM to Cloudflare
+#   - No need to open ports 3001 on the VM (only SSH port 22)
+#   - API traffic: api.counsel.ai → Cloudflare → Tunnel → localhost:3001
+#   - Free, no bandwidth limits, DDoS protected
+#
+# How to set up:
+# 1. Install cloudflared on Oracle VM (see oracle-setup-tunnel.sh)
+# 2. Create this tunnel config on the VM
+# 3. Configure DNS in Cloudflare Dashboard
+
+tunnel: counsel-prod-tunnel
+credentials-file: /root/.cloudflared/counsel-prod-tunnel.json
+
+# Ingress rules — map Cloudflare hostnames to local services
+ingress:
+  # API backend (Express)
+  - hostname: api.counsel.ai
+    service: http://localhost:3001
+
+  # AI health check (FastAPI) — optional direct access
+  - hostname: ai.counsel.ai
+    service: http://localhost:8000
+
+  # Web frontend (Next.js via PM2)
+  - hostname: app.counsel.ai
+    service: http://localhost:3000
+
+  # Catch-all: reject anything else
+  - service: http_status:404

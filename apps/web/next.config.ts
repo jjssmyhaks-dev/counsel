@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   // ── Monorepo: transpile local packages ──────────────────────────────────
   transpilePackages: ['@counsel/database'],
 
-  // ── Environment (baked at build time, can be overridden at runtime) ────
+  // ── Environment (baked at build time) ──────────────────────────────────
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1',
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
@@ -34,22 +34,19 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // ── Redirects ───────────────────────────────────────────────────────────
-  async redirects() {
-    return [
-      {
-        source: '/docs',
-        destination: '/',
-        permanent: false,
-      },
-    ];
-  },
-
   // ── Build ───────────────────────────────────────────────────────────────
   poweredByHeader: false,
   reactStrictMode: true,
   compress: true,
   productionBrowserSourceMaps: false,
 };
+
+// Cloudflare Pages: enable dev platform bindings (only when package exists)
+if (process.env.NODE_ENV === 'development') {
+  try {
+    const { setupDevPlatform } = require('@cloudflare/next-on-pages/next-dev');
+    setupDevPlatform().catch(() => {});
+  } catch { /* @cloudflare/next-on-pages not installed — skipping */ }
+}
 
 export default nextConfig;

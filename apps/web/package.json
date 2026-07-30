@@ -6,9 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:deploy": "npx @cloudflare/next-on-pages && npx wrangler pages deploy .vercel/output/static",
+    "pages:preview": "npx @cloudflare/next-on-pages && npx wrangler pages dev .vercel/output/static",
     "lint": "next lint"
   },
   "dependencies": {
+    "@cloudflare/next-on-pages": "^1.13.8",
     "@workos-inc/authkit-nextjs": "^4.2.0",
     "next": "^15.0.0",
     "react": "^19.0.0",

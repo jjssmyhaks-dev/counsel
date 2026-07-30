@@ -1,0 +1,21 @@
+# wrangler.toml — Cloudflare Pages configuration for Counsel Web
+# Deploy: npx @cloudflare/next-on-pages && npx wrangler pages deploy .vercel/output/static
+
+name = "counsel-platform-web"
+compatibility_date = "2026-07-30"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# Environment variables (also set in CF Dashboard)
+[vars]
+NEXT_PUBLIC_API_URL = "https://api.counsel.ai/api/v1"
+NEXT_PUBLIC_SITE_URL = "https://app.counsel.ai"
+NEXT_PUBLIC_ENABLE_AI = "true"
+
+# Production environment override
+[env.production.vars]
+NEXT_PUBLIC_API_URL = "https://api.counsel.ai/api/v1"
+
+# Preview environment
+[env.preview.vars]
+NEXT_PUBLIC_API_URL = "https://api-staging.counsel.ai/api/v1"
