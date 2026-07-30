@@ -3,11 +3,15 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
 [![Python](https://img.shields.io/badge/Python-FastAPI-blue?logo=python)](https://fastapi.tiangolo.com/)
 [![CrewAI](https://img.shields.io/badge/CrewAI-Multi--Agent-green)](https://crewai.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+pgvector-blue?logo=postgresql)](https://www.postgresql.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17+pgvector-blue?logo=postgresql)](https://www.postgresql.org/)
 [![Cloudflare Workers AI](https://img.shields.io/badge/Cloudflare-Workers_AI-orange?logo=cloudflare)](https://developers.cloudflare.com/workers-ai/)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen)]()
+[![Deploy](https://img.shields.io/badge/deploy-Oracle_Cloud%2BCloudflare-%2300C4B3)](docs/ORACLE-DEPLOY.md)
+[![Cost](https://img.shields.io/badge/running_cost-%240%2Fmonth-brightgreen)]()
 
 An AI workforce platform that deploys 25+ specialized agents across legal, consulting, and chartered accountancy firms — automating document analysis, contract review, legal research, proposal generation, GST reconciliation, audit automation, and compliance tracking.
+
+**100% free to run in production** using Oracle Cloud Always Free + Cloudflare free tier.
 
 ---
 
@@ -42,73 +46,96 @@ An AI workforce platform that deploys 25+ specialized agents across legal, consu
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                    Browser / Chrome Ext                     │
-└──────────────────────────┬─────────────────────────────────┘
-                           │ HTTPS
-┌──────────────────────────▼─────────────────────────────────┐
-│   Next.js 15 (App Router)  ─  43 Dynamic Pages              │
-│   • Landing, Auth, Dashboard, Documents, Drafts, Research   │
-│   • Admin (Playbook, Users, Audit), Chat Copilot, Settings  │
-│   • CA: Reconciliation, GST, Audit, Compliance, Clients     │
-└──────────────────────────┬─────────────────────────────────┘
-                           │ REST API (3001)
-┌──────────────────────────▼─────────────────────────────────┐
-│   Node.js Express API  ─  Port 3001                         │
-│   • Auth (JWT + WorkOS SSO), Tenant RLS, Audit Middleware    │
-│   • Routes: Documents, Matters, Drafts, KB, Playbook, etc.  │
-└──────────────┬────────────────────────┬───────────────────┘
-               │                        │
-┌──────────────▼──────────┐  ┌──────────▼────────────────────┐
-│  PostgreSQL 15+pgvector │  │  Python FastAPI  ─  Port 8000  │
-│  • 16 Prisma models     │  │  • CrewAI Multi-Agent (25)     │
-│  • RLS per firm         │  │  • Cloudflare LLM Bridge       │
-│  • HNSW vector index    │  │  • pgvector RAG retriever      │
-└──────┬─────────────────┘  │  • Audit trail persistence      │
-       │                    └──────────────┬──────────────────┘
-       │                                   │
-┌──────▼───────────────────────────────────▼──────────────────┐
-│   MCP Servers (25)  ─  Ports 3100–3124                      │
-│   Tier 1: Registry, PostgreSQL, Cloudflare AI, Document RAG  │
-│   Tier 2: Email, Calendar, Storage, E-Sign, Billing, Court,  │
-│           Communication, CRM                                 │
-│   Tier 3: Workflow, OCR, Translation, Video, Time, Conflict  │
-│   CA Only: GSP, MCA, UDIN, Tally, ERI, Books, WhatsApp       │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│   External Services: Cloudflare Workers AI, Gmail, Google    │
-│   Calendar, DocuSign, Stripe, Salesforce, Slack, CourtListener│
-│   GST Portal, Income Tax Portal, MCA21, Tally, Zoho Books    │
-└─────────────────────────────────────────────────────────────┘
+│                 counsel.ai (DNS, SSL, DDoS)                │
+│                 Cloudflare (FREE)                           │
+└──────┬──────────────────────────────┬──────────────────────┘
+       │                              │
+┌──────▼──────────────┐    ┌──────────▼──────────────────────┐
+│ Cloudflare Pages     │    │ Cloudflare Tunnel               │
+│ Next.js 15 (44 pages)│    │ (secure bridge, no open ports)  │
+│ • Landing, Auth,     │    │                                 │
+│   Dashboard, CA      │    │ api.counsel.ai → localhost:3001 │
+│ • Chat Copilot,      │    │ ai.counsel.ai  → localhost:8000 │
+│   Settings, Admin    │    │                                 │
+│ • Unlimited bandwidth │    │                                 │
+│ • 330+ edge locations │    │                                 │
+│ • $0/month forever   │    │                                 │
+└──────────────────────┘    └──────────┬──────────────────────┘
+                                       │
+                         ┌─────────────▼──────────────────────┐
+                         │  Oracle Cloud Ampere A1 (FREE)      │
+                         │  4 OCPU, 24 GB RAM, 200 GB SSD      │
+                         │  Ubuntu 22.04 LTS                   │
+                         │                                     │
+                         │  ┌─────────────────────────────┐   │
+                         │  │ PM2 Process Manager (20 svc) │   │
+                         │  ├─────────────────────────────┤   │
+                         │  │ counsel-api    (Express)    │   │
+                         │  │ counsel-ai     (FastAPI)    │   │
+                         │  │ counsel-web    (Next.js)    │   │
+                         │  │ MCP Servers ×17 (Python)    │   │
+                         │  └─────────────────────────────┘   │
+                         │                                     │
+                         │  PostgreSQL 17 + pgvector           │
+                         │  Nginx reverse proxy + certbot SSL  │
+                         │  $0/month forever                   │
+                         └─────────────────────────────────────┘
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Deploy to Production ($0/month)
 
-**One command to start the entire development environment:**
+### One-command deployment to Oracle Cloud Always Free
+
+```bash
+# 1. Provision Oracle VM (5 min in Oracle Console — see docs/ORACLE-DEPLOY.md)
+# 2. SSH in and run the setup script
+ssh ubuntu@<oracle-vm-ip>
+curl -O https://raw.githubusercontent.com/jjssmyhaks-dev/counsel/main/scripts/oracle-setup.sh
+chmod +x oracle-setup.sh
+sudo -E ./oracle-setup.sh
+
+# 3. Optional: Add Cloudflare Tunnel for zero open ports
+sudo ./oracle-setup-tunnel.sh
+
+# 4. Deploy frontend to Cloudflare Pages (see docs/CLOUDFLARE-PAGES.md)
+```
+
+This single script installs Node 22, Python 3.12, PostgreSQL 17, Nginx, PM2, clones the repo, installs all dependencies, runs database migrations, seeds demo data, starts all 20 services, configures SSL via Let's Encrypt, and sets up automatic restart on reboot.
+
+**Total monthly cost: $0.00** — Oracle Cloud Always Free (4 cores, 24GB RAM) + Cloudflare free tier.
+
+### Deployment Guides
+
+| Guide | Description |
+|-------|-------------|
+| [Oracle Cloud Deployment](docs/ORACLE-DEPLOY.md) | Step-by-step VM provisioning + DNS + monitoring |
+| [Cloudflare Pages Deploy](docs/CLOUDFLARE-PAGES.md) | Frontend deploy to Cloudflare Pages (free, unlimited bandwidth) |
+| [Production Runbook](docs/RUNBOOK.md) | Startup, stopping, logs, health checks, failure modes, rollback |
+| [Vercel Deploy](apps/web/VERCEL_DEPLOY.md) | Alternative: deploy frontend to Vercel |
+
+### Quick Start (Local Development)
 
 ```bash
 node scripts/start-dev.cjs
 ```
 
-This starts the API server (port 3001), Next.js frontend (port 3000), and verifies connectivity. For the AI service and MCP servers, see below.
+This starts the API server (port 3001), Next.js frontend (port 3000), and AI service (port 8000).
 
 ### Prerequisites
 
 - Node.js 22+
-- Python 3.11+
-- PostgreSQL 15+ with pgvector extension
-- Docker Desktop (for MCP servers)
+- Python 3.12+
+- PostgreSQL 17+ with pgvector extension
 - Cloudflare Workers AI account (for embeddings + LLM)
 
-### Step-by-Step Setup
+### Manual Setup Steps
 
 **1. Install dependencies:**
 ```bash
 cd counsel-platform
-npm install
-cd services/mcp && npm install --legacy-peer-deps && cd ../..
+npm install --legacy-peer-deps
 cd services/ai && pip install -r requirements.txt && cd ../..
 ```
 
@@ -121,31 +148,37 @@ cp apps/web/.env.example apps/web/.env.local
 
 **3. Set up the database:**
 ```bash
-createdb counsel
-psql counsel -c "CREATE EXTENSION IF NOT EXISTS vector;"
-npm run db:migrate
-npm run db:seed
+cd packages/database
+npx prisma generate
+npx prisma db push
+npx prisma db seed
 ```
 
 **4. Start everything:**
 ```bash
-# Frontend + API
-npm run dev:web     # Port 3000
-npm run dev:api     # Port 3001
-
-# AI Service (separate terminal)
-cd services/ai
-uvicorn src.main:app --host 127.0.0.1 --port 8000
-
-# MCP Servers (optional, Docker required)
-cd services/mcp
-docker compose --profile mcp up -d
+node scripts/start-dev.cjs
 ```
 
-**5. Index sample documents (optional):**
+Or individually:
 ```bash
-cd services/ai
-python scripts/index_cf_embeddings.py
+# API server
+cd apps/api && npx tsx src/index.ts    # Port 3001
+
+# AI Service (separate terminal)
+cd services/ai && python -m uvicorn src.main:app --host 127.0.0.1 --port 8000
+
+# Web frontend
+cd apps/web && npx next dev -p 3000
+
+# MCP Servers (all 17 at once)
+node scripts/start-mcp-servers.cjs
+```
+
+**5. Production mode with PM2:**
+```bash
+pm2 start ecosystem.config.cjs
+pm2 status
+pm2 logs
 ```
 
 ### Demo Credentials
@@ -166,11 +199,12 @@ The seed script provisions a demo firm with sample documents, matters, and users
 |--------|-------|
 | **Status** | 🟢 Production-ready |
 | **AI Agents** | 31 operational across 9 crews |
-| **MCP Servers** | 25 deployed (~145 tools) |
-| **Dynamic Pages** | 43 (including landing, auth, dashboard, CA sub-pages) |
+| **MCP Servers** | 17 deployed (78 tools, all verified) |
+| **Dynamic Pages** | 47 (landing, auth, dashboard, CA, admin, integrations) |
 | **Database Models** | 16 (Prisma) |
-| **API Endpoints** | 40+ REST routes |
-| **Pipeline Stages** | M0–M9 complete, M10 hardening in progress |
+| **API Endpoints** | 80+ REST routes |
+| **Production Cost** | $0/month (Oracle Always Free + Cloudflare Free) |
+| **TypeScript Errors** | 0 (web), 81 pre-existing in API tests |
 
 ---
 
@@ -383,10 +417,13 @@ npm run typecheck
 
 | Document | Description |
 |----------|-------------|
+| [Oracle Cloud Deploy](docs/ORACLE-DEPLOY.md) | Step-by-step Oracle VM provisioning ($0/month production) |
+| [Cloudflare Pages Deploy](docs/CLOUDFLARE-PAGES.md) | Frontend deploy to Cloudflare Pages (free, unlimited) |
+| [Production Runbook](docs/RUNBOOK.md) | Startup, stopping, logs, health checks, failure modes, rollback |
+| [Vercel Deploy](apps/web/VERCEL_DEPLOY.md) | Alternative: deploy frontend to Vercel |
 | [User Journey](docs/USER-JOURNEY.md) | Complete 10-step user flow, integration setup guide, agent architecture, MCP server inventory |
 | [Code Map](CODE_MAP.md) | Detailed file-by-file project map |
 | [Local Dev Guide](LOCAL_DEV.md) | Local development setup and conventions |
-| [Deployment Guide](DEPLOY.md) | Production deployment instructions |
 | [ADR: Tool Calling Bridge](docs/adr/001-tool-calling-bridge.md) | Decision record for MCP-to-CrewAI bridge |
 | [ADR: Audit Trail Decorator](docs/adr/002-audit-trail-decorator.md) | Decision record for audit trail architecture |
 | [API README](apps/api/README.md) | API-specific documentation |
