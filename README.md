@@ -200,11 +200,11 @@ The seed script provisions a demo firm with sample documents, matters, and users
 | **Status** | 🟢 Production-ready |
 | **AI Agents** | 31 operational across 9 crews |
 | **MCP Servers** | 17 deployed (78 tools, all verified) |
-| **Dynamic Pages** | 47 (landing, auth, dashboard, CA, admin, integrations) |
+| **Dynamic Pages** | 49 — landing, auth, dashboard, CA, admin, integrations, Feature Connector |
 | **Database Models** | 16 (Prisma) |
-| **API Endpoints** | 80+ REST routes |
+| **API Endpoints** | 80+ REST routes + health check script |
 | **Production Cost** | $0/month (Oracle Always Free + Cloudflare Free) |
-| **TypeScript Errors** | 0 (web), 81 pre-existing in API tests |
+| **TypeScript Errors** | 0 — full project compiles clean |
 
 ---
 
@@ -377,6 +377,18 @@ Three-tier model selection per agent task complexity:
 - **CA Non-Negotiable Guardrails:** No auto-filing to government portals; all filing-bound numbers carry provenance; UDIN/DSC signing always manual; PAN/GSTIN data never used for model training
 
 ---
+
+## 🔌 Feature Connector
+
+`/dashboard/admin/feature-connector` — A Stamen Design-inspired infrastructure map showing all MCP servers and external integrations with live health status. Available to admin/partner users via the Admin sidebar.
+
+### Automated Health Checks
+
+```bash
+node scripts/health-check.cjs
+```
+
+Pings every service (API, AI, Web, Auth, Public, Integration), prints a status table, and writes structured JSON logs to `logs/health-YYYY-MM-DD.json`. Exit codes: `0` = all healthy, `1` = degraded, `2` = critical.
 
 ## 🧪 Testing
 
