@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Meeting, MeetingActionItem, MeetingDecision, PaginatedResponse } from '@/lib/types';
-import { api, mockGetMeetings, mockGetMeeting, mockGetActionItems, mockGetDecisions } from '@/lib/api';
+import { api } from '@/lib/api';
 import { ApiError } from '@/lib/api';
 
 export function useMeetings() {
@@ -16,13 +16,8 @@ export function useMeetings() {
     try {
       const res = await api.get<PaginatedResponse<Meeting>>('/meetings');
       setMeetings(res.data);
-    } catch {
-      try {
-        const res = await mockGetMeetings();
-        setMeetings(res.data);
-      } catch (mockErr) {
-        setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load meetings');
-      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to load meetings');
     }
     setLoading(false);
   }, []);
@@ -45,13 +40,8 @@ export function useMeeting(id: string) {
     setError(null);
     api.get<Meeting>(`/meetings/${id}`)
       .then(setMeeting)
-      .catch(async () => {
-        try {
-          const m = await mockGetMeeting(id);
-          setMeeting(m);
-        } catch (mockErr) {
-          setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load meeting');
-        }
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Failed to load meeting');
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -70,12 +60,12 @@ export function useMeetingActions(meetingId: string) {
     setLoading(true);
     setError(null);
     Promise.all([
-      api.get<MeetingActionItem[]>(`/meetings/${meetingId}/action-items`).catch(() => mockGetActionItems(meetingId)),
-      api.get<MeetingDecision[]>(`/meetings/${meetingId}/decisions`).catch(() => mockGetDecisions(meetingId)),
+      api.get<MeetingActionItem[]>(`/meetings/${meetingId}/action-items`),
+      api.get<MeetingDecision[]>(`/meetings/${meetingId}/decisions`),
     ])
       .then(([items, decs]) => {
-        setActionItems(items);
-        setDecisions(decs);
+        setActionItems(Array.isArray(items) ? items : []);
+        setDecisions(Array.isArray(decs) ? decs : []);
       })
       .catch((err) => {
         setError(err instanceof ApiError ? err.message : 'Failed to load meeting items');

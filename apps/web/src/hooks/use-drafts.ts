@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Draft, PaginatedResponse, CreateDraftRequest } from '@/lib/types';
-import { api, mockGetDrafts, mockGetDraft, mockCreateDraft } from '@/lib/api';
+import { api } from '@/lib/api';
 import { ApiError } from '@/lib/api';
 
 export function useDrafts() {
@@ -16,13 +16,8 @@ export function useDrafts() {
     try {
       const res = await api.get<PaginatedResponse<Draft>>('/drafts');
       setDrafts(res.data);
-    } catch {
-      try {
-        const res = await mockGetDrafts();
-        setDrafts(res.data);
-      } catch (mockErr) {
-        setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load drafts');
-      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to load drafts');
     }
     setLoading(false);
   }, []);
@@ -45,13 +40,8 @@ export function useDraft(id: string) {
     setError(null);
     api.get<Draft>(`/drafts/${id}`)
       .then(setDraft)
-      .catch(async () => {
-        try {
-          const d = await mockGetDraft(id);
-          setDraft(d);
-        } catch (mockErr) {
-          setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load draft');
-        }
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Failed to load draft');
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -70,17 +60,11 @@ export function useCreateDraft() {
       const result = await api.post<Draft>('/drafts', data);
       setCreating(false);
       return result;
-    } catch {
-      try {
-        const result = await mockCreateDraft(data);
-        setCreating(false);
-        return result;
-      } catch (mockErr) {
-        setCreating(false);
-        const message = mockErr instanceof ApiError ? mockErr.message : 'Failed to create draft';
-        setError(message);
-        throw mockErr;
-      }
+    } catch (err) {
+      setCreating(false);
+      const message = err instanceof ApiError ? err.message : 'Failed to create draft';
+      setError(message);
+      throw err;
     }
   }, []);
 

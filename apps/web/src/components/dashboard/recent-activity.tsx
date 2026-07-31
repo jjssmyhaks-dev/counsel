@@ -1,59 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 interface ActivityItem {
   id: string;
   type: 'document' | 'matter' | 'draft' | 'user' | 'meeting' | 'kb';
   description: string;
-  timestamp: string; // ISO string
+  timestamp: string;
   user: string;
 }
-
-const MOCK_ACTIVITIES: ActivityItem[] = [
-  {
-    id: 'act-001',
-    type: 'document',
-    description: 'Uploaded "Quantum Dynamics - Merger Agreement v3.pdf"',
-    timestamp: '2026-07-13T00:15:00Z',
-    user: 'Sarah Chen',
-  },
-  {
-    id: 'act-002',
-    type: 'matter',
-    description: 'Opened new matter: "Brighton Commercial Lease Dispute"',
-    timestamp: '2026-07-12T22:30:00Z',
-    user: 'James Wright',
-  },
-  {
-    id: 'act-003',
-    type: 'draft',
-    description: 'Finalized draft: "NovaTech Demand Letter"',
-    timestamp: '2026-07-12T20:00:00Z',
-    user: 'Sarah Chen',
-  },
-  {
-    id: 'act-004',
-    type: 'user',
-    description: 'Invited paralegal "Maria Gomez" to the firm',
-    timestamp: '2026-07-12T16:45:00Z',
-    user: 'Admin',
-  },
-  {
-    id: 'act-005',
-    type: 'meeting',
-    description: 'Meeting "Evergreen Strategy Session" completed with 5 action items',
-    timestamp: '2026-07-12T14:00:00Z',
-    user: 'Lisa Park',
-  },
-  {
-    id: 'act-006',
-    type: 'kb',
-    description: 'Queried KB: "What are the notice requirements for force majeure in NY?"',
-    timestamp: '2026-07-12T11:20:00Z',
-    user: 'David Kim',
-  },
-];
 
 function getRelativeTime(isoString: string): string {
   const now = Date.now();
@@ -127,7 +83,33 @@ function getIconBg(type: ActivityItem['type']): string {
 }
 
 export function RecentActivity() {
-  const activities = useMemo(() => MOCK_ACTIVITIES, []);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchActivities = () => {
+    setLoading(true);
+    setError(null);
+    api.get('/admin/audit?limit=10')
+      .then((res: any) => {
+        const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : null);
+        if (data && data.length) {
+          setActivities(data.map((a: any) => ({
+            id: a.id,
+            type: inferType(a.resource),
+            description: a.details,
+            timestamp: a.createdAt,
+            user: a.userName,
+          })));
+        }
+      })
+      .catch(() => setError('Failed to load activity'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200">
@@ -135,7 +117,20 @@ export function RecentActivity() {
         <h3 className="font-semibold text-slate-900">Recent Activity</h3>
       </div>
 
-      {activities.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <svg className="w-6 h-6 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="ml-3 text-sm text-slate-500">Loading activity...</span>
+        </div>
+      ) : error ? (
+        <div className="p-6 text-center">
+          <p className="text-sm text-red-600">{error}</p>
+          <button onClick={fetchActivities} className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium">Retry</button>
+        </div>
+      ) : activities.length === 0 ? (
         <div className="p-12 text-center">
           <svg className="mx-auto h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -166,4 +161,15 @@ export function RecentActivity() {
       )}
     </div>
   );
+}
+
+function inferType(resource: string): ActivityItem['type'] {
+  const r = resource?.toLowerCase() || '';
+  if (r === 'document') return 'document';
+  if (r === 'matter') return 'matter';
+  if (r === 'draft') return 'draft';
+  if (r === 'user') return 'user';
+  if (r === 'meeting') return 'meeting';
+  if (r === 'kb' || r === 'knowledge_base') return 'kb';
+  return 'document';
 }

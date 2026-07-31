@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import type { KbQueryRequest, KbAnswer } from '@/lib/types';
-import { api, mockKbQuery } from '@/lib/api';
+import { api } from '@/lib/api';
 import { ApiError } from '@/lib/api';
 
 export function useKb() {
@@ -17,14 +17,9 @@ export function useKb() {
     try {
       const res = await api.post<KbAnswer>('/kb/query', req);
       setAnswer(res);
-    } catch {
-      try {
-        const res = await mockKbQuery(req);
-        setAnswer(res);
-      } catch (mockErr) {
-        const message = mockErr instanceof ApiError ? mockErr.message : 'Query failed';
-        setError(message);
-      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Query failed';
+      setError(message);
     }
     setLoading(false);
   }, []);

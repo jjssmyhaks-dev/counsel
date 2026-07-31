@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Matter, PaginatedResponse, CreateMatterRequest } from '@/lib/types';
-import { api, mockGetMatters, mockGetMatter, mockCreateMatter } from '@/lib/api';
+import { api } from '@/lib/api';
 import { ApiError } from '@/lib/api';
 
 export function useMatters() {
@@ -16,13 +16,8 @@ export function useMatters() {
     try {
       const res = await api.get<PaginatedResponse<Matter>>('/matters');
       setMatters(res.data);
-    } catch {
-      try {
-        const res = await mockGetMatters();
-        setMatters(res.data);
-      } catch (mockErr) {
-        setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load matters');
-      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to load matters');
     }
     setLoading(false);
   }, []);
@@ -45,13 +40,8 @@ export function useMatter(id: string) {
     setError(null);
     api.get<Matter>(`/matters/${id}`)
       .then(setMatter)
-      .catch(async () => {
-        try {
-          const m = await mockGetMatter(id);
-          setMatter(m);
-        } catch (mockErr) {
-          setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load matter');
-        }
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Failed to load matter');
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -70,17 +60,11 @@ export function useCreateMatter() {
       const result = await api.post<Matter>('/matters', data);
       setCreating(false);
       return result;
-    } catch {
-      try {
-        const result = await mockCreateMatter(data);
-        setCreating(false);
-        return result;
-      } catch (mockErr) {
-        setCreating(false);
-        const message = mockErr instanceof ApiError ? mockErr.message : 'Failed to create matter';
-        setError(message);
-        throw mockErr;
-      }
+    } catch (err) {
+      setCreating(false);
+      const message = err instanceof ApiError ? err.message : 'Failed to create matter';
+      setError(message);
+      throw err;
     }
   }, []);
 

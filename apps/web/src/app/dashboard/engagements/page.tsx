@@ -17,14 +17,6 @@ interface Engagement {
   team: number;
 }
 
-const mockEngagements: Engagement[] = [
-  { id: '1', projectName: 'Digital Strategy 2026', clientName: 'Meridian Health', status: 'active', progress: 65, budget: '$450K', startDate: '2026-04-01', endDate: '2026-10-15', team: 6 },
-  { id: '2', projectName: 'Op Model Redesign', clientName: 'NexGen Manufacturing', status: 'active', progress: 38, budget: '$320K', startDate: '2026-06-01', endDate: '2026-12-20', team: 4 },
-  { id: '3', projectName: 'Market Entry: APAC', clientName: 'Synthwave Software', status: 'planning', progress: 12, budget: '$680K', startDate: '2026-08-15', endDate: '2027-03-01', team: 8 },
-  { id: '4', projectName: 'Post-Merger Integration', clientName: 'Apex Capital', status: 'completed', progress: 100, budget: '$250K', startDate: '2026-02-01', endDate: '2026-07-01', team: 5 },
-  { id: '5', projectName: 'ESG Strategy Development', clientName: 'Greenfield Energy', status: 'on-hold', progress: 45, budget: '$190K', startDate: '2026-05-01', endDate: '2026-11-01', team: 3 },
-];
-
 const statusColors: Record<string, string> = {
   active: 'bg-[#15b881]/10 text-[#0a8a5f] border-[#15b881]/30',
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -33,26 +25,39 @@ const statusColors: Record<string, string> = {
 };
 
 export default function EngagementsPage() {
+  const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [engagements, setEngagements] = useState<Engagement[]>(mockEngagements);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     api.get('/engagements')
       .then((res: any) => {
         const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : null));
-        if (data && data.length) setEngagements(data);
+        if (data && data.length) {
+          setEngagements(data);
+        } else {
+          setEngagements([]);
+        }
       })
-      .catch(() => {})
+      .catch(() => setError('Failed to load engagements'))
       .finally(() => setLoading(false));
   }, []);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const filtered = engagements.filter(e => {
     if (statusFilter !== 'all' && e.status !== statusFilter) return false;
     if (search && !e.projectName.toLowerCase().includes(search.toLowerCase()) && !e.clientName.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  // Compute stats from real data
+  const activeCount = engagements.filter(e => e.status === 'active').length;
+  const planningCount = engagements.filter(e => e.status === 'planning').length;
+  const completedCount = engagements.filter(e => e.status === 'completed').length;
+  const totalRevenue = `$${engagements.reduce((s, e) => s + parseInt(e.budget.replace(/[^0-9]/g, '')), 0).toLocaleString()}K`;
 
   return (
     <div className="space-y-8" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
@@ -70,10 +75,10 @@ export default function EngagementsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Active', value: engagements.filter(e => e.status === 'active').length, color: '#0a8a5f', bg: '#eaf7f0' },
-          { label: 'Planning', value: engagements.filter(e => e.status === 'planning').length, color: '#b45309', bg: '#fffbeb' },
-          { label: 'Completed', value: engagements.filter(e => e.status === 'completed').length, color: '#475569', bg: '#f8fafc' },
-          { label: 'Total Revenue', value: `$${engagements.reduce((s, e) => s + parseInt(e.budget.replace(/[^0-9]/g, '')), 0).toLocaleString()}K`, color: '#0c0a09', bg: '#fefdfb' },
+          { label: 'Active', value: loading ? '—' : activeCount, color: '#0a8a5f', bg: '#eaf7f0' },
+          { label: 'Planning', value: loading ? '—' : planningCount, color: '#b45309', bg: '#fffbeb' },
+          { label: 'Completed', value: loading ? '—' : completedCount, color: '#475569', bg: '#f8fafc' },
+          { label: 'Total Revenue', value: loading ? '—' : totalRevenue, color: '#0c0a09', bg: '#fefdfb' },
         ].map(s => (
           <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-black/[0.04] dark:border-slate-800 p-4">
             <p className="text-[12px] text-[#969e9b]">{s.label}</p>
@@ -100,45 +105,74 @@ export default function EngagementsPage() {
         </div>
       </div>
 
+      {/* Error state */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-sm text-red-700">
+          {error}
+          <button onClick={() => {
+            setLoading(true);
+            setError(null);
+            api.get('/engagements')
+              .then((res: any) => {
+                const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : null));
+                if (data && data.length) setEngagements(data);
+              })
+              .catch(() => setError('Failed to load engagements'))
+              .finally(() => setLoading(false));
+          }} className="ml-3 underline font-medium">Retry</button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-black/[0.04] dark:border-slate-800 overflow-x-auto">
-        <table className="w-full text-[13px]">
-          <thead>
-            <tr className="border-b border-black/[0.04] dark:border-slate-800">
-              <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Project</th>
-              <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Client</th>
-              <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Status</th>
-              <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Progress</th>
-              <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Budget</th>
-              <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Timeline</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(e => (
-              <tr key={e.id} className="border-b border-black/[0.02] dark:border-slate-800/50 hover:bg-[#eaf7f0]/30 dark:hover:bg-slate-800/30 transition-colors">
-                <td className="py-3.5 px-5">
-                  <p className="font-medium text-[#0c0a09] dark:text-white">{e.projectName}</p>
-                </td>
-                <td className="py-3.5 px-5 text-[#717d79]">{e.clientName}</td>
-                <td className="py-3.5 px-5">
-                  <span className={`inline-block px-2.5 py-1 rounded-lg text-[11px] font-medium border ${statusColors[e.status]}`}>{e.status.charAt(0).toUpperCase() + e.status.slice(1)}</span>
-                </td>
-                <td className="py-3.5 px-5">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-black/[0.04] dark:bg-slate-700 rounded-full max-w-[80px]">
-                      <div className="h-full bg-[#15b881] rounded-full transition-all" style={{ width: `${e.progress}%` }} />
-                    </div>
-                    <span className="text-[12px] text-[#969e9b]">{e.progress}%</span>
-                  </div>
-                </td>
-                <td className="py-3.5 px-5 text-[#717d79]">{e.budget}</td>
-                <td className="py-3.5 px-5 text-[#717d79] text-[12px]">{e.startDate} → {e.endDate}</td>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <svg className="w-6 h-6 text-[#15b881] animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <span className="ml-3 text-[#969e9b] text-[13px]">Loading engagements...</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-12 text-[#969e9b] text-[13px]">
+            {search || statusFilter !== 'all' ? 'No engagements match your filters.' : 'No engagements found.'}
+          </div>
+        ) : (
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr className="border-b border-black/[0.04] dark:border-slate-800">
+                <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Project</th>
+                <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Client</th>
+                <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Status</th>
+                <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Progress</th>
+                <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Budget</th>
+                <th className="text-left py-3 px-5 text-[12px] font-medium text-[#969e9b] tracking-[0.03em] uppercase">Timeline</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-[#969e9b] text-[13px]">No engagements found.</div>
+            </thead>
+            <tbody>
+              {filtered.map(e => (
+                <tr key={e.id} className="border-b border-black/[0.02] dark:border-slate-800/50 hover:bg-[#eaf7f0]/30 dark:hover:bg-slate-800/30 transition-colors">
+                  <td className="py-3.5 px-5">
+                    <p className="font-medium text-[#0c0a09] dark:text-white">{e.projectName}</p>
+                  </td>
+                  <td className="py-3.5 px-5 text-[#717d79]">{e.clientName}</td>
+                  <td className="py-3.5 px-5">
+                    <span className={`inline-block px-2.5 py-1 rounded-lg text-[11px] font-medium border ${statusColors[e.status]}`}>{e.status.charAt(0).toUpperCase() + e.status.slice(1)}</span>
+                  </td>
+                  <td className="py-3.5 px-5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-black/[0.04] dark:bg-slate-700 rounded-full max-w-[80px]">
+                        <div className="h-full bg-[#15b881] rounded-full transition-all" style={{ width: `${e.progress}%` }} />
+                      </div>
+                      <span className="text-[12px] text-[#969e9b]">{e.progress}%</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-5 text-[#717d79]">{e.budget}</td>
+                  <td className="py-3.5 px-5 text-[#717d79] text-[12px]">{e.startDate} → {e.endDate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

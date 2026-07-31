@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 // ─── Types ───
 
@@ -17,54 +18,7 @@ interface AuditLog {
   firmId: string;
 }
 
-// ─── Mock Data ───
-
-const MOCK_AUDIT_LOGS: AuditLog[] = Array.from({ length: 35 }, (_, i) => {
-  const users = [
-    { id: 'u-1', name: 'Sarah Chen' },
-    { id: 'u-2', name: 'James Wright' },
-    { id: 'u-3', name: 'Lisa Park' },
-    { id: 'u-4', name: 'David Kim' },
-    { id: 'u-5', name: 'Maria Gomez' },
-  ];
-  const user = users[i % users.length];
-
-  const actions: Array<{ action: string; resource: string; details: string }> = [
-    { action: 'document.upload', resource: 'document', details: 'Uploaded "Merger Agreement v3.pdf" to matter "In re Quantum Dynamics"' },
-    { action: 'document.analyze', resource: 'document', details: 'Requested risk analysis on "Patent Filing US2026-001234.pdf"' },
-    { action: 'matter.create', resource: 'matter', details: 'Created matter "Brighton Commercial Lease Dispute"' },
-    { action: 'matter.update', resource: 'matter', details: 'Updated matter status to "active" for "Evergreen IP Portfolio"' },
-    { action: 'draft.create', resource: 'draft', details: 'Created draft "Demand Letter" for matter "NovaTech Data Privacy"' },
-    { action: 'draft.finalize', resource: 'draft', details: 'Finalized draft "Settlement Agreement" with 3 approved clauses' },
-    { action: 'kb.query', resource: 'kb', details: 'Queried: "What are the force majeure requirements in NY?"' },
-    { action: 'user.invite', resource: 'user', details: 'Sent invitation to "maria.gomez@firm.com" as paralegal' },
-    { action: 'user.role_change', resource: 'user', details: 'Changed role from "associate" to "partner" for James Wright' },
-    { action: 'firm.settings_update', resource: 'firm', details: 'Enabled document analysis feature for the firm' },
-    { action: 'meeting.record', resource: 'meeting', details: 'Recorded meeting "Evergreen Strategy Session" (45 min)' },
-    { action: 'meeting.summary', resource: 'meeting', details: 'Generated meeting summary with 5 action items and 2 decisions' },
-    { action: 'research.create', resource: 'research', details: 'Created research brief: "Recent precedent on data breach liability"' },
-  ];
-  const entry = actions[i % actions.length];
-
-  const ips = ['192.168.1.45', '10.0.0.23', '172.16.0.8', '203.0.113.45', '198.51.100.7'];
-
-  // Generate timestamps going back from now
-  const hoursAgo = i * 3 + Math.floor(Math.random() * 2);
-  const date = new Date(Date.now() - hoursAgo * 3600 * 1000);
-
-  return {
-    id: `audit-${String(i + 1).padStart(4, '0')}`,
-    userId: user.id,
-    userName: user.name,
-    action: entry.action,
-    resource: entry.resource,
-    resourceId: `${entry.resource}-${String(i + 1).padStart(3, '0')}`,
-    details: entry.details,
-    ipAddress: ips[i % ips.length],
-    createdAt: date.toISOString(),
-    firmId: 'firm-001',
-  };
-});
+// ─── Static filter options ───
 
 const RESOURCE_TYPES = ['all', 'document', 'matter', 'draft', 'kb', 'user', 'firm', 'meeting', 'research'];
 const ACTION_TYPES = [
@@ -108,6 +62,7 @@ function formatDate(iso: string): string {
 // ─── Component ───
 
 export function AuditLogViewer() {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [dateRangeStart, setDateRangeStart] = useState('');
   const [dateRangeEnd, setDateRangeEnd] = useState('');
   const [resourceFilter, setResourceFilter] = useState('all');
@@ -115,36 +70,54 @@ export function AuditLogViewer() {
   const [userSearch, setUserSearch] = useState('');
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch audit logs from API
+  const fetchLogs = () => {
+    setLoading(true);
+    setError(null);
+    api.get('/admin/audit')
+      .then((r: any) => {
+        setLogs(Array.isArray(r?.data) ? r.data : []);
+      })
+      .catch(() => setError('Failed to load audit logs'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
 
   // Filter
   const filteredLogs = useMemo(() => {
-    let logs = MOCK_AUDIT_LOGS;
+    let filtered = logs;
 
     if (dateRangeStart) {
       const start = new Date(dateRangeStart).getTime();
-      logs = logs.filter((l) => new Date(l.createdAt).getTime() >= start);
+      filtered = filtered.filter((l) => new Date(l.createdAt).getTime() >= start);
     }
     if (dateRangeEnd) {
       const end = new Date(dateRangeEnd).getTime() + 86400000; // include full end day
-      logs = logs.filter((l) => new Date(l.createdAt).getTime() <= end);
+      filtered = filtered.filter((l) => new Date(l.createdAt).getTime() <= end);
     }
     if (resourceFilter !== 'all') {
-      logs = logs.filter((l) => l.resource === resourceFilter);
+      filtered = filtered.filter((l) => l.resource === resourceFilter);
     }
     if (actionFilter !== 'all') {
-      logs = logs.filter((l) => l.action === actionFilter);
+      filtered = filtered.filter((l) => l.action === actionFilter);
     }
     if (userSearch.trim()) {
       const q = userSearch.toLowerCase();
-      logs = logs.filter(
+      filtered = filtered.filter(
         (l) =>
           l.userName.toLowerCase().includes(q) ||
           l.userId.toLowerCase().includes(q)
       );
     }
 
-    return logs;
-  }, [dateRangeStart, dateRangeEnd, resourceFilter, actionFilter, userSearch]);
+    return filtered;
+  }, [logs, dateRangeStart, dateRangeEnd, resourceFilter, actionFilter, userSearch]);
 
   // Paginate
   const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
@@ -187,6 +160,16 @@ export function AuditLogViewer() {
 
   return (
     <div className="space-y-4">
+      {/* Error state */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+          {error}
+          <button onClick={fetchLogs} className="ml-3 underline font-medium">
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Filter bar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex flex-wrap items-end gap-3">
@@ -279,8 +262,17 @@ export function AuditLogViewer() {
         )}
       </div>
 
-      {/* Empty state */}
-      {filteredLogs.length === 0 ? (
+      {/* Loading state */}
+      {loading ? (
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+          <svg className="mx-auto h-10 w-10 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="mt-3 text-sm text-slate-500">Loading audit logs...</p>
+        </div>
+      ) : filteredLogs.length === 0 ? (
+        /* Empty state */
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
           <svg className="mx-auto h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Document, PaginatedResponse, CreateDocumentRequest } from '@/lib/types';
-import { api, mockGetDocuments, mockGetDocument, mockGetAnalysis } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Analysis } from '@/lib/types';
 import { ApiError } from '@/lib/api';
 
@@ -17,13 +17,8 @@ export function useDocuments() {
     try {
       const res = await api.get<PaginatedResponse<Document>>('/documents');
       setDocuments(res.data);
-    } catch {
-      try {
-        const res = await mockGetDocuments();
-        setDocuments(res.data);
-      } catch (mockErr) {
-        setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load documents');
-      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to load documents');
     }
     setLoading(false);
   }, []);
@@ -46,13 +41,8 @@ export function useDocument(id: string) {
     setError(null);
     api.get<Document>(`/documents/${id}`)
       .then(setDocument)
-      .catch(async () => {
-        try {
-          const doc = await mockGetDocument(id);
-          setDocument(doc);
-        } catch (mockErr) {
-          setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load document');
-        }
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Failed to load document');
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -71,13 +61,8 @@ export function useAnalysis(documentId: string) {
     setError(null);
     api.get<Analysis>(`/documents/${documentId}/analysis`)
       .then(setAnalysis)
-      .catch(async () => {
-        try {
-          const a = await mockGetAnalysis(documentId);
-          setAnalysis(a);
-        } catch (mockErr) {
-          setError(mockErr instanceof ApiError ? mockErr.message : 'Failed to load analysis');
-        }
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Failed to load analysis');
       })
       .finally(() => setLoading(false));
   }, [documentId]);

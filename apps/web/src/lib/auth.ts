@@ -70,6 +70,5 @@ export function logout(): void {
   localStorage.removeItem('counsel_token');
   localStorage.removeItem('counsel_user');
   localStorage.removeItem('counsel_firm');
-  localStorage.removeItem('counsel_use_mock');
   window.location.href = '/login';
 }

@@ -11,43 +11,54 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-const mockActivity = [
-  { id: '1', user: 'Sarah Chen', action: 'Uploaded document', detail: 'Quantum Dynamics - Merger Agreement v3.pdf', resource: 'Document', time: '2026-07-12T16:00:00Z' },
-  { id: '2', user: 'Lisa Park', action: 'Completed research', detail: 'FRCP Amendments Impact on E-Discovery', resource: 'Research', time: '2026-07-12T14:30:00Z' },
-  { id: '3', user: 'Michael Torres', action: 'Finalized draft', detail: 'Demand Letter - Quantum Merger Counterparty', resource: 'Draft', time: '2026-07-12T11:45:00Z' },
-  { id: '4', user: 'Sarah Chen', action: 'Ran KB query', detail: 'What is our standard indemnification language?', resource: 'Knowledge Base', time: '2026-07-12T10:30:00Z' },
-  { id: '5', user: 'James Wilson', action: 'Updated matter', detail: 'Brighton Commercial Lease Dispute — status to Active', resource: 'Matter', time: '2026-07-12T09:15:00Z' },
-  { id: '6', user: 'David Kim', action: 'Viewed document', detail: 'Evergreen - Patent Filing US2026-001234.pdf', resource: 'Document', time: '2026-07-12T08:45:00Z' },
-  { id: '7', user: 'Lisa Park', action: 'Created meeting', detail: 'Evergreen Patent Claim Construction', resource: 'Meeting', time: '2026-07-11T16:00:00Z' },
-  { id: '8', user: 'Sarah Chen', action: 'Analyzed document', detail: 'Brighton - Lease Agreement 2024.docx', resource: 'Document', time: '2026-07-11T14:20:00Z' },
-  { id: '9', user: 'Michael Torres', action: 'Edited playbook', detail: 'Updated Indemnification Cap rule', resource: 'Playbook', time: '2026-07-11T11:00:00Z' },
-  { id: '10', user: 'James Wilson', action: 'Invited user', detail: 'david.kim@sterling-law.com as Viewer', resource: 'User', time: '2026-07-11T09:30:00Z' },
-];
-
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activity, setActivity] = useState(mockActivity);
-  const [metrics, setMetrics] = useState({ activeUsers: 12, totalDocuments: 247, aiJobsRun: 1204, storageUsed: '8.2 GB', apiCallsToday: 847 });
+  const [activity, setActivity] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState({ activeUsers: 0, totalDocuments: 0, aiJobsRun: 0, storageUsed: '—', apiCallsToday: 0 });
+  const [metricsLoading, setMetricsLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/admin/metrics').then((res: any) => {
-      if (res) setMetrics(prev => ({ ...prev, ...(res.data || res) }));
-    }).catch(() => {});
-    api.get('/admin/audit?limit=10').then((res: any) => {
-      const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : null);
-      if (data) {
-        setActivity(data.map((a: any) => ({
-          id: a.id, user: a.userName, action: a.action, detail: a.details, resource: a.resource, time: a.createdAt,
-        })));
-      }
-    }).catch(() => {});
+    // Fetch metrics
+    setMetricsLoading(true);
+    api.get('/admin/metrics')
+      .then((res: any) => {
+        if (res?.data) {
+          setMetrics(prev => ({
+            ...prev,
+            ...(typeof res.data === 'object' ? res.data : {}),
+          }));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setMetricsLoading(false));
+
+    // Fetch recent activity
+    setActivityLoading(true);
+    api.get('/admin/audit?limit=10')
+      .then((res: any) => {
+        const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : null);
+        if (data && data.length) {
+          setActivity(data.map((a: any) => ({
+            id: a.id,
+            user: a.userName,
+            action: a.action,
+            detail: a.details,
+            resource: a.resource,
+            time: a.createdAt,
+          })));
+        }
+      })
+      .catch(() => setActivityError('Could not load recent activity'))
+      .finally(() => setActivityLoading(false));
   }, []);
 
   const stats = [
-    { label: 'Total Users', value: String(metrics.activeUsers), icon: '👥', color: 'bg-[#eaf7f0]/40 text-[#15b881]' },
-    { label: 'Total Documents', value: String(metrics.totalDocuments), icon: '📄', color: 'bg-green-50 text-green-600' },
-    { label: 'Queries This Month', value: String(metrics.aiJobsRun), icon: '💡', color: 'bg-purple-50 text-purple-600' },
-    { label: 'Active Matters', value: '12', icon: '📋', color: 'bg-amber-50 text-amber-600' },
+    { label: 'Active Users', value: metricsLoading ? '—' : String(metrics.activeUsers), icon: '👥', color: 'bg-[#eaf7f0]/40 text-[#15b881]' },
+    { label: 'Total Documents', value: metricsLoading ? '—' : String(metrics.totalDocuments), icon: '📄', color: 'bg-green-50 text-green-600' },
+    { label: 'Queries This Month', value: metricsLoading ? '—' : String(metrics.aiJobsRun), icon: '💡', color: 'bg-purple-50 text-purple-600' },
+    { label: 'Active Matters', value: '—', icon: '📋', color: 'bg-amber-50 text-amber-600' },
   ];
 
   const quickActions = [
@@ -84,11 +95,11 @@ export default function AdminDashboardPage() {
   ];
 
   function getActionBadge(action: string) {
-    if (action.includes('Upload')) return <Badge variant="info">Upload</Badge>;
-    if (action.includes('Analyze') || action.includes('Completed') || action.includes('Finalize')) return <Badge variant="success">Processed</Badge>;
-    if (action.includes('Edit') || action.includes('Updated') || action.includes('Invite')) return <Badge variant="warning">Modified</Badge>;
-    if (action.includes('View') || action.includes('Ran')) return <Badge variant="neutral">Read</Badge>;
-    if (action.includes('Create')) return <Badge variant="info">Created</Badge>;
+    if (action.includes('upload') || action.includes('Upload')) return <Badge variant="info">Upload</Badge>;
+    if (action.includes('analyze') || action.includes('Analyze') || action.includes('Completed') || action.includes('Finalize') || action.includes('finalize')) return <Badge variant="success">Processed</Badge>;
+    if (action.includes('Edit') || action.includes('Updated') || action.includes('Invite') || action.includes('update') || action.includes('invite')) return <Badge variant="warning">Modified</Badge>;
+    if (action.includes('View') || action.includes('Ran') || action.includes('view') || action.includes('query')) return <Badge variant="neutral">Read</Badge>;
+    if (action.includes('Create') || action.includes('create')) return <Badge variant="info">Created</Badge>;
     return <Badge variant="neutral">Action</Badge>;
   }
 
@@ -141,26 +152,61 @@ export default function AdminDashboardPage() {
       <div>
         <h3 className="font-semibold text-[#0c0a09] mb-3">Recent Activity</h3>
         <Card padding="none">
-          <div className="divide-y divide-black/[0.04]">
-            {activity.map((entry) => (
-              <div key={entry.id} className="flex items-center gap-4 px-5 py-3 hover:bg-[#fefdfb] transition-colors">
-                <div className="w-8 h-8 rounded-full bg-[#eaf7f0] text-[#0a8a5f] flex items-center justify-center text-xs font-bold flex-shrink-0">
-                  {entry.user.split(' ').map((n) => n[0]).join('')}
+          {activityLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <svg className="w-6 h-6 text-[#15b881] animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="ml-3 text-sm text-[#717d79]">Loading activity...</span>
+            </div>
+          ) : activityError ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-red-600">{activityError}</p>
+              <Button variant="ghost" size="sm" onClick={() => {
+                setActivityLoading(true);
+                setActivityError(null);
+                api.get('/admin/audit?limit=10')
+                  .then((res: any) => {
+                    const data = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : null);
+                    if (data) {
+                      setActivity(data.map((a: any) => ({
+                        id: a.id, user: a.userName, action: a.action, detail: a.details, resource: a.resource, time: a.createdAt,
+                      })));
+                    }
+                  })
+                  .catch(() => setActivityError('Could not load recent activity'))
+                  .finally(() => setActivityLoading(false));
+              }} className="mt-2 text-sm">
+                Retry
+              </Button>
+            </div>
+          ) : activity.length === 0 ? (
+            <div className="py-12 text-center text-sm text-[#717d79]">
+              No recent activity found.
+            </div>
+          ) : (
+            <div className="divide-y divide-black/[0.04]">
+              {activity.map((entry) => (
+                <div key={entry.id} className="flex items-center gap-4 px-5 py-3 hover:bg-[#fefdfb] transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-[#eaf7f0] text-[#0a8a5f] flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {entry.user.split(' ').map((n: string) => n[0]).join('')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-[#4b5551]">
+                      <span className="font-medium">{entry.user}</span>{' '}
+                      <span className="text-[#717d79]">{entry.action}</span>
+                    </p>
+                    <p className="text-xs text-[#717d79] truncate">{entry.detail}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {getActionBadge(entry.action)}
+                    <span className="text-xs text-[#969e9b] whitespace-nowrap">{formatDate(entry.time)}</span>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#4b5551]">
-                    <span className="font-medium">{entry.user}</span>{' '}
-                    <span className="text-[#717d79]">{entry.action}</span>
-                  </p>
-                  <p className="text-xs text-[#717d79] truncate">{entry.detail}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {getActionBadge(entry.action)}
-                  <span className="text-xs text-[#969e9b] whitespace-nowrap">{formatDate(entry.time)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <div className="px-5 py-3 border-t border-black/[0.04]">
             <Button variant="ghost" size="sm" onClick={() => router.push('/admin/audit')} className="text-sm">
               View Full Audit Log →
