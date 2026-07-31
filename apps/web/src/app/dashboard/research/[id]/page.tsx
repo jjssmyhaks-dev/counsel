@@ -173,7 +173,7 @@ function ConfidenceBar({ value }: { value: number }) {
   );
 }
 
-export default function ResearchDetailPage() {
+export default function DetectiveWorkflowPage() {
   const params = useParams();
   const router = useRouter();
   const briefId = params.id as string;

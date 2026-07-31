@@ -49,7 +49,7 @@ export default function PlaybookPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await api.get<PlaybookRule[]>('/admin/playbook');
+      const data = await api.get<PlaybookRule[]>('/playbook/rules');
       setRules(data);
     } catch {
       setError('Failed to load playbook rules.');

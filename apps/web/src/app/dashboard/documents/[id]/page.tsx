@@ -120,14 +120,12 @@ export default function DocumentDetailPage() {
 
   async function handleRunAnalysis() {
     setRunningAnalysis(true);
-    // Simulate analysis
-    await new Promise((r) => setTimeout(r, 2000));
     if (doc) {
       try {
         const a = await api.get<Analysis>(`/documents/${doc.id}/analysis`);
         setAnalysis(a);
       } catch {
-        // Still no analysis mock for this doc
+        setError('Analysis service unavailable.');
       }
     }
     setRunningAnalysis(false);

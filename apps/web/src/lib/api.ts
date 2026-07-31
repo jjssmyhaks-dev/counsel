@@ -1016,6 +1016,9 @@ function getMockResponse<T>(path: string, body?: unknown): T | undefined {
   if (path === '/settings') return mockGetSettings() as unknown as T;
   if (path === '/jobs') return mockGetJobs() as unknown as T;
   if (path === '/usage') return mockGetUsage() as unknown as T;
+  if (path === '/chat-copilot/message') return mockChatCopilotMessage({ message: '' }) as unknown as T;
+  if (path === '/agents/proposal') return mockAgentProposal() as unknown as T;
+  if (path === '/agents/market-intel') return mockAgentMarketIntel() as unknown as T;
 
   // POST routes
   if (path === '/drafts' && body) {

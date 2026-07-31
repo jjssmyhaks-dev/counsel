@@ -30,6 +30,10 @@ import engagementRoutes from './routes/engagements';
 import filingRoutes from './routes/filings';
 import complianceCalendarRoutes from './routes/compliance-calendar';
 import publicRoutes from './routes/public';
+import adminRoutes from './routes/admin';
+import chatCopilotRoutes from './routes/chat-copilot';
+import usageRoutes from './routes/usage';
+import agentsProxyRoutes from './routes/agents-proxy';
 
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -167,6 +171,10 @@ app.use('/api/v1/clients', clientRoutes);
 app.use('/api/v1/engagements', engagementRoutes);
 app.use('/api/v1/filings', filingRoutes);
 app.use('/api/v1/compliance-calendar', complianceCalendarRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/chat-copilot', chatCopilotRoutes);
+app.use('/api/v1/usage', usageRoutes);
+app.use('/api/v1/agents', agentsProxyRoutes);
 
 // ─── Global error handler (must be last) ────────────────────────────────────
 app.use(errorHandler);

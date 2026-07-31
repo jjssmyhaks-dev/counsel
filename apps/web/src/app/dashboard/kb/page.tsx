@@ -83,8 +83,20 @@ export default function KbPage() {
   const [question, setQuestion] = useState('');
   const [searching, setSearching] = useState(false);
   const [result, setResult] = useState<KbAnswer | null>(null);
-  const [history, setHistory] = useState<QueryRecord[]>(SAMPLE_RESPONSES);
+  const [history, setHistory] = useState<QueryRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Load history from API on mount
+  useEffect(() => {
+    api.get<{ data: QueryRecord[] }>('/kb/history')
+      .then((res: any) => {
+        const records = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : []);
+        setHistory(records);
+      })
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false));
+  }, []);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
