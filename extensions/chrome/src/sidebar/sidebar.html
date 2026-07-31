@@ -4,102 +4,94 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Counsel — AI Side Panel</title>
-  <style>
-    :root {
-      --mint: #15b881;
-      --mint-dark: #0a8a5f;
-      --mint-light: #7ce3b6;
-      --bg: #fefdfb;
-      --text: #0c0a09;
-      --surface: #ffffff;
-      --border: #e5e0da;
-      --radius: 8px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.5;
-      padding: 16px;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .header h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 20px; color: var(--mint-dark); }
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .action-btn {
-      background: var(--mint);
-      color: white;
-      border: none;
-      border-radius: var(--radius);
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: left;
-      transition: background 0.2s;
-    }
-    .action-btn:hover { background: var(--mint-dark); }
-    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .status {
-      margin-top: 16px;
-      padding: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 12px;
-      color: #888;
-    }
-    .status.connected { color: var(--mint-dark); }
-    .status.error { color: #d32f2f; }
-    #output {
-      margin-top: 12px;
-      padding: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      max-height: 300px;
-      overflow-y: auto;
-      font-size: 12px;
-      white-space: pre-wrap;
-    }
-    .spinner {
-      display: none;
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--border);
-      border-top-color: var(--mint);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-left: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading .spinner { display: inline-block; }
-  </style>
+  <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
-  <div class="header">
-    <h1>Counsel</h1>
-    <span id="status" class="status">Connecting…</span>
+  <div class="counsel-sidebar">
+
+    <!-- Header -->
+    <div class="counsel-sidebar__header">
+      <div class="counsel-sidebar__logo">
+        <span class="counsel-sidebar__title">Counsel</span>
+      </div>
+      <div id="status-indicator" class="counsel-status">
+        <span class="counsel-status-dot"></span>
+        <span id="status-text">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- Gmail Integration Panel -->
+    <div class="counsel-auth-section" id="gmail-integration-panel">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Tabs -->
+    <div class="counsel-tabs">
+      <button class="counsel-tab counsel-tab--active" data-tab="draft">✍️ Draft</button>
+      <button class="counsel-tab" data-tab="analyze">🔍 Analyze</button>
+      <button class="counsel-tab" data-tab="gmail">📬 Gmail</button>
+    </div>
+
+    <!-- Tab: Draft -->
+    <div class="counsel-tab-content" id="tab-draft">
+      <div class="counsel-card">
+        <div class="counsel-form-group">
+          <label for="draft-instructions">What would you like to draft?</label>
+          <textarea id="draft-instructions" class="counsel-textarea" placeholder="e.g., Draft a polite follow-up email about the contract review…" rows="3"></textarea>
+        </div>
+        <div class="counsel-form-group">
+          <label for="draft-tone">Tone</label>
+          <select id="draft-tone" class="counsel-select">
+            <option value="professional">Professional</option>
+            <option value="concise">Concise</option>
+            <option value="persuasive">Persuasive</option>
+            <option value="friendly">Friendly</option>
+            <option value="formal">Formal</option>
+          </select>
+        </div>
+        <button id="btn-draft-email" class="counsel-btn counsel-btn--primary counsel-btn--full">
+          ✨ Draft Email
+        </button>
+      </div>
+      <div id="draft-output" class="counsel-draft-output" style="display:none;"></div>
+      <div id="draft-loading" class="counsel-loading" style="display:none;">
+        <span class="counsel-spinner"></span>
+        Drafting…
+      </div>
+    </div>
+
+    <!-- Tab: Analyze -->
+    <div class="counsel-tab-content" id="tab-analyze" style="display:none;">
+      <div class="counsel-card">
+        <p class="counsel-text--muted counsel-text--sm">Select text in an email, then choose an action:</p>
+        <div class="counsel-analyze-actions">
+          <button id="btn-summarize" class="counsel-btn counsel-btn--secondary">📝 Summarize</button>
+          <button id="btn-risk" class="counsel-btn counsel-btn--secondary">⚠️ Risk Check</button>
+          <button id="btn-clauses" class="counsel-btn counsel-btn--secondary">📋 Clauses</button>
+          <button id="btn-actions" class="counsel-btn counsel-btn--secondary">✅ Action Items</button>
+        </div>
+      </div>
+      <div id="analyze-output" class="counsel-analyze-output" style="display:none;"></div>
+      <div id="analyze-loading" class="counsel-loading" style="display:none;">
+        <span class="counsel-spinner"></span>
+        Analyzing…
+      </div>
+    </div>
+
+    <!-- Tab: Gmail -->
+    <div class="counsel-tab-content" id="tab-gmail" style="display:none;">
+      <div id="gmail-tab-content">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="counsel-sidebar__footer">
+      <span id="footer-status" class="counsel-status">API Offline</span>
+      <button id="btn-refresh" class="counsel-btn counsel-btn--ghost counsel-btn--sm">🔄 Refresh</button>
+    </div>
+
   </div>
-  <div class="actions">
-    <button id="btn-summarize" class="action-btn">📝 Summarize Email Thread</button>
-    <button id="btn-draft" class="action-btn">✍️ Draft Reply</button>
-    <button id="btn-risk" class="action-btn">⚠️ Check Contract Risks</button>
-    <button id="btn-research" class="action-btn">🔍 Research Topic</button>
-  </div>
-  <div id="output"></div>
 
   <script src="sidebar.js"></script>
 </body>

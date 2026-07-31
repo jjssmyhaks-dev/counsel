@@ -715,3 +715,56 @@ model DSCKey {
   @@index([firmId])
   @@map("dsc_keys")
 }
+
+// ─── Integration Models ─────────────────────────────────────────────────────
+
+model OAuthToken {
+  userId          String    @map("user_id") @db.Uuid
+  provider        String
+  firmId          String    @map("firm_id") @db.Uuid
+  tokensEncrypted String    @map("tokens_encrypted")
+  expiresAt       DateTime? @map("expires_at")
+  scope           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@id([userId, provider])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("oauth_tokens")
+}
+
+model DocuSignEnvelope {
+  id           String   @id @default(uuid()) @db.Uuid
+  firmId       String   @map("firm_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  envelopeId   String   @unique @map("envelope_id")
+  subject      String
+  status       String   @default("created")
+  documentIds  Json?    @map("document_ids")
+  recipients   Json?
+  signedDocUrl String?  @map("signed_doc_url")
+  rawWebhook   Json?    @map("raw_webhook")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  completedAt  DateTime? @map("completed_at")
+
+  @@index([firmId])
+  @@index([envelopeId])
+  @@index([status])
+  @@map("docusign_envelopes")
+}
+
+model IntegrationHealthStatus {
+  id          String   @id @default(uuid()) @db.Uuid
+  service     String
+  status      String
+  errorMsg    String?  @map("error_msg")
+  latencyMs   Int?     @map("latency_ms")
+  errorCount  Int      @default(0) @map("error_count")
+  checkedAt   DateTime @default(now()) @map("checked_at")
+
+  @@index([service])
+  @@index([checkedAt])
+  @@map("integration_health_status")
+}

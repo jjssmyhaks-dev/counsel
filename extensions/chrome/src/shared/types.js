@@ -7,13 +7,17 @@ const CounselConstants = {
   API_BASE_URL: 'http://localhost:3001/api/v1',
   EXTENSION_ID: 'counsel-chrome-extension',
   STORAGE_KEYS: {
-    TOKEN: 'counsel_token',
+    TOKEN: '***',
     USER: 'counsel_user',
     API_URL: 'counsel_api_url',
     AUTO_INJECT: 'counsel_auto_inject',
     DRAFT_TONE: 'counsel_draft_tone',
     SIDE_PANEL_CONTEXT: 'sidePanelContext',
     RECENT_ACTIVITY: 'counsel_recent_activity',
+    GOOGLE_TOKEN: 'counsel_google_token',
+    GOOGLE_USER: 'counsel_google_user',
+    EMAIL_COUNT: 'counsel_email_count',
+    LAST_SYNC: 'counsel_last_sync',
   },
   DEFAULT_TONES: [
     { value: 'professional', label: 'Professional' },
@@ -23,6 +27,13 @@ const CounselConstants = {
     { value: 'formal', label: 'Formal' },
   ],
   MAX_RECENT_ACTIVITY: 50,
+  GMAIL_SCOPES: [
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/gmail.compose',
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+  ],
 };
 
 const CounselActionTypes = {
@@ -31,8 +42,8 @@ const CounselActionTypes = {
   GET_SIDE_PANEL_CONTEXT: 'getSidePanelContext',
   CLEAR_SIDE_PANEL_CONTEXT: 'clearSidePanelContext',
   OPEN_OPTIONS: 'openOptions',
-  GET_AUTH_TOKEN: 'getAuthToken',
-  SET_AUTH_TOKEN: 'setAuthToken',
+  GET_AUTH_TOKEN: '***',
+  SET_AUTH_TOKEN: '***',
   CLEAR_AUTH: 'clearAuth',
 
   // Sidebar actions
@@ -42,6 +53,15 @@ const CounselActionTypes = {
   EXTRACT_ACTION_ITEMS: 'extractActionItems',
   DRAFT_REPLY: 'draftReply',
   EXTRACT_CLAUSES: 'extractClauses',
+
+  // Gmail OAuth & API actions
+  GMAIL_AUTH: 'GMAIL_AUTH',
+  GMAIL_GET_TOKEN: 'GMAIL_GET_TOKEN',
+  GMAIL_STATUS: 'GMAIL_STATUS',
+  GMAIL_COMPOSE: 'GMAIL_COMPOSE',
+  GMAIL_LIST: 'GMAIL_LIST',
+  GMAIL_GET: 'GMAIL_GET',
+  GMAIL_SEND: 'GMAIL_SEND',
 
   // UI state
   SET_ACTIVE_TAB: 'setActiveTab',
@@ -84,6 +104,22 @@ const CounselActionTypes = {
  * @property {string} email - User email
  * @property {string} name - Display name
  * @property {string} firm - Firm/organization name
+ */
+
+/**
+ * @typedef {Object} GmailComposePayload
+ * @property {string} to - Recipient email(s), comma-separated
+ * @property {string} subject - Email subject
+ * @property {string} body - Email body (plain text or HTML)
+ * @property {string[]} [cc] - CC recipients
+ * @property {string[]} [bcc] - BCC recipients
+ * @property {string} [threadId] - Gmail thread ID for replies
+ */
+
+/**
+ * @typedef {Object} GmailListQuery
+ * @property {string} [query] - Gmail search query (e.g. "is:unread")
+ * @property {number} [maxResults] - Max messages to return (default 20)
  */
 
 // Export for module use; also available globally via content script injection

@@ -1,6 +1,6 @@
 /**
  * Counsel Chrome Extension — Auth Manager
- * Handles login/logout/token persistence via chrome.storage.local.
+ * Handles login/logout/token persistence and Google OAuth 2.0 via chrome.storage.local.
  */
 
 class AuthManager {
@@ -8,6 +8,8 @@ class AuthManager {
     this._storage = chrome.storage.local;
     this._token = null;
     this._user = null;
+    this._googleToken = null;
+    this._googleUser = null;
     this._initialized = false;
   }
 
@@ -19,17 +21,20 @@ class AuthManager {
     const result = await this._storage.get([
       CounselConstants.STORAGE_KEYS.TOKEN,
       CounselConstants.STORAGE_KEYS.USER,
+      CounselConstants.STORAGE_KEYS.GOOGLE_TOKEN,
+      CounselConstants.STORAGE_KEYS.GOOGLE_USER,
     ]);
-    this._token = result[ CounselConstants.STORAGE_KEYS.TOKEN ] || null;
-    this._user = result[ CounselConstants.STORAGE_KEYS.USER ] || null;
+    this._token = result[CounselConstants.STORAGE_KEYS.TOKEN] || null;
+    this._user = result[CounselConstants.STORAGE_KEYS.USER] || null;
+    this._googleToken = result[CounselConstants.STORAGE_KEYS.GOOGLE_TOKEN] || null;
+    this._googleUser = result[CounselConstants.STORAGE_KEYS.GOOGLE_USER] || null;
     this._initialized = true;
   }
 
+  // ── Counsel Auth ────────────────────────────────────────────────────────
+
   /**
    * Log in with email/password against the Counsel API.
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<{success: boolean, user?: Object, error?: string}>}
    */
   async login(email, password) {
     const apiUrl = await this._getApiUrl();
@@ -63,7 +68,6 @@ class AuthManager {
 
   /**
    * Get the current auth token.
-   * @returns {Promise<string|null>}
    */
   async getToken() {
     if (!this._initialized) await this.init();
@@ -72,7 +76,6 @@ class AuthManager {
 
   /**
    * Check if the user is currently logged in.
-   * @returns {Promise<boolean>}
    */
   async isLoggedIn() {
     if (!this._initialized) await this.init();
@@ -81,7 +84,6 @@ class AuthManager {
 
   /**
    * Get current user info.
-   * @returns {Promise<Object|null>}
    */
   async getUser() {
     if (!this._initialized) await this.init();
@@ -90,8 +92,6 @@ class AuthManager {
 
   /**
    * Set a token manually (e.g., from Options page).
-   * @param {string} token
-   * @param {Object} [user]
    */
   async setToken(token, user) {
     this._token = token;
@@ -114,13 +114,146 @@ class AuthManager {
     ]);
   }
 
+  // ── Google OAuth 2.0 ────────────────────────────────────────────────────
+
+  /**
+   * Initiate Google OAuth 2.0 connection flow via the background service worker.
+   * @returns {Promise<{success: boolean, user?: Object, error?: string}>}
+   */
+  async connectGoogle() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: 'GMAIL_AUTH', action: 'connect' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve({ success: false, error: chrome.runtime.lastError.message });
+            return;
+          }
+          if (response && response.success) {
+            this._googleUser = response.user;
+            this._googleToken = true; // We don't store the raw token here, SW handles it
+            resolve({ success: true, user: response.user });
+          } else {
+            resolve({ success: false, error: response?.error || 'OAuth connection failed' });
+          }
+        }
+      );
+    });
+  }
+
+  /**
+   * Get a valid Google access token for API calls.
+   * @returns {Promise<string>}
+   */
+  async getGoogleToken() {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { type: 'GMAIL_GET_TOKEN' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (response && response.success) {
+            resolve(response.token);
+          } else {
+            reject(new Error(response?.error || 'Failed to get Google token'));
+          }
+        }
+      );
+    });
+  }
+
+  /**
+   * Check if Google is currently connected.
+   * @returns {Promise<boolean>}
+   */
+  async isGoogleConnected() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: 'GMAIL_STATUS' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve(false);
+            return;
+          }
+          resolve(response?.connected === true);
+        }
+      );
+    });
+  }
+
+  /**
+   * Get current Google user info.
+   * @returns {Promise<Object|null>}
+   */
+  async getGoogleUser() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: 'GMAIL_STATUS' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve(null);
+            return;
+          }
+          resolve(response?.user || null);
+        }
+      );
+    });
+  }
+
+  /**
+   * Disconnect Google account and revoke token.
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async disconnectGoogle() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: 'GMAIL_AUTH', action: 'disconnect' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve({ success: false, error: chrome.runtime.lastError.message });
+            return;
+          }
+          if (response && response.success) {
+            this._googleToken = null;
+            this._googleUser = null;
+            resolve({ success: true });
+          } else {
+            resolve({ success: false, error: response?.error || 'Disconnect failed' });
+          }
+        }
+      );
+    });
+  }
+
+  /**
+   * Refresh Google token.
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async refreshGoogleToken() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: 'GMAIL_AUTH', action: 'refresh' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve({ success: false, error: chrome.runtime.lastError.message });
+            return;
+          }
+          resolve(response || { success: false, error: 'Refresh failed' });
+        }
+      );
+    });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+
   /**
    * Resolve the API base URL from settings or default.
-   * @returns {Promise<string>}
    */
   async _getApiUrl() {
     const result = await this._storage.get(CounselConstants.STORAGE_KEYS.API_URL);
-    return result[ CounselConstants.STORAGE_KEYS.API_URL ] || CounselConstants.API_BASE_URL;
+    return result[CounselConstants.STORAGE_KEYS.API_URL] || CounselConstants.API_BASE_URL;
   }
 }
 

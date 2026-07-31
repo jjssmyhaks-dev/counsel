@@ -83,6 +83,124 @@ html, body {
   flex-shrink: 0;
 }
 
+/* ── Gmail Integration Bar ──────────────────────────────────────────────── */
+
+.counsel-gmail-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--counsel-bg-alt);
+  border-bottom: 1px solid var(--counsel-border);
+  gap: 8px;
+}
+
+.counsel-gmail-bar--disconnected {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 16px;
+}
+
+.counsel-gmail-bar__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.counsel-gmail-bar__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ea4335;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.counsel-gmail-bar__email {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--counsel-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.counsel-gmail-bar__count {
+  font-size: 11px;
+  color: var(--counsel-text-muted);
+}
+
+/* ── Gmail Message List ─────────────────────────────────────────────────── */
+
+.counsel-gmail-message {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--counsel-border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.counsel-gmail-message:last-child {
+  border-bottom: none;
+}
+
+.counsel-gmail-message:hover {
+  background: var(--counsel-bg-alt);
+  margin: 0 -8px;
+  padding: 10px 8px;
+  border-radius: var(--counsel-radius-sm);
+}
+
+.counsel-gmail-message__from {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--counsel-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.counsel-gmail-message__subject {
+  font-size: 12px;
+  color: var(--counsel-text);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.counsel-gmail-message__snippet {
+  font-size: 11px;
+  color: var(--counsel-text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Quick Compose (in sidebar) ─────────────────────────────────────────── */
+
+.counsel-quick-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--counsel-border);
+}
+
+.counsel-quick-compose__status {
+  font-size: 11px;
+  padding: 2px 0;
+  min-height: 16px;
+}
+
 /* ── Tabs ───────────────────────────────────────────────────────────────── */
 
 .counsel-tabs {
@@ -463,6 +581,9 @@ html, body {
 }
 
 .counsel-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   color: var(--counsel-success);
   font-weight: 500;
@@ -470,6 +591,18 @@ html, body {
 
 .counsel-status--disconnected {
   color: var(--counsel-error);
+}
+
+.counsel-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--counsel-success);
+  flex-shrink: 0;
+}
+
+.counsel-status--disconnected .counsel-status-dot {
+  background: var(--counsel-error);
 }
 
 /* ── Text Utilities ─────────────────────────────────────────────────────── */

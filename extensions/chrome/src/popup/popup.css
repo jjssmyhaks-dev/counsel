@@ -88,6 +88,7 @@ html, body {
   height: 8px;
   border-radius: 50%;
   background: var(--counsel-border);
+  flex-shrink: 0;
 }
 
 .counsel-status-dot--connected {
@@ -180,6 +181,16 @@ html, body {
   border-color: var(--counsel-primary);
 }
 
+.counsel-popup-btn--full {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.counsel-popup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ── Section ────────────────────────────────────────────────────────────── */
 
 .counsel-popup__section {
@@ -195,6 +206,145 @@ html, body {
   color: var(--counsel-text-muted);
   padding: 8px 0 6px;
   border-top: 1px solid var(--counsel-border);
+}
+
+/* ── Gmail Integration ──────────────────────────────────────────────────── */
+
+.counsel-gmail {
+  padding: 6px 0;
+}
+
+.counsel-gmail__connected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.counsel-gmail__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.counsel-gmail__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ea4335;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.counsel-gmail__user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.counsel-gmail__email {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--counsel-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.counsel-gmail__count {
+  font-size: 11px;
+  color: var(--counsel-text-muted);
+}
+
+.counsel-gmail__disconnected {
+  padding: 4px 0;
+}
+
+.counsel-gmail__hint {
+  font-size: 12px;
+  color: var(--counsel-text-muted);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.counsel-gmail__google-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  color: #ea4335;
+  font-weight: 700;
+  font-size: 12px;
+  margin-right: 2px;
+}
+
+/* ── Quick Compose ──────────────────────────────────────────────────────── */
+
+.counsel-quick-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.counsel-input,
+.counsel-textarea {
+  width: 100%;
+  font-family: var(--counsel-font);
+  font-size: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--counsel-border);
+  border-radius: var(--counsel-radius-sm);
+  background: var(--counsel-bg);
+  color: var(--counsel-text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.counsel-input:focus,
+.counsel-textarea:focus {
+  border-color: var(--counsel-primary);
+}
+
+.counsel-textarea {
+  resize: vertical;
+  min-height: 48px;
+  line-height: 1.4;
+}
+
+.counsel-quick-compose__status {
+  font-size: 11px;
+  padding: 2px 0;
+  min-height: 16px;
+}
+
+.counsel-quick-compose__status--success {
+  color: var(--counsel-success);
+}
+
+.counsel-quick-compose__status--error {
+  color: var(--counsel-error);
+}
+
+/* ── Error Message ──────────────────────────────────────────────────────── */
+
+.counsel-error-msg {
+  font-size: 12px;
+  color: var(--counsel-error);
+  background: #fce8e6;
+  border: 1px solid #f5c6cb;
+  border-radius: var(--counsel-radius-sm);
+  padding: 6px 10px;
+  margin-top: 6px;
 }
 
 /* ── Activity ───────────────────────────────────────────────────────────── */

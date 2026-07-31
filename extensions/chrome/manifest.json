@@ -1,14 +1,31 @@
 {
   "manifest_version": 3,
   "name": "Counsel — AI for Legal & Consulting",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "AI copilot for email, documents, and research — embedded in Gmail",
-  "permissions": ["storage", "activeTab", "sidePanel", "scripting"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "sidePanel",
+    "scripting",
+    "identity",
+    "identity.email"
+  ],
   "host_permissions": [
     "https://mail.google.com/*",
     "https://*.counsel.app/*",
     "http://localhost:3001/*"
   ],
+  "oauth2": {
+    "client_id": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/gmail.modify",
+      "https://www.googleapis.com/auth/gmail.compose",
+      "https://www.googleapis.com/auth/gmail.send",
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
   "side_panel": {
     "default_path": "src/sidebar/sidebar.html"
   },

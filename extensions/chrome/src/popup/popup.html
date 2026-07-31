@@ -3,27 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <title>Counsel — Popup</title>
-  <style>
-    :root { --mint: #15b881; --mint-dark: #0a8a5f; --bg: #fefdfb; --text: #0c0a09; --radius: 6px; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { width: 280px; font-family: Inter, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 12px; font-size: 13px; }
-    h2 { font-family: Georgia, serif; color: var(--mint-dark); margin-bottom: 10px; font-size: 18px; }
-    .btn { display: block; width: 100%; margin: 6px 0; padding: 8px; background: var(--mint); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 600; text-align: left; }
-    .btn:hover { background: var(--mint-dark); }
-    .btn-secondary { background: #f0ede8; color: var(--text); }
-    .btn-secondary:hover { background: #e5e0da; }
-    .divider { border-top: 1px solid #e5e0da; margin: 10px 0; }
-    .status { font-size: 11px; color: #888; text-align: center; }
-  </style>
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h2>Counsel</h2>
-  <button class="btn" id="btn-sidebar">📋 Open Side Panel</button>
-  <div class="divider"></div>
-  <button class="btn btn-secondary" id="btn-dashboard">🏠 Open Dashboard</button>
-  <button class="btn btn-secondary" id="btn-settings">⚙️ Settings</button>
-  <div class="divider"></div>
-  <div id="status" class="status">Checking connection…</div>
+  <div class="counsel-popup">
+
+    <!-- Header -->
+    <div class="counsel-popup__header">
+      <div class="counsel-popup__logo">
+        <span class="counsel-popup__title">Counsel</span>
+      </div>
+      <span class="counsel-popup__version">v0.2</span>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="counsel-popup__status" id="status-bar">
+      <span class="counsel-status-dot counsel-status-dot--disconnected" id="status-dot"></span>
+      <span id="status-text">Checking connection…</span>
+    </div>
+
+    <!-- Gmail Integration -->
+    <div class="counsel-popup__section" id="gmail-section">
+      <div class="counsel-popup__section-title">Gmail</div>
+      <div id="gmail-status" class="counsel-gmail">
+        <!-- Gmail connect button / status shown here -->
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="counsel-popup__actions">
+      <button class="counsel-popup-btn counsel-popup-btn--primary" id="btn-sidebar">
+        📋 Open Side Panel
+      </button>
+      <button class="counsel-popup-btn counsel-popup-btn--secondary" id="btn-dashboard">
+        🏠 Open Dashboard
+      </button>
+      <button class="counsel-popup-btn counsel-popup-btn--secondary" id="btn-settings">
+        ⚙️ Settings
+      </button>
+    </div>
+
+    <!-- Quick Compose -->
+    <div class="counsel-popup__section" id="quick-compose-section" style="display:none;">
+      <div class="counsel-popup__section-title">Quick Compose</div>
+      <div id="quick-compose-form" class="counsel-quick-compose">
+        <input type="email" id="qc-to" class="counsel-input" placeholder="To: email@example.com" />
+        <input type="text" id="qc-subject" class="counsel-input" placeholder="Subject" />
+        <textarea id="qc-body" class="counsel-textarea" placeholder="Message…" rows="3"></textarea>
+        <button class="counsel-popup-btn counsel-popup-btn--primary" id="btn-send-quick">
+          ✉️ Send
+        </button>
+        <div id="qc-status" class="counsel-quick-compose__status"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="counsel-popup__footer">
+      <a class="counsel-popup__link" href="http://localhost:3000/dashboard" target="_blank">Dashboard</a>
+      <span class="counsel-popup__link" id="btn-logout" style="display:none;">Sign Out</span>
+    </div>
+
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>

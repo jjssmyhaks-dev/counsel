@@ -10,6 +10,8 @@ import { tenantMiddleware } from './middleware/tenant';
 import { errorHandler } from './middleware/errorHandler';
 import { initWorkOS } from './lib/workos';
 import { initResend } from './lib/email';
+import { initR2 } from './lib/r2-client';
+import { registerOAuthProvider } from './lib/oauth';
 
 import authRoutes from './routes/auth';
 import firmRoutes from './routes/firms';
@@ -34,6 +36,10 @@ import adminRoutes from './routes/admin';
 import chatCopilotRoutes from './routes/chat-copilot';
 import usageRoutes from './routes/usage';
 import agentsProxyRoutes from './routes/agents-proxy';
+import integrationsRoutes from './routes/integrations';
+import mediumIntegrationsRoutes from './routes/medium-integrations';
+import docusignRoutes from './routes/docusign';
+import googleRoutes from './routes/google';
 
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -43,6 +49,7 @@ import { startWorkers } from './workers/jobWorker';
 // Initialize services
 initWorkOS();
 initResend();
+initR2();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -175,6 +182,10 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/chat-copilot', chatCopilotRoutes);
 app.use('/api/v1/usage', usageRoutes);
 app.use('/api/v1/agents', agentsProxyRoutes);
+app.use('/api/v1/integrations', integrationsRoutes);
+app.use('/api/v1', mediumIntegrationsRoutes);
+app.use('/api/v1/docusign', docusignRoutes);
+app.use('/api/v1/google', googleRoutes);
 
 // ─── Global error handler (must be last) ────────────────────────────────────
 app.use(errorHandler);
