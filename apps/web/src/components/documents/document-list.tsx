@@ -44,7 +44,7 @@ export function DocumentList({ documents, loading }: DocumentListProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <span className="font-medium text-slate-900 truncate max-w-[250px]">{doc.name}</span>
+          <span className="font-medium text-slate-900 truncate max-w-[250px]">{doc.originalName}</span>
         </div>
       ),
     },
@@ -52,7 +52,7 @@ export function DocumentList({ documents, loading }: DocumentListProps) {
       key: 'type',
       header: 'Type',
       render: (doc: Document) => (
-        <span className="text-xs uppercase font-mono text-slate-500">{doc.type}</span>
+        <span className="text-xs uppercase font-mono text-slate-500">{doc.mimeType}</span>
       ),
     },
     {
@@ -67,7 +67,7 @@ export function DocumentList({ documents, loading }: DocumentListProps) {
       key: 'matterName',
       header: 'Matter',
       render: (doc: Document) => (
-        <span className="text-slate-600 truncate max-w-[200px] block">{doc.matterName}</span>
+        <span className="text-slate-600 truncate max-w-[200px] block">{doc.matter?.name || '—'}</span>
       ),
     },
     {
@@ -78,7 +78,7 @@ export function DocumentList({ documents, loading }: DocumentListProps) {
     {
       key: 'size',
       header: 'Size',
-      render: (doc: Document) => <span className="text-slate-500 font-mono text-xs">{formatSize(doc.size)}</span>,
+      render: (doc: Document) => <span className="text-slate-500 font-mono text-xs">{formatSize(doc.sizeBytes)}</span>,
     },
   ];
 

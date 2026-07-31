@@ -450,51 +450,6 @@ def _get_mcp_tools(*servers: str):
     except Exception:
         return []  # Fallback: no MCP tools, agents still work
 
-AGENT_FACTORIES = {
-    # Legal
-    "clause_extractor": create_clause_extractor,
-    "risk_analyzer": create_risk_analyzer,
-    "playbook_guardian": create_playbook_guardian,
-    "legal_drafter": create_legal_drafter,
-    "citation_validator": create_citation_validator,
-    "legal_researcher": create_legal_researcher,
-    "rag_synthesizer": create_rag_synthesizer,
-    "compliance_checker": create_compliance_checker,
-    "negotiator_advisor": create_negotiator_advisor,
-    # Consulting
-    "proposal_writer": create_proposal_writer,
-    "market_intelligence_analyst": create_market_intelligence_analyst,
-    "strategic_advisor": create_strategic_advisor,
-    "rfp_analyzer": create_rfp_analyzer,
-    "engagement_manager": create_engagement_manager,
-    "financial_modeler": create_financial_modeler,
-    # CA vertical
-    "transaction_matcher": create_transaction_matcher,
-    "variance_analyzer": create_variance_analyzer,
-    "reconciliation_reporter": create_reconciliation_reporter,
-    "input_tax_reconciler": create_input_tax_reconciler,
-    "gstr_validator": create_gstr_validator,
-    "filing_prep_advisor": create_filing_prep_advisor,
-    "risk_assessment_engine": create_risk_assessment_engine,
-    "sampling_recommendation": create_sampling_recommendation,
-    "audit_report_compiler": create_audit_report_compiler,
-    "tds_reconciler": create_tds_reconciler,
-    "itr_data_aggregator": create_itr_data_aggregator,
-    "notice_response_drafter": create_notice_response_drafter,
-    "filing_deadline_tracker": create_filing_deadline_tracker,
-    "form_data_compiler": create_form_data_compiler,
-    "compliance_calendar_manager": create_compliance_calendar_manager,
-}
-
-
-def get_agent(name: str) -> Agent:
-    """Get or create an agent by name. Agents are cached after creation."""
-    factory = AGENT_FACTORIES.get(name)
-    if not factory:
-        raise ValueError(f"Unknown agent: {name}. Available: {list(AGENT_FACTORIES.keys())}")
-    return factory()
-
-
 # ─── CA Vertical Agent Factories (Crews 9-13) ──────────────────────────────
 
 def create_transaction_matcher() -> Agent:

@@ -105,7 +105,8 @@ export default function Landing() {
               <p className="mt-6 text-[17px] md:text-[19px] text-[#4b5551] max-w-lg leading-relaxed">
                 Self-updating legal intelligence for{" "}
                 <span className={`${serif} italic text-[#0c0a09]`}>boutiques</span>,{" "}
-                <span className={`${serif} italic text-[#0c0a09]`}>Big Law</span>, and{" "}
+                <span className={`${serif} italic text-[#0c0a09]`}>Big Law</span>,{" "}
+                <span className={`${serif} italic text-[#0c0a09]`}>CA firms</span>, and{" "}
                 <span className={`${serif} italic text-[#0c0a09]`}>agents</span>.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -129,6 +130,10 @@ export default function Landing() {
                   <span className="text-black/[0.15]">|</span>
                   <Link href="/register" className="inline-flex items-center gap-1.5 text-[#0a8a5f] hover:text-[#15b881] font-medium transition-colors">
                     📊 I'm a Consulting firm →
+                  </Link>
+                  <span className="text-black/[0.15]">|</span>
+                  <Link href="/register" className="inline-flex items-center gap-1.5 text-[#0a8a5f] hover:text-[#15b881] font-medium transition-colors">
+                    🧾 I'm a CA firm →
                   </Link>
                 </div>
                 <div className="flex items-center gap-4">
@@ -263,10 +268,10 @@ export default function Landing() {
               Start in under 2 minutes
             </div>
             <h2 className={`${serif} mt-6 text-[2.75rem] md:text-[5rem] font-normal tracking-[-0.02em] leading-[1.02] text-[#0c0a09]`}>
-              The AI platform built for<br />legal &amp; consulting firms
+              The AI platform built for<br />legal, consulting &amp; CA firms
             </h2>
             <p className="mt-8 text-[17px] md:text-[18px] text-[#717d79] max-w-2xl mx-auto leading-relaxed">
-              Join 500+ firms already using Counsel to analyze contracts, synthesize research, and draft documents — faster and more accurately than ever.
+              Join 500+ firms already using Counsel to analyze contracts, synthesize research, reconcile accounts, file GST returns, and draft documents — faster and more accurately than ever.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register" className="text-[14px] font-medium text-white bg-[#0c0a09] hover:bg-[#0a8a5f] transition-colors rounded-full px-8 py-3.5 shadow-[0_10px_30px_-10px_rgba(12,10,9,0.5)] hover:shadow-[0_14px_40px_-10px_rgba(21,184,129,0.5)] hover:-translate-y-0.5 transition-all">

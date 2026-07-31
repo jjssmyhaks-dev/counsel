@@ -57,6 +57,7 @@ const solutionsMenu: MenuSection[] = [
       { label: "Litigation", desc: "Brief generation & e-discovery", href: "/solutions#litigation" },
       { label: "Regulatory", desc: "Compliance research", href: "/solutions#regulatory" },
       { label: "IP / Patent", desc: "Prior art search & filing", href: "/solutions#ip" },
+      { label: "CA / Accounting", desc: "GST, ITR, audit & reconciliation", href: "/solutions#ca" },
     ],
   },
 ];

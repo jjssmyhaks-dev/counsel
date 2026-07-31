@@ -191,10 +191,10 @@ export default function MatterDetailPage() {
                       className="border-b border-black/[0.04] hover:bg-[#fefdfb] cursor-pointer transition-colors"
                     >
                       <td className="px-5 py-3">
-                        <p className="text-sm font-medium text-[#0c0a09]">{doc.name}</p>
+                        <p className="text-sm font-medium text-[#0c0a09]">{doc.originalName}</p>
                       </td>
                       <td className="px-5 py-3">
-                        <span className="text-xs font-mono uppercase text-[#717d79] bg-black/[0.04] px-2 py-0.5 rounded">{doc.type}</span>
+                        <span className="text-xs font-mono uppercase text-[#717d79] bg-black/[0.04] px-2 py-0.5 rounded">{doc.mimeType}</span>
                       </td>
                       <td className="px-5 py-3"><StatusBadge status={doc.status} /></td>
                       <td className="px-5 py-3 text-sm text-[#717d79]">{formatDate(doc.createdAt)}</td>

@@ -906,9 +906,10 @@ export const api = {
 
   post: async <T>(path: string, body?: unknown): Promise<T> => {
     try {
+      const isFormData = body instanceof FormData;
       return await request<T>(path, {
         method: 'POST',
-        body: body ? JSON.stringify(body) : undefined,
+        body: isFormData ? (body as FormData) : (body ? JSON.stringify(body) : undefined),
       });
     } catch (err) {
       if (err instanceof ApiError && err.code === 'SERVER_SIDE') throw err;

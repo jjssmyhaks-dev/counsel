@@ -103,7 +103,7 @@ export default function DocumentDetailPage() {
       const document = await api.get<Document>(`/documents/${id}`);
       setDoc(document);
 
-      if (document.status === 'ready') {
+      if (document.status === 'READY') {
         try {
           const a = await api.get<Analysis>(`/documents/${id}/analysis`);
           setAnalysis(a);
@@ -200,7 +200,7 @@ export default function DocumentDetailPage() {
           </svg>
           Back to Documents
         </button>
-        <h1 className="text-2xl font-bold text-[#0c0a09]">{doc.name}</h1>
+        <h1 className="text-2xl font-bold text-[#0c0a09]">{doc.originalName}</h1>
       </div>
 
       {/* Metadata bar */}
@@ -209,11 +209,11 @@ export default function DocumentDetailPage() {
           <svg className="w-4 h-4 text-[#969e9b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          {formatSize(doc.size)}
+          {formatSize(doc.sizeBytes)}
         </span>
-        <span className="text-xs font-mono uppercase text-[#717d79] bg-black/[0.04] px-2 py-0.5 rounded">{doc.type}</span>
+        <span className="text-xs font-mono uppercase text-[#717d79] bg-black/[0.04] px-2 py-0.5 rounded">{doc.mimeType}</span>
         <StatusBadge status={doc.status} />
-        <span>{doc.uploaderName}</span>
+        <span>{(doc.uploadedBy?.name || '—')}</span>
         <span>{formatDate(doc.createdAt)}</span>
       </div>
 
@@ -315,7 +315,7 @@ export default function DocumentDetailPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 p-3 bg-[#fefdfb] rounded-xl border border-black/[0.06]">
               <p className="text-xs font-medium text-[#717d79] mb-1">Current Document</p>
-              <p className="text-sm font-semibold text-[#0c0a09] truncate">{doc.name}</p>
+              <p className="text-sm font-semibold text-[#0c0a09] truncate">{doc.originalName}</p>
             </div>
             <div className="flex items-center justify-center text-[#969e9b]">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -404,19 +404,19 @@ export default function DocumentDetailPage() {
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">File Name</dt>
-              <dd className="text-sm text-[#0c0a09] mt-1">{doc.name}</dd>
+              <dd className="text-sm text-[#0c0a09] mt-1">{doc.originalName}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">Type</dt>
-              <dd className="text-sm text-[#0c0a09] mt-1 uppercase">{doc.type}</dd>
+              <dd className="text-sm text-[#0c0a09] mt-1 uppercase">{doc.mimeType}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">Size</dt>
-              <dd className="text-sm text-[#0c0a09] mt-1">{formatSize(doc.size)}</dd>
+              <dd className="text-sm text-[#0c0a09] mt-1">{formatSize(doc.sizeBytes)}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">Pages</dt>
-              <dd className="text-sm text-[#0c0a09] mt-1">{doc.pageCount || 'N/A'}</dd>
+              <dd className="text-sm text-[#0c0a09] mt-1">{(doc._count?.analyses || 0) || 'N/A'}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">Status</dt>
@@ -424,11 +424,11 @@ export default function DocumentDetailPage() {
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">Uploaded By</dt>
-              <dd className="text-sm text-[#0c0a09] mt-1">{doc.uploaderName}</dd>
+              <dd className="text-sm text-[#0c0a09] mt-1">{(doc.uploadedBy?.name || '—')}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">Matter</dt>
-              <dd className="text-sm text-[#0c0a09] mt-1">{doc.matterName}</dd>
+              <dd className="text-sm text-[#0c0a09] mt-1">{doc.matter?.name || '—'}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-[#717d79] uppercase">Created</dt>

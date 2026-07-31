@@ -54,18 +54,19 @@ export interface Matter {
 
 export interface Document {
   id: string;
-  name: string;
-  type: string;
-  size: number;
-  status: 'uploaded' | 'processing' | 'ready' | 'failed';
-  matterId: string;
-  matterName: string;
-  uploadedBy: string;
-  uploaderName: string;
+  originalName: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  status: 'UPLOADED' | 'PROCESSING' | 'READY' | 'FAILED';
+  matterId?: string;
+  matter?: { id: string; name: string };
+  uploadedBy?: { id: string; name: string };
   firmId: string;
-  pageCount?: number;
+  r2Key?: string;
   createdAt: string;
   updatedAt: string;
+  _count?: { analyses: number };
 }
 
 export interface DocumentChunk {

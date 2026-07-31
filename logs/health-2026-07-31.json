@@ -1,0 +1,118 @@
+[
+  {
+    "timestamp": "2026-07-31T18:05:13.676Z",
+    "summary": {
+      "passed": 2,
+      "failed": 4,
+      "skipped": 2
+    },
+    "results": [
+      {
+        "name": "API Server (Express)",
+        "status": 503,
+        "latency": 312,
+        "passed": false
+      },
+      {
+        "name": "AI Service (FastAPI)",
+        "status": 0,
+        "latency": 3,
+        "passed": false
+      },
+      {
+        "name": "Web App (Next.js)",
+        "status": 0,
+        "latency": 3,
+        "passed": false
+      },
+      {
+        "name": "GET /public/stats",
+        "status": 200,
+        "latency": 765,
+        "passed": true
+      },
+      {
+        "name": "GET /public/firms",
+        "status": 200,
+        "latency": 154,
+        "passed": true
+      },
+      {
+        "name": "POST /auth/login",
+        "status": 401,
+        "latency": 232,
+        "passed": true
+      },
+      {
+        "name": "POST /auth/register",
+        "status": 400,
+        "latency": 8,
+        "passed": true
+      },
+      {
+        "name": "Integration Health",
+        "status": 401,
+        "latency": 3,
+        "passed": false
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-07-31T18:06:08.946Z",
+    "summary": {
+      "passed": 1,
+      "failed": 5,
+      "skipped": 2
+    },
+    "results": [
+      {
+        "name": "API Server (Express)",
+        "status": 0,
+        "latency": 42,
+        "passed": false
+      },
+      {
+        "name": "AI Service (FastAPI)",
+        "status": 200,
+        "latency": 12,
+        "passed": true
+      },
+      {
+        "name": "Web App (Next.js)",
+        "status": 0,
+        "latency": 2,
+        "passed": false
+      },
+      {
+        "name": "GET /public/stats",
+        "status": 0,
+        "latency": 4,
+        "passed": false
+      },
+      {
+        "name": "GET /public/firms",
+        "status": 0,
+        "latency": 3,
+        "passed": false
+      },
+      {
+        "name": "POST /auth/login",
+        "status": 0,
+        "latency": 4,
+        "passed": false
+      },
+      {
+        "name": "POST /auth/register",
+        "status": 0,
+        "latency": 3,
+        "passed": false
+      },
+      {
+        "name": "Integration Health",
+        "status": 0,
+        "latency": 4,
+        "passed": false
+      }
+    ]
+  }
+]
