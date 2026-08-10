@@ -56,5 +56,63 @@
         "passed": false
       }
     ]
+  },
+  {
+    "timestamp": "2026-08-10T17:23:02.675Z",
+    "summary": {
+      "passed": 4,
+      "failed": 2,
+      "skipped": 2
+    },
+    "results": [
+      {
+        "name": "API Server (Express)",
+        "status": 200,
+        "latency": 386,
+        "passed": true
+      },
+      {
+        "name": "AI Service (FastAPI)",
+        "status": 200,
+        "latency": 5,
+        "passed": true
+      },
+      {
+        "name": "Web App (Next.js)",
+        "status": 0,
+        "latency": 5000,
+        "passed": false
+      },
+      {
+        "name": "GET /public/stats",
+        "status": 200,
+        "latency": 1450,
+        "passed": true
+      },
+      {
+        "name": "GET /public/firms",
+        "status": 200,
+        "latency": 252,
+        "passed": true
+      },
+      {
+        "name": "POST /auth/login",
+        "status": 401,
+        "latency": 2112,
+        "passed": true
+      },
+      {
+        "name": "POST /auth/register",
+        "status": 400,
+        "latency": 26,
+        "passed": true
+      },
+      {
+        "name": "Integration Health",
+        "status": 401,
+        "latency": 7,
+        "passed": false
+      }
+    ]
   }
 ]
