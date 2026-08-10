@@ -10,26 +10,20 @@ import { Select } from '../ui/select';
 interface MatterFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; clientName: string; description: string; practiceArea: string }) => Promise<void>;
+  onSubmit: (data: { name: string; clientName: string; description: string; type: string }) => Promise<void>;
 }
 
-const PRACTICE_AREAS = [
-  { value: '', label: 'Select practice area...' },
-  { value: 'Corporate M&A', label: 'Corporate M&A' },
-  { value: 'Intellectual Property', label: 'Intellectual Property' },
-  { value: 'Real Estate', label: 'Real Estate' },
-  { value: 'Employment Law', label: 'Employment Law' },
-  { value: 'Privacy & Data Protection', label: 'Privacy & Data Protection' },
-  { value: 'Litigation', label: 'Litigation' },
-  { value: 'Tax', label: 'Tax' },
-  { value: 'Banking & Finance', label: 'Banking & Finance' },
+const TYPE_OPTIONS = [
+  { value: '', label: 'Select type...' },
+  { value: 'LEGAL', label: 'Legal' },
+  { value: 'CONSULTING', label: 'Consulting' },
 ];
 
 export function MatterForm({ open, onClose, onSubmit }: MatterFormProps) {
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
   const [description, setDescription] = useState('');
-  const [practiceArea, setPracticeArea] = useState('');
+  const [matterType, setMatterType] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -38,7 +32,7 @@ export function MatterForm({ open, onClose, onSubmit }: MatterFormProps) {
     if (!name.trim()) e.name = 'Matter name is required';
     if (!clientName.trim()) e.clientName = 'Client name is required';
     if (!description.trim()) e.description = 'Description is required';
-    if (!practiceArea) e.practiceArea = 'Practice area is required';
+    if (!matterType) e.matterType = 'Type is required';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -47,11 +41,11 @@ export function MatterForm({ open, onClose, onSubmit }: MatterFormProps) {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      await onSubmit({ name, clientName, description, practiceArea });
+      await onSubmit({ name, clientName, description, type: matterType });
       setName('');
       setClientName('');
       setDescription('');
-      setPracticeArea('');
+      setMatterType('');
       onClose();
     } catch {
       // Error handled by parent
@@ -91,11 +85,11 @@ export function MatterForm({ open, onClose, onSubmit }: MatterFormProps) {
           error={errors.clientName}
         />
         <Select
-          label="Practice Area"
-          options={PRACTICE_AREAS}
-          value={practiceArea}
-          onChange={(e) => setPracticeArea(e.target.value)}
-          error={errors.practiceArea}
+          label="Type"
+          options={TYPE_OPTIONS}
+          value={matterType}
+          onChange={(e) => setMatterType(e.target.value)}
+          error={errors.matterType}
         />
         <Textarea
           label="Description"

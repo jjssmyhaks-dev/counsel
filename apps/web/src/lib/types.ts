@@ -41,13 +41,13 @@ export interface Matter {
   id: string;
   name: string;
   clientName: string;
-  description: string;
-  status: 'active' | 'pending' | 'closed' | 'archived';
-  practiceArea: string;
-  responsibleUserId: string;
-  responsibleUserName: string;
+  description?: string;
+  type: 'LEGAL' | 'CONSULTING';
+  status: 'ACTIVE' | 'CLOSED' | 'ARCHIVED';
+  responsibleUserId?: string;
   firmId: string;
-  documentCount: number;
+  createdBy?: { id: string; name: string };
+  _count?: { documents: number; drafts: number; meetings: number };
   createdAt: string;
   updatedAt: string;
 }

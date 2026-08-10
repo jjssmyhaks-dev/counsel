@@ -119,16 +119,16 @@ export default function MatterDetailPage() {
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge status={matter.status} />
-            <span className="text-xs text-[#717d79] bg-black/[0.04] px-2.5 py-1 rounded">{matter.practiceArea}</span>
+            <span className="text-xs text-[#717d79] bg-black/[0.04] px-2.5 py-1 rounded">{matter.type}</span>
           </div>
         </div>
       </div>
 
       {/* Info bar */}
       <div className="flex flex-wrap items-center gap-4 text-sm text-[#717d79]">
-        <span>Responsible: <strong>{matter.responsibleUserName}</strong></span>
+        <span>Responsible: <strong>{matter.createdBy?.name || '—'}</strong></span>
         <span>•</span>
-        <span>{matter.documentCount} documents</span>
+        <span>{matter._count?.documents ?? 0} documents</span>
         <span>•</span>
         <span>Updated {formatDate(matter.updatedAt)}</span>
       </div>

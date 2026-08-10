@@ -1,0 +1,60 @@
+[
+  {
+    "timestamp": "2026-08-10T14:42:21.009Z",
+    "summary": {
+      "passed": 5,
+      "failed": 1,
+      "skipped": 2
+    },
+    "results": [
+      {
+        "name": "API Server (Express)",
+        "status": 200,
+        "latency": 360,
+        "passed": true
+      },
+      {
+        "name": "AI Service (FastAPI)",
+        "status": 200,
+        "latency": 21,
+        "passed": true
+      },
+      {
+        "name": "Web App (Next.js)",
+        "status": 200,
+        "latency": 1730,
+        "passed": true
+      },
+      {
+        "name": "GET /public/stats",
+        "status": 200,
+        "latency": 1048,
+        "passed": true
+      },
+      {
+        "name": "GET /public/firms",
+        "status": 200,
+        "latency": 204,
+        "passed": true
+      },
+      {
+        "name": "POST /auth/login",
+        "status": 401,
+        "latency": 660,
+        "passed": true
+      },
+      {
+        "name": "POST /auth/register",
+        "status": 400,
+        "latency": 17,
+        "passed": true
+      },
+      {
+        "name": "Integration Health",
+        "status": 401,
+        "latency": 4,
+        "passed": false
+      }
+    ]
+  }
+]

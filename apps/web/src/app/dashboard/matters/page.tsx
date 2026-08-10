@@ -154,7 +154,7 @@ export default function MattersPage() {
             >
               <div className="flex items-start justify-between mb-3">
                 <span className="text-xs font-medium text-[#717d79] dark:text-[#969e9b] bg-black/[0.03] dark:bg-slate-800 px-2 py-0.5 rounded">
-                  {matter.practiceArea}
+                  {matter.type}
                 </span>
                 <StatusBadge status={matter.status} />
               </div>
@@ -170,7 +170,7 @@ export default function MattersPage() {
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  {matter.documentCount} docs
+                  {matter._count?.documents ?? 0} docs
                 </div>
                 <span className="text-xs text-[#969e9b] dark:text-[#717d79]">Updated {formatDate(matter.updatedAt)}</span>
               </div>
