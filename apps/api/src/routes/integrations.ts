@@ -262,18 +262,21 @@ router.get('/health', async (_req: Request, res: Response) => {
   // Stripe (check via env)
   results.push({
     service: 'Stripe',
+    provider: 'stripe',
     status: process.env.STRIPE_SECRET_KEY ? 'configured' : 'unconfigured',
   });
 
   // Resend
   results.push({
     service: 'Resend Email',
+    provider: 'resend',
     status: process.env.RESEND_API_KEY ? 'configured' : 'unconfigured',
   });
 
   // WorkOS
   results.push({
     service: 'WorkOS SSO',
+    provider: 'workos',
     status: process.env.WORKOS_API_KEY ? 'configured' : 'unconfigured',
   });
 

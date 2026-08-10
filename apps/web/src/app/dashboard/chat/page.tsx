@@ -238,13 +238,22 @@ export default function ChatPage() {
     let formMessage = '';
     switch (formType) {
       case 'create_matter':
-        formMessage = `Create a new ${fields.type || 'Legal'} matter:\nName: ${fields.name}\nClient: ${fields.clientName}\nDescription: ${fields.description || 'N/A'}`;
+        formMessage = 'Create a new ' + (fields.type || 'Legal') + ' matter:\nName: ' + fields.name + '\nClient: ' + fields.clientName + '\nDescription: ' + (fields.description || 'N/A');
+        break;
+      case 'add_client':
+        formMessage = 'Add a new client called ' + fields.name + (fields.pan ? ' PAN ' + fields.pan : '') + (fields.email ? ' email ' + fields.email : '');
+        break;
+      case 'create_proposal':
+        formMessage = 'Create a proposal called ' + fields.title + (fields.client ? ' for ' + fields.client : '') + (fields.budget ? ' budget ' + fields.budget : '') + (fields.timeline ? ' timeline ' + fields.timeline : '');
+        break;
+      case 'schedule_meeting':
+        formMessage = 'Schedule a meeting called ' + fields.title + ' on ' + (fields.date || '2026-08-20 15:00') + (fields.attendees ? ' with ' + fields.attendees : '');
         break;
       case 'compliance_check':
-        formMessage = `Check this provision against ${fields.framework || 'GDPR'}:\n\n${fields.clause}`;
+        formMessage = 'Check this provision against ' + (fields.framework || 'GDPR') + ':\n\n' + fields.clause;
         break;
       case 'financial_analysis':
-        formMessage = `Calculate financial metrics for cash flows: ${fields.cashFlows} at ${fields.discountRate || '0.10'} discount rate`;
+        formMessage = 'Calculate financial metrics for cash flows: ' + fields.cashFlows + ' at ' + (fields.discountRate || '0.10') + ' discount rate';
         break;
       default:
         formMessage = JSON.stringify(fields, null, 2);
@@ -298,14 +307,21 @@ export default function ChatPage() {
 
   // ── Tool definitions ─────────────────────────────────────────────────────
   const CHAT_TOOLS: ChatTool[] = [
-    { id: 'create_matter', name: 'Create Matter', description: 'Open a new matter', icon: 'briefcase', category: 'work' },
-    { id: 'upload_document', name: 'Upload', description: 'Upload documents', icon: 'file-up', category: 'documents' },
-    { id: 'search_documents', name: 'Search', description: 'Search documents', icon: 'search', category: 'documents' },
+    { id: 'create_matter', name: 'Matter', description: 'Create matter', icon: 'briefcase', category: 'work' },
+    { id: 'add_client', name: 'Client', description: 'Add client', icon: 'user-plus', category: 'ca' },
+    { id: 'upload_document', name: 'Upload', description: 'Upload docs', icon: 'file-up', category: 'documents' },
+    { id: 'search_documents', name: 'Search', description: 'Search docs', icon: 'search', category: 'documents' },
     { id: 'legal_research', name: 'Research', description: 'Legal research', icon: 'scale', category: 'research' },
-    { id: 'draft_document', name: 'Draft', description: 'Draft documents', icon: 'edit', category: 'drafts' },
-    { id: 'schedule_meeting', name: 'Meeting', description: 'Schedule meeting', icon: 'calendar', category: 'meetings' },
-    { id: 'check_compliance', name: 'Compliance', description: 'Check compliance', icon: 'shield', category: 'compliance' },
-    { id: 'financial_analysis', name: 'Finance', description: 'Financial analysis', icon: 'calculator', category: 'finance' },
+    { id: 'draft_document', name: 'Draft', description: 'Draft docs', icon: 'edit', category: 'drafts' },
+    { id: 'create_proposal', name: 'Proposal', description: 'Proposals', icon: 'file-text', category: 'consulting' },
+    { id: 'market_intel', name: 'Intel', description: 'Market intel', icon: 'trending-up', category: 'consulting' },
+    { id: 'schedule_meeting', name: 'Meeting', description: 'Schedule', icon: 'calendar', category: 'meetings' },
+    { id: 'compliance_calendar', name: 'Filings', description: 'Tax filings', icon: 'clipboard-check', category: 'ca' },
+    { id: 'check_compliance', name: 'Comply', description: 'Compliance', icon: 'shield', category: 'compliance' },
+    { id: 'financial_analysis', name: 'Finance', description: 'NPV/IRR', icon: 'calculator', category: 'analysis' },
+    { id: 'reconciliation', name: 'Recon', description: 'Reconciliation', icon: 'refresh-cw', category: 'ca' },
+    { id: 'manage_engagements', name: 'Engage', description: 'Engagements', icon: 'clipboard-list', category: 'consulting' },
+    { id: 'manage_integrations', name: 'Integrate', description: 'Integrations', icon: 'plug', category: 'integrations' },
   ];
 
   // ── Markdown Renderer ────────────────────────────────────────────────────

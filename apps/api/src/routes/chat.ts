@@ -5,15 +5,20 @@ const router = Router();
 
 const CHAT_TOOLS = [
   { id: 'create_matter', name: 'Create Matter', description: 'Open a new legal or consulting matter', icon: 'briefcase', category: 'work' },
+  { id: 'add_client', name: 'Add Client', description: 'Register a new client with tax IDs', icon: 'user-plus', category: 'ca' },
   { id: 'upload_document', name: 'Upload Document', description: 'Upload and analyze a document (PDF, DOCX, etc.)', icon: 'file-up', category: 'documents' },
   { id: 'search_documents', name: 'Search Documents', description: 'Semantic search across all firm documents', icon: 'search', category: 'documents' },
-  { id: 'legal_research', name: 'Legal Research', description: 'Research case law, statutes, and regulations', icon: 'scale', category: 'research' },
-  { id: 'draft_document', name: 'Draft Document', description: 'AI-assisted contract or memo drafting', icon: 'edit', category: 'drafts' },
-  { id: 'schedule_meeting', name: 'Schedule Meeting', description: 'Create and manage meetings with clients', icon: 'calendar', category: 'meetings' },
-  { id: 'check_compliance', name: 'Check Compliance', description: 'Verify provisions against playbook rules', icon: 'shield', category: 'compliance' },
-  { id: 'financial_analysis', name: 'Financial Analysis', description: 'Calculate NPV, IRR, sensitivity analysis', icon: 'calculator', category: 'analysis' },
-  { id: 'kb_query', name: 'Ask Firm Knowledge Base', description: "Query the firm's internal knowledge base", icon: 'brain', category: 'knowledge' },
-  { id: 'manage_integrations', name: 'Manage Integrations', description: 'Connect CRM, billing, DMS, and other integrations', icon: 'plug', category: 'integrations' },
+  { id: 'legal_research', name: 'Research', description: 'Legal research, case law, statutes', icon: 'scale', category: 'research' },
+  { id: 'draft_document', name: 'Draft', description: 'AI-assisted contract or memo drafting', icon: 'edit', category: 'drafts' },
+  { id: 'create_proposal', name: 'Proposal', description: 'Generate consulting proposals & SOWs', icon: 'file-text', category: 'consulting' },
+  { id: 'market_intel', name: 'Market Intel', description: 'Industry research & competitive analysis', icon: 'trending-up', category: 'consulting' },
+  { id: 'schedule_meeting', name: 'Meeting', description: 'Schedule meetings with clients', icon: 'calendar', category: 'meetings' },
+  { id: 'compliance_calendar', name: 'Filings', description: 'Tax filings, GST, ROC compliance calendar', icon: 'clipboard-check', category: 'ca' },
+  { id: 'check_compliance', name: 'Compliance', description: 'Check against playbook & regulatory rules', icon: 'shield', category: 'compliance' },
+  { id: 'financial_analysis', name: 'Finance', description: 'NPV, IRR, sensitivity analysis', icon: 'calculator', category: 'analysis' },
+  { id: 'reconciliation', name: 'Reconciliation', description: 'Bank & ledger reconciliation status', icon: 'refresh-cw', category: 'ca' },
+  { id: 'manage_engagements', name: 'Engagements', description: 'Track client engagements & projects', icon: 'clipboard-list', category: 'consulting' },
+  { id: 'manage_integrations', name: 'Integrations', description: 'Connect CRM, billing, DMS', icon: 'plug', category: 'integrations' },
 ];
 
 router.get('/tools', (_req: Request, res: Response) => {
@@ -199,6 +204,83 @@ async function localDispatch(message: string, toolId: string | undefined, firmId
     return ok({ content: '\uD83D\uDCB0 Financial Analysis\n\nI compute NPV, IRR, payback period.\n\nSay: Calculate NPV for -100000, 30000, 40000, 50000 at 10% discount rate\n\nOr fill the form:', form: { type: 'financial_analysis', fields: [{ name: 'cashFlows', label: 'Cash Flows', type: 'text', placeholder: '-100000, 30000, 40000, 50000', required: true }, { name: 'discountRate', label: 'Discount Rate (%)', type: 'text', placeholder: '10', required: true }] } });
   }
 
+  // ── ADD CLIENT (CA) ────────────────────────────────────────────────
+  if (toolId === 'add_client' || /\b(?:add|new|create|register)\s+(?:a\s+)?(?:client|customer)\b/i.test(lowerMsg)) {
+    const cname = extractBetween(message, [/(?:client|customer)\s+(?:called|named)?\s*"([^"]+)"/i, /(?:client|customer)\s+(?:called|named)?\s*'([^']+)'/i, /(?:add|new|create|register)\s+(?:a\s+)?(?:client|customer)\s+(?:called|named)?\s+(.+?)(?:\s+(?:with|pan|gst|email|phone)|$)/i]);
+    const pan = extractBetween(message, [/pan\s*(?:is\s+)?(?:no\.?\s*)?([A-Z]{5}[0-9]{4}[A-Z])/i]);
+    const email_ = extractBetween(message, [/(?:email|mail)\s+(\S+@\S+\.\S+)/i]);
+    if (cname) {
+      try {
+        const client = await prisma.client.create({ data: { firmId, name: cname, pan: pan || undefined, email: email_ || undefined, contactName: extractBetween(message, [/(?:contact|person)\s+(?:is\s+)?(.+?)(?:,|\.|\s+with|$)/i]) || undefined } });
+        return ok({ content: '\u2705 Client created!\n\nName: ' + client.name + (client.pan ? '\nPAN: ' + client.pan : '') + (client.email ? '\nEmail: ' + client.email : '') + '\n\nYou can now:\n\u2022 Assign engagements\n\u2022 Set up compliance filings\n\u2022 Add documents', result: { action: 'created', clientId: client.id, client } });
+      } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
+    }
+    const clients = await prisma.client.findMany({ where: { firmId }, select: { id: true, name: true, pan: true, email: true }, orderBy: { name: 'asc' }, take: 10 });
+    const cLines = clients.map(function(c: any) { return '\u2022 ' + c.name + (c.pan ? ' (PAN: ' + c.pan + ')' : ''); }).join('\n');
+    return ok({ content: clients.length ? 'Existing clients:\n' + cLines + '\n\nSay: Add a client called [name] PAN [PAN number]' : 'No clients yet. Say: Add a client called [name] PAN [PAN number]', form: { type: 'add_client', fields: [{ name: 'name', label: 'Client Name', type: 'text', required: true }, { name: 'pan', label: 'PAN', type: 'text', required: false }, { name: 'email', label: 'Email', type: 'text', required: false }] } });
+  }
+
+  // ── COMPLIANCE CALENDAR (CA) ────────────────────────────────────────
+  if (toolId === 'compliance_calendar' || /\b(filing|compliance|due\s*date|gst|itr|tds|roc|tax\s+filing|deadline)\b/i.test(lowerMsg)) {
+    try {
+      const items = await prisma.complianceItem.findMany({ where: { firmId }, include: { client: { select: { name: true } } }, orderBy: { dueDate: 'asc' }, take: 15 });
+      const now = new Date();
+      if (items.length === 0) return ok({ content: 'No compliance items yet. Track GST returns, ITRs, TDS filings, and ROC compliance.\n\nSay: Add a GST filing due on 2026-09-15 for client X' });
+      let overdue = 0, dueWeek = 0;
+      items.forEach(function(i: any) { if (new Date(i.dueDate) < now && i.status !== 'COMPLETED') overdue++; else { const d = (new Date(i.dueDate).getTime() - now.getTime()) / 86400000; if (d >= 0 && d <= 7) dueWeek++; } });
+      const iLines = items.map(function(i: any) {
+        const d = new Date(i.dueDate); const diff = (d.getTime() - now.getTime()) / 86400000;
+        const flag = diff < 0 && i.status !== 'COMPLETED' ? ' \uD83D\uDD34 OVERDUE' : diff <= 7 && i.status !== 'COMPLETED' ? ' \uD83D\uDFE1 Due soon' : i.status === 'COMPLETED' ? ' \u2705 Done' : '';
+        return '\u2022 ' + i.type + ' — ' + (i.client?.name || 'N/A') + ' | ' + d.toLocaleDateString() + flag;
+      }).join('\n');
+      return ok({ content: '\uD83D\uDCC5 Compliance Calendar\n\nOverdue: ' + overdue + ' | Due this week: ' + dueWeek + '\n\n' + iLines });
+    } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
+  }
+
+  // ── RECONCILIATION (CA) ─────────────────────────────────────────────
+  if (toolId === 'reconciliation' || /\b(reconcili|reconcile|ledger|bank\s+stmt|trial\s+balance)\b/i.test(lowerMsg)) {
+    try {
+      const recs = await prisma.reconciliation.findMany({ where: { firmId }, include: { client: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 10 });
+      if (recs.length === 0) return ok({ content: 'No reconciliations yet. Track bank and ledger reconciliations for your clients.\n\nSay: Start reconciliation for client X' });
+      const rLines = recs.map(function(r: any) { return '\u2022 ' + (r.client?.name || 'N/A') + ' — ' + r.period + ' | Status: ' + r.status + (r.difference ? ' | Diff: ' + r.difference : ''); }).join('\n');
+      return ok({ content: '\uD83D\uDCCA Reconciliations\n\n' + rLines });
+    } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
+  }
+
+  // ── CREATE PROPOSAL (Consulting) ─────────────────────────────────────
+  if (toolId === 'create_proposal' || /\b(proposal|pitch|sow|statement\s+of\s+work|rfp)\b/i.test(lowerMsg)) {
+    const pname = extractBetween(message, [/(?:proposal|pitch|sow)\s+(?:called|named|for)?\s*"([^"]+)"/i, /(?:proposal|pitch|sow)\s+(?:called|named|for)?\s*'([^']+)'/i, /(?:proposal|pitch|sow)\s+(?:called|named|for)?\s+(.+?)(?:\s+(?:for|with|client)|$)/i]);
+    if (pname) {
+      try {
+        const client = await prisma.client.findFirst({ where: { firmId }, orderBy: { name: 'asc' }, select: { id: true, name: true } });
+        const draft = await prisma.draft.create({ data: { firmId, title: 'Proposal: ' + pname, content: '# Proposal: ' + pname + '\n\nGenerated via Counsel Chat\n\n## Executive Summary\n\n## Scope of Work\n\n## Timeline\n\n## Budget', type: 'REPORT' as any, status: 'DRAFT', matterId: null, createdById: userId } });
+        return ok({ content: '\u2728 Proposal created!\n\nTitle: ' + draft.title + '\n\nReady in Drafts. You can:\n\u2022 Edit and refine\n\u2022 Generate sections with AI\n\u2022 Export as PDF', result: { action: 'created', draftId: draft.id }, toolSuggestions: [{ id: 'market_intel', name: 'Market Intel', icon: 'trending-up' }, { id: 'draft_document', name: 'Edit Draft', icon: 'edit' }] });
+      } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
+    }
+    return ok({ content: '\uD83D\uDCC4 Create a proposal!\n\nI can generate:\n\u2022 Client proposals\n\u2022 Pitch decks\n\u2022 Statements of Work (SOW)\n\u2022 RFP responses\n\nSay: Create a proposal called "Digital Transformation Strategy"\n\nOr fill the form:', form: { type: 'create_proposal', fields: [{ name: 'title', label: 'Proposal Title', type: 'text', required: true }, { name: 'client', label: 'Client', type: 'text', required: false }, { name: 'budget', label: 'Budget', type: 'text', required: false }, { name: 'timeline', label: 'Timeline', type: 'text', required: false }] } });
+  }
+
+  // ── MARKET INTEL (Consulting) ────────────────────────────────────────
+  if (toolId === 'market_intel' || /\b(market\s+intel|industry|competitive|competitor|landscape|benchmark)\b/i.test(lowerMsg)) {
+    const q = extractBetween(message, [/(?:about|on|for|research)\s+"([^"]+)"/i, /(?:about|on|for|research)\s+'([^']+)'/i, /(?:about|on|for|research)\s+(.+?)(?:\s*\.|$)/i]) || message;
+    // Create a research brief for market intel
+    const matter = await prisma.matter.findFirst({ where: { firmId }, select: { id: true, name: true }, orderBy: { updatedAt: 'desc' } });
+    try {
+      const brief = await prisma.researchBrief.create({ data: { firmId, matterId: matter?.id || null as any, title: 'Market Intel: ' + q.substring(0, 180), query: q, status: 'PENDING', createdById: userId } });
+      return ok({ content: '\uD83D\uDCCA Market Intel research started!\n\nQuery: ' + q + '\nStatus: ' + brief.status + '\n\nI am analyzing:\n\u2022 Industry trends\n\u2022 Competitive landscape\n\u2022 Market sizing\n\u2022 Key players\n\nResults will appear here and in the Research section.', result: { action: 'created', briefId: brief.id }, toolSuggestions: [{ id: 'create_proposal', name: 'Create Proposal', icon: 'file-text' }, { id: 'draft_document', name: 'Draft Report', icon: 'edit' }] });
+    } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
+  }
+
+  // ── MANAGE ENGAGEMENTS (Consulting/CA) ───────────────────────────────
+  if (toolId === 'manage_engagements' || /\b(engagement|project|assignment|retainer)\b/i.test(lowerMsg)) {
+    try {
+      const engs = await prisma.engagement.findMany({ where: { firmId }, include: { client: { select: { name: true } } }, orderBy: { startDate: 'desc' }, take: 10 });
+      if (engs.length === 0) return ok({ content: 'No engagements yet. Track projects, retainers, and assignments for your clients.\n\nSay: Create an engagement for client X — GST Filing starting 2026-09-01' });
+      const eLines = engs.map(function(e: any) { return '\u2022 ' + e.name + ' — ' + (e.client?.name || 'N/A') + ' | ' + e.type + ' | Start: ' + new Date(e.startDate).toLocaleDateString(); }).join('\n');
+      return ok({ content: '\uD83D\uDCCB Engagements (' + engs.length + ')\n\n' + eLines });
+    } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
+  }
+
   // ── INTEGRATIONS ───────────────────────────────────────────────────
   if (toolId === 'manage_integrations' || /\b(integration|connect|link|sync|mcp)\b/i.test(lowerMsg)) {
     try {
@@ -216,7 +298,7 @@ async function localDispatch(message: string, toolId: string | undefined, firmId
     if (matts.length === 0) return ok({ content: 'No matters yet. Say "create a matter"!', toolSuggestions: [{ id: 'create_matter', name: 'Create Matter', icon: 'briefcase' }] });
     return ok({ content: 'Your Matters (' + matts.length + '):\n\n' + matts.map(m => '\u2022 ' + m.name + ' \u2014 ' + m.clientName + ' [' + m.type + '] (' + m.status + ')').join('\n'), toolSuggestions: [{ id: 'create_matter', name: 'Create Matter', icon: 'briefcase' }] });
   }
-  return ok({ content: '\uD83D\uDC4B I am Counsel AI.\n\nFirm: ' + (firm?.name || 'Unknown') + '\nMatters: ' + (firm?._count.matters || 0) + '\nDocuments: ' + (firm?._count.documents || 0) + '\n\nI can:\n\u2022 Create matters\n\u2022 Upload & search documents\n\u2022 Legal research (creates real briefs)\n\u2022 Draft contracts, NDAs\n\u2022 Schedule meetings\n\u2022 Check compliance\n\u2022 Financial analysis (NPV/IRR)\n\u2022 Manage integrations\n\nJust type what you need!', toolSuggestions: CHAT_TOOLS.map(t => ({ id: t.id, name: t.name, icon: t.icon })) });
+  return ok({ content: '\uD83D\uDC4B I am Counsel AI.\n\nFirm: ' + (firm?.name || 'Unknown') + '\nMatters: ' + (firm?._count.matters || 0) + '\nDocuments: ' + (firm?._count.documents || 0) + '\n\n**For Law Firms:**\n\u2022 Create matters\n\u2022 Upload & search documents\n\u2022 Legal research (creates real briefs)\n\u2022 Draft contracts, NDAs\n\u2022 Check compliance\n\n**For CA Firms:**\n\u2022 Add clients with PAN/GST\n\u2022 Track tax filings & deadlines\n\u2022 Bank reconciliation\n\u2022 Manage engagements\n\n**For Consulting:**\n\u2022 Create proposals & SOWs\n\u2022 Market intel & competitive analysis\n\u2022 Track engagements & projects\n\n**For Everyone:**\n\u2022 Schedule meetings\n\u2022 Financial analysis (NPV/IRR)\n\u2022 Manage integrations\n\nJust type what you need!', toolSuggestions: CHAT_TOOLS.map(t => ({ id: t.id, name: t.name, icon: t.icon })) });
 }
 
 export default router;
