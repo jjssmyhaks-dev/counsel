@@ -768,3 +768,18 @@ model IntegrationHealthStatus {
   @@index([checkedAt])
   @@map("integration_health_status")
 }
+
+model ChatConversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  firmId    String   @map("firm_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String   @default("New conversation")
+  messages  Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([firmId])
+  @@index([userId])
+  @@index([updatedAt])
+  @@map("chat_conversations")
+}
