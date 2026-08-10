@@ -286,16 +286,24 @@ router.get('/health', async (_req: Request, res: Response) => {
     status: process.env.CF_API_TOKEN ? 'configured' : 'unconfigured',
   });
 
-  // All catalog services
+  // Catalog-only services: listed here for OAuth future setup, shown as 'available'
   const catalogServices = [
-    'gmail', 'outlook', 'google-calendar', 'outlook-calendar',
-    'google-drive', 'onedrive', 'sharepoint', 'docusign', 'hellosign',
-    'salesforce', 'clio', 'hubspot', 'slack', 'teams', 'zoom',
-    'quickbooks', 'xero', 'zoho-books', 'imanage', 'netdocuments',
-    'harvest', 'toggl', 'zapier', 'make', 'n8n',
+    { service: 'HubSpot CRM', provider: 'hubspot' },
+    { service: 'Clio Legal CRM', provider: 'clio' },
+    { service: 'Xero Accounting', provider: 'xero' },
+    { service: 'Zoho Books', provider: 'zoho' },
+    { service: 'iManage DMS', provider: 'imanage' },
+    { service: 'NetDocuments DMS', provider: 'netdocs' },
+    { service: 'HelloSign', provider: 'hellosign' },
+    { service: 'SharePoint', provider: 'sharepoint' },
+    { service: 'Harvest Time Tracking', provider: 'harvest' },
+    { service: 'Toggl Track', provider: 'toggl' },
+    { service: 'Zapier', provider: 'zapier' },
+    { service: 'Make (Integromat)', provider: 'make' },
+    { service: 'n8n Workflow', provider: 'n8n' },
   ];
   for (const svc of catalogServices) {
-    results.push({ service: svc, status: 'catalog_only' });
+    results.push({ service: svc.service, provider: svc.provider, status: 'catalog_only' });
   }
 
   res.json({
