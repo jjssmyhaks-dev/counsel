@@ -1,62 +1,169 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 
-interface Client { id: string; name: string; pan: string; gstin: string; lastEngagement: string; status: string; email: string; }
+const serif = 'font-serif';
 
-function extractList(res: any): any[] {
-  if (Array.isArray(res)) return res;
-  if (res?.data?.data) return res.data.data;
-  if (Array.isArray(res?.data)) return res.data;
-  return [];
+interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  pan?: string;
+  gstin?: string;
+  phone?: string;
+  _count?: { engagements: number; filings: number };
 }
 
 export default function CAClientsPage() {
-  const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
-  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [formName, setFormName] = useState('');
+  const [formPan, setFormPan] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    api.get('/clients')
-      .then((res: any) => setClients(extractList(res)))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    loadClients();
   }, []);
 
-  const filtered = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.pan.includes(search.toUpperCase()) || c.gstin.includes(search));
+  async function loadClients() {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.get<Client[]>('/clients');
+      setClients(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load clients');
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  if (loading) return <div className="p-6"><div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-4" /><div className="h-64 bg-gray-200 rounded-lg animate-pulse" /></div>;
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formName.trim()) return;
+    setSubmitting(true);
+    try {
+      const client = await api.post<Client>('/clients', {
+        name: formName,
+        pan: formPan || undefined,
+        email: formEmail || undefined,
+      });
+      setClients(prev => [client, ...prev]);
+      setShowAdd(false);
+      setFormName(''); setFormPan(''); setFormEmail('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to add client');
+    }
+    setSubmitting(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="skeleton h-8 w-48" />
+        {[1, 2, 3].map(i => <div key={i} className="skeleton h-20 rounded-xl" />)}
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4">
-      <div className="flex flex-wrap justify-between items-center gap-3">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your CA firm&apos;s clients, PAN/GST verifications, and engagements</p>
+          <h1 className={`${serif} text-2xl font-bold text-[#0c0a09]`}>Clients</h1>
+          <p className="text-[#717d79] text-sm mt-1">Manage your CA firm's clients</p>
         </div>
-        <button className="px-4 py-2 bg-green-700 text-white text-sm rounded-lg hover:bg-green-800 transition-colors">+ New Client</button>
+        <button
+          onClick={() => setShowAdd(true)}
+          className="px-4 py-2.5 bg-[#0c0a09] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] transition-colors"
+        >
+          + Add Client
+        </button>
       </div>
 
-      <input type="text" placeholder="Search by name, PAN, or GSTIN..." value={search} onChange={e => setSearch(e.target.value)}
-        className="w-full max-w-md p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-200" />
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={loadClients} className="font-medium underline">Retry</button>
+        </div>
+      )}
 
-      <div className="bg-white rounded-lg border shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead><tr className="bg-gray-50 text-left text-gray-600"><th className="p-3">Name</th><th className="p-3">PAN</th><th className="p-3">GSTIN</th><th className="p-3">Last Engagement</th><th className="p-3">Status</th></tr></thead>
-          <tbody className="divide-y">
-            {filtered.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50 cursor-pointer">
-                <td className="p-3 font-medium text-gray-900">{c.name}<br/><span className="text-xs text-gray-400">{c.email}</span></td>
-                <td className="p-3 text-gray-600">{c.pan}</td>
-                <td className="p-3 text-gray-600">{c.gstin}</td>
-                <td className="p-3 text-gray-600">{c.lastEngagement}</td>
-                <td className="p-3"><span className={`text-xs px-2 py-0.5 rounded ${c.status==='Active'?'bg-green-50 text-green-700':'bg-gray-100 text-gray-500'}`}>{c.status}</span></td>
+      {clients.length === 0 && !error ? (
+        <div className="bg-white rounded-2xl border border-black/[0.04] p-12 text-center">
+          <p className="text-[#717d79] text-sm mb-4">No clients yet. Add your first client to get started.</p>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="px-4 py-2.5 bg-[#0c0a09] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] transition-colors"
+          >
+            + Add Client
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-black/[0.04] overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-black/[0.02]">
+              <tr>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#717d79] uppercase tracking-wider">Name</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#717d79] uppercase tracking-wider">PAN</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#717d79] uppercase tracking-wider">Email</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-[#717d79] uppercase tracking-wider">Engagements</th>
               </tr>
-            ))}
-            {filtered.length===0 && <tr><td colSpan={5} className="p-8 text-center text-gray-400">No clients found. Add your first client to get started.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-black/[0.04]">
+              {clients.map(client => (
+                <tr key={client.id} className="hover:bg-black/[0.01]">
+                  <td className="px-4 py-3 text-sm font-medium text-[#0c0a09]">{client.name}</td>
+                  <td className="px-4 py-3 text-sm text-[#717d79]">{client.pan || '—'}</td>
+                  <td className="px-4 py-3 text-sm text-[#717d79]">{client.email || '—'}</td>
+                  <td className="px-4 py-3 text-sm text-[#717d79] text-right">{client._count?.engagements || 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showAdd && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAdd(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-[#0c0a09] mb-4">Add Client</h3>
+            <form onSubmit={handleAdd} className="space-y-3">
+              <input
+                type="text"
+                value={formName}
+                onChange={e => setFormName(e.target.value)}
+                placeholder="Client Name *"
+                className="w-full px-3 py-2 border border-black/[0.08] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
+                required
+              />
+              <input
+                type="text"
+                value={formPan}
+                onChange={e => setFormPan(e.target.value)}
+                placeholder="PAN (optional)"
+                className="w-full px-3 py-2 border border-black/[0.08] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
+              />
+              <input
+                type="email"
+                value={formEmail}
+                onChange={e => setFormEmail(e.target.value)}
+                placeholder="Email (optional)"
+                className="w-full px-3 py-2 border border-black/[0.08] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#15b881]/30"
+              />
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowAdd(false)} className="flex-1 px-4 py-2 border border-black/[0.08] rounded-xl text-sm font-medium text-[#717d79]">Cancel</button>
+                <button type="submit" disabled={submitting} className="flex-1 px-4 py-2 bg-[#0c0a09] text-white rounded-xl text-sm font-medium hover:bg-[#0a8a5f] disabled:opacity-50">
+                  {submitting ? 'Adding...' : 'Add Client'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -261,7 +261,25 @@ router.post(
         select: { id: true, name: true, slug: true, plan: true, firmType: true, onboardingCompleted: true },
       });
 
-      res.status(201).json({ token, user, firm });
+      // Send welcome email (item #1 — email verification)
+      try {
+        const { sendEmail } = await import('../lib/email');
+        const verifyToken = require('crypto').randomBytes(32).toString('hex');
+        const baseUrl = process.env.CORS_ORIGIN || 'http://localhost:3000';
+        await sendEmail({
+          to: email,
+          subject: 'Welcome to Counsel — Verify Your Email',
+          html: '<div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px">' +
+            '<h1 style="color:#0c0a09">Welcome to Counsel!</h1>' +
+            '<p style="color:#717d79;font-size:14px">Hi ' + name + ',</p>' +
+            '<p style="color:#717d79;font-size:14px">Your account has been created. Click below to verify your email address:</p>' +
+            '<a href="' + baseUrl + '/verify-email?token=' + verifyToken + '" style="display:inline-block;padding:12px 28px;background:#0c0a09;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;margin:16px 0">Verify Email</a>' +
+            '<p style="color:#969e9b;font-size:12px;margin-top:24px">If you didn\'t create this account, ignore this email.</p>' +
+            '</div>',
+        });
+      } catch { /* email fails silently — don\'t block registration */ }
+
+      res.status(201).json({ token, user, firm, emailSent: true });
     } catch (err) {
       next(err);
     }

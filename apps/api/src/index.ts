@@ -8,6 +8,7 @@ import { requestIdMiddleware } from './middleware/requestId';
 import { requestLogger, log } from './lib/logger';
 import { tenantMiddleware } from './middleware/tenant';
 import { errorHandler } from './middleware/errorHandler';
+import { metricsMiddleware, metricsEndpoint } from './middleware/metrics';
 import { initWorkOS } from './lib/workos';
 import { initResend } from './lib/email';
 import { initR2 } from './lib/r2-client';
@@ -98,6 +99,10 @@ app.use(express.urlencoded({ extended: true }));
 // ─── Structured JSON logging — request lifecycle ────────────────────────────
 app.use(requestLogger);
 
+// Prometheus metrics (item #18)
+app.use(metricsMiddleware);
+app.get('/api/metrics', metricsEndpoint);
+
 // ─── Request ID — inject tracing ID into every request ──────────────────────
 app.use(requestIdMiddleware);
 
@@ -142,6 +147,7 @@ app.get('/api/health', async (_req, res) => {
 // ─── Rate limiting ─────────────────────────────────────────────────────────
 import rateLimit from 'express-rate-limit';
 
+// Global rate limit
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -151,6 +157,18 @@ app.use(
     message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } },
   }),
 );
+
+// Auth-specific rate limit — stricter to prevent brute-force (item #5)
+const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: 'AUTH_RATE_LIMITED', message: 'Too many auth attempts. Try again in 15 minutes.' } },
+});
+app.use('/api/v1/auth/login', authRateLimit);
+app.use('/api/v1/auth/register', authRateLimit);
+app.use('/api/v1/auth/forgot-password', authRateLimit);
 
 // ─── Public routes (no auth) — landing page stats ───────────────────────────
 app.use('/api/v1/public', publicRoutes);

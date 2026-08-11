@@ -46,9 +46,25 @@ export function errorHandler(
 
   log.error(`Unhandled: ${err.message}`, { requestId, stack: err.stack, path: req.path });
 
+  // Item #3 — Error monitoring hook (Sentry-ready)
+  // When SENTRY_DSN is configured, errors are automatically captured
+  const sentryDsn = process.env.SENTRY_DSN;
+  if (sentryDsn) {
+    try {
+      const Sentry = await import('@sentry/node');
+      Sentry.captureException(err, {
+        tags: { requestId, path: req.path },
+        extra: { method: req.method, url: req.url },
+      });
+    } catch { /* Sentry not installed — skip */ }
+  }
+
+  // In production, don't leak stack traces
+  const isProd = process.env.NODE_ENV === 'production';
   res.status(500).json({
     error: 'Internal server error',
     code: 'INTERNAL_ERROR',
     requestId,
+    ...(isProd ? {} : { stack: err.stack?.split('\n').slice(0, 5) }),
   });
 }
