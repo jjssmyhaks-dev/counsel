@@ -87,6 +87,7 @@ enum MeetingSource {
   TEAMS
   MEET
   UPLOAD
+  MANUAL
 }
 
 enum MeetingStatus {
@@ -227,8 +228,28 @@ model Firm {
   complianceItems ComplianceItem[]
   reconciliations Reconciliation[]
   dscKeys         DSCKey[]
+  subscriptions   Subscription[]
 
   @@map("firms")
+}
+
+model Subscription {
+  id                   String    @id @default(uuid()) @db.Uuid
+  firmId               String    @unique @map("firm_id") @db.Uuid
+  stripeCustomerId     String?   @map("stripe_customer_id")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+  status               String    @default("NONE")
+  plan                 String    @default("FREE")
+  seatCount            Int       @default(5) @map("seat_count")
+  currentPeriodStart   DateTime? @map("current_period_start")
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@index([firmId])
+  @@map("subscriptions")
 }
 
 model User {
@@ -239,6 +260,7 @@ model User {
   passwordHash String?  @map("password_hash")
   role         UserRole @default(READONLY)
   avatarUrl    String?  @map("avatar_url")
+  lastLoginAt  DateTime? @map("last_login_at")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -361,12 +383,13 @@ model DocumentChunk {
 }
 
 model Analysis {
-  id          String         @id @default(uuid()) @db.Uuid
+  id           String         @id @default(uuid()) @db.Uuid
   documentId  String         @map("document_id") @db.Uuid
   firmId      String         @map("firm_id") @db.Uuid
   type        AnalysisType
   status      AnalysisStatus @default(PENDING)
   result      Json?
+  errorMessage String?        @map("error_message")
   modelUsed   String?        @map("model_used")
   createdAt   DateTime       @default(now()) @map("created_at")
   completedAt DateTime?      @map("completed_at")
@@ -502,7 +525,7 @@ model KbQuery {
 model AuditLog {
   id           String   @id @default(uuid()) @db.Uuid
   firmId       String   @map("firm_id") @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
   action       String
   resourceType String   @map("resource_type")
   resourceId   String   @map("resource_id")
@@ -512,7 +535,7 @@ model AuditLog {
   createdAt    DateTime @default(now()) @map("created_at")
 
   firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([firmId])
   @@index([userId])

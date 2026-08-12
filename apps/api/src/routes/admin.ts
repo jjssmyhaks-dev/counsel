@@ -31,9 +31,9 @@ router.get('/metrics', async (req: Request, res: Response, next: NextFunction) =
     // Total storage (approximate from document sizes)
     const docs = await prisma.document.findMany({
       where: { firmId },
-      select: { size: true },
+      select: { sizeBytes: true },
     });
-    const totalStorageBytes = docs.reduce((sum, d) => sum + (d.size || 0), 0);
+    const totalStorageBytes = docs.reduce((sum, d) => sum + (d.sizeBytes || 0), 0);
 
     res.json({
       users: { total: userCount },

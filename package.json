@@ -26,6 +26,11 @@
     "concurrently": "^9.1.0",
     "typescript": "^5.7.0"
   },
+  "overrides": {
+    "@types/express": "4.17.25",
+    "@types/express-serve-static-core": "4.19.9",
+    "@types/express-serve-static": "1.15.7"
+  },
   "dependencies": {
     "ioredis": "^5.11.1",
     "stripe": "^22.3.2",

@@ -2,152 +2,173 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@counsel/database';
 import { z } from 'zod';
 import { validate } from '../middleware/validate';
-import { auditAction } from '../middleware/audit';
 import { requireRole } from '../middleware/rbac';
 import { NotFoundError } from '../lib/errors';
 
 const router = Router();
 
-// ─── GET / ─── List all playbook rules ──────────────────────────────────────
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function parseRules(rules: unknown): unknown[] {
+  if (typeof rules === 'string') {
+    try { return JSON.parse(rules); } catch { return []; }
+  }
+  return Array.isArray(rules) ? rules : [];
+}
+
+async function getFirmPlaybook(firmId: string) {
+  return prisma.playbook.findFirst({
+    where: { firmId },
+    orderBy: { updatedAt: 'desc' },
+  });
+}
+
+// ─── GET /rules ─── Get the firm's playbook rules array ─────────────────────
+// Contract used by the web Playbook Configuration page:
+//   GET  /playbook/rules  → PlaybookRule[]
+//   PATCH /playbook/rules { rules } → { rules }
+router.get('/rules', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const rules = await prisma.playbookRule.findMany({
-      where: { firmId: req.firmId },
-      orderBy: [{ category: 'asc' }, { riskLevel: 'desc' }, { ruleName: 'asc' }],
-    });
-    res.json({ data: rules, total: rules.length });
+    const playbook = await getFirmPlaybook(req.firmId!);
+    res.json(parseRules(playbook?.rules));
   } catch (err) {
     next(err);
   }
 });
 
-// ─── POST / ─── Create a rule ───────────────────────────────────────────────
-const createRuleSchema = z.object({
-  ruleName: z.string().min(1, 'Rule name is required'),
+const saveRulesSchema = z.object({
+  rules: z.array(z.record(z.any())).optional().default([]),
+});
+
+router.patch(
+  '/rules',
+  requireRole('PARTNER'),
+  validate('body', saveRulesSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const rules = req.body.rules || [];
+      const existing = await getFirmPlaybook(req.firmId!);
+
+      if (existing) {
+        await prisma.playbook.update({
+          where: { id: existing.id },
+          data: { rules: rules as any },
+        });
+      } else {
+        await prisma.playbook.create({
+          data: {
+            firmId: req.firmId!,
+            name: 'Firm Playbook',
+            description: 'Firm-wide risk rules that drive AI document analysis',
+            rules: rules as any,
+          },
+        });
+      }
+
+      res.json({ rules });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── GET / ─── List firm playbooks ──────────────────────────────────────────
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const playbooks = await prisma.playbook.findMany({
+      where: { firmId: req.firmId },
+      orderBy: { updatedAt: 'desc' },
+    });
+    res.json({ data: playbooks, total: playbooks.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST / ─── Create a playbook ───────────────────────────────────────────
+const createPlaybookSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  category: z.string().min(1, 'Category is required'),
-  checkType: z.enum(['REQUIRE', 'RANGE', 'PATTERN', 'PROHIBIT']),
-  targetField: z.string().optional(),
-  requiredValue: z.string().optional(),
-  acceptableRange: z.string().optional(),
-  riskLevel: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
-  remediation: z.string().optional(),
-  enabled: z.boolean().default(true),
+  rules: z.array(z.record(z.any())).optional().default([]),
 });
 
 router.post(
   '/',
   requireRole('PARTNER'),
-  validate('body', createRuleSchema),
-  auditAction('Playbook', 'PLAYBOOK_RULE_CREATED'),
+  validate('body', createPlaybookSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const rule = await prisma.playbookRule.create({
+      const playbook = await prisma.playbook.create({
         data: {
           firmId: req.firmId!,
-          ...req.body,
+          name: req.body.name,
+          description: req.body.description,
+          rules: req.body.rules || [],
         },
       });
-      (res as any).locals = { auditDetails: { ruleName: rule.ruleName, category: rule.category } };
-      res.status(201).json(rule);
+      res.status(201).json(playbook);
     } catch (err) {
       next(err);
     }
   },
 );
 
-// ─── GET /:id ─── Get a single rule ─────────────────────────────────────────
+// ─── GET /:id ─── Get a single playbook ─────────────────────────────────────
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const rule = await prisma.playbookRule.findFirst({
+    const playbook = await prisma.playbook.findFirst({
       where: { id: req.params.id, firmId: req.firmId },
     });
-    if (!rule) throw new NotFoundError('Playbook rule');
-    res.json(rule);
+    if (!playbook) throw new NotFoundError('Playbook');
+    res.json(playbook);
   } catch (err) {
     next(err);
   }
 });
 
-// ─── PATCH /:id ─── Update a rule ───────────────────────────────────────────
-const updateRuleSchema = z.object({
-  ruleName: z.string().min(1).optional(),
+// ─── PATCH /:id ─── Update a playbook ───────────────────────────────────────
+const updatePlaybookSchema = z.object({
+  name: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
-  category: z.string().optional(),
-  checkType: z.enum(['REQUIRE', 'RANGE', 'PATTERN', 'PROHIBIT']).optional(),
-  targetField: z.string().optional().nullable(),
-  requiredValue: z.string().optional().nullable(),
-  acceptableRange: z.string().optional().nullable(),
-  riskLevel: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
-  remediation: z.string().optional().nullable(),
-  enabled: z.boolean().optional(),
+  rules: z.array(z.record(z.any())).optional(),
 });
 
 router.patch(
   '/:id',
   requireRole('PARTNER'),
-  validate('body', updateRuleSchema),
-  auditAction('Playbook', 'PLAYBOOK_RULE_UPDATED'),
+  validate('body', updatePlaybookSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const existing = await prisma.playbookRule.findFirst({
+      const existing = await prisma.playbook.findFirst({
         where: { id: req.params.id, firmId: req.firmId },
       });
-      if (!existing) throw new NotFoundError('Playbook rule');
+      if (!existing) throw new NotFoundError('Playbook');
 
-      const rule = await prisma.playbookRule.update({
+      const playbook = await prisma.playbook.update({
         where: { id: req.params.id },
         data: req.body,
       });
 
-      res.json(rule);
+      res.json(playbook);
     } catch (err) {
       next(err);
     }
   },
 );
 
-// ─── DELETE /:id ─── Delete a rule ──────────────────────────────────────────
+// ─── DELETE /:id ─── Delete a playbook ──────────────────────────────────────
 router.delete(
   '/:id',
   requireRole('PARTNER'),
-  auditAction('Playbook', 'PLAYBOOK_RULE_DELETED'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const rule = await prisma.playbookRule.findFirst({
+      const existing = await prisma.playbook.findFirst({
         where: { id: req.params.id, firmId: req.firmId },
       });
-      if (!rule) throw new NotFoundError('Playbook rule');
+      if (!existing) throw new NotFoundError('Playbook');
 
-      await prisma.playbookRule.delete({ where: { id: req.params.id } });
-      (res as any).locals = { auditDetails: { ruleName: rule.ruleName } };
-      res.json({ message: 'Playbook rule deleted', id: req.params.id });
-    } catch (err) {
-      next(err);
-    }
-  },
-);
-
-// ─── POST /toggle/:id ─── Quick enable/disable toggle ───────────────────────
-router.post(
-  '/toggle/:id',
-  requireRole('PARTNER'),
-  auditAction('Playbook', 'PLAYBOOK_RULE_TOGGLED'),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const existing = await prisma.playbookRule.findFirst({
-        where: { id: req.params.id, firmId: req.firmId },
-        select: { id: true, enabled: true, ruleName: true },
-      });
-      if (!existing) throw new NotFoundError('Playbook rule');
-
-      const rule = await prisma.playbookRule.update({
-        where: { id: req.params.id },
-        data: { enabled: !existing.enabled },
-      });
-
-      (res as any).locals = { auditDetails: { ruleName: rule.ruleName, enabled: rule.enabled } };
-      res.json(rule);
+      await prisma.playbook.delete({ where: { id: req.params.id } });
+      res.json({ message: 'Playbook deleted', id: req.params.id });
     } catch (err) {
       next(err);
     }

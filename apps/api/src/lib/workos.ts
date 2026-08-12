@@ -103,13 +103,13 @@ export async function getAuthorizationUrl(
 
   if (opts?.state) params.state = opts.state;
 
-  const result = await workos.sso.getAuthorizationUrl(params);
-  return result.url;
+  // WorkOS v10: getAuthorizationUrl returns the URL string directly
+  return workos.sso.getAuthorizationUrl(params as any);
 }
 
 export async function authenticateWithCode(code: string): Promise<WorkOSProfile> {
   const workos = getWorkOS();
-  const { profile } = await workos.sso.authenticate({
+  const { profile } = await workos.sso.getProfileAndToken({
     clientId: getWorkOSClientId(),
     code,
   });

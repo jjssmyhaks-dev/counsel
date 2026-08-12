@@ -110,6 +110,10 @@ async function localDispatch(message: string, toolId: string | undefined, firmId
   const ts = new Date().toISOString();
   const ok = function(r: any) { return { id, role: 'assistant' as const, ...r, timestamp: ts }; };
 
+  if (!userId) {
+    return ok({ content: '⚠️ Session error — your user context is missing. Please re-login.' });
+  }
+
   // ── CREATE MATTER ─────────────────────────────────────────────────
   if (toolId === 'create_matter' || /\b(create|new|open)\s+(a\s+)?(matter|case|file)\b/i.test(lowerMsg)) {
     const name = extractBetween(message, [/matter\s+(?:called|named|titled?)?\s*"([^"]+)"/i, /matter\s+(?:called|named)\s+'([^']+)'/i, /(?:create|new|open)\s+(?:a\s+)?matter\s+(?:called|named|for\s+)?(.+?)(?:\s+(?:for|with|client|about)|$)/i]);
@@ -169,7 +173,7 @@ async function localDispatch(message: string, toolId: string | undefined, firmId
     if (mtitle && mdate) {
       try {
         const meetingDate = /^\d{4}-\d{2}-\d{2}/.test(mdate) ? new Date(mdate) : new Date(Date.now() + 86400000);
-        const meeting = await prisma.meeting.create({ data: { firmId, title: mtitle, description: 'Scheduled via Counsel Chat', meetingDate: meetingDate, source: 'MANUAL', durationMinutes: 60, createdById: userId } });
+        const meeting = await prisma.meeting.create({ data: { firmId, title: mtitle, meetingDate: meetingDate, source: 'MANUAL' } });
         return ok({ content: '\uD83D\uDCC5 Meeting scheduled!\n\nTitle: ' + meeting.title + '\nWhen: ' + meeting.meetingDate.toLocaleString() + '\nDuration: 60 min', result: { action: 'created', meetingId: meeting.id }, toolSuggestions: [{ id: 'draft_document', name: 'Prepare Agenda', icon: 'edit' }] });
       } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
     }
@@ -265,8 +269,11 @@ async function localDispatch(message: string, toolId: string | undefined, firmId
     const q = extractBetween(message, [/(?:about|on|for|research)\s+"([^"]+)"/i, /(?:about|on|for|research)\s+'([^']+)'/i, /(?:about|on|for|research)\s+(.+?)(?:\s*\.|$)/i]) || message;
     // Create a research brief for market intel
     const matter = await prisma.matter.findFirst({ where: { firmId }, select: { id: true, name: true }, orderBy: { updatedAt: 'desc' } });
+    if (!matter) {
+      return ok({ content: 'Create a matter first before starting market intelligence research.', toolSuggestions: [{ id: 'create_matter', name: 'Create Matter', icon: 'briefcase' }] });
+    }
     try {
-      const brief = await prisma.researchBrief.create({ data: { firmId, matterId: matter?.id || null as any, title: 'Market Intel: ' + q.substring(0, 180), query: q, status: 'PENDING', createdById: userId } });
+      const brief = await prisma.researchBrief.create({ data: { firmId, matterId: matter.id, title: 'Market Intel: ' + q.substring(0, 180), query: q, status: 'PENDING', createdById: userId } });
       return ok({ content: '\uD83D\uDCCA Market Intel research started!\n\nQuery: ' + q + '\nStatus: ' + brief.status + '\n\nI am analyzing:\n\u2022 Industry trends\n\u2022 Competitive landscape\n\u2022 Market sizing\n\u2022 Key players\n\nResults will appear here and in the Research section.', result: { action: 'created', briefId: brief.id }, toolSuggestions: [{ id: 'create_proposal', name: 'Create Proposal', icon: 'file-text' }, { id: 'draft_document', name: 'Draft Report', icon: 'edit' }] });
     } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
   }
@@ -284,10 +291,10 @@ async function localDispatch(message: string, toolId: string | undefined, firmId
   // ── INTEGRATIONS ───────────────────────────────────────────────────
   if (toolId === 'manage_integrations' || /\b(integration|connect|link|sync|mcp)\b/i.test(lowerMsg)) {
     try {
-      const ints = await prisma.integrationHealth.findMany({ select: { service: true, status: true, errorMsg: true, latencyMs: true } });
+      const ints = await prisma.integrationHealthStatus.findMany({ select: { service: true, status: true, errorMsg: true, latencyMs: true } });
       if (ints.length === 0) return ok({ content: '\uD83D\uDD0C Integrations\n\nCounsel supports CRM, billing, DMS, e-sign, and automation integrations. Go to Feature Connector to set them up.' });
-      const okc = ints.filter(i => i.status === 'healthy').length;
-      return ok({ content: '\uD83D\uDD0C Integration Status\n\n' + okc + '/' + ints.length + ' healthy\n\n' + ints.map(i => '\u2022 ' + i.service + ' \u2014 ' + (i.status === 'healthy' ? '\u2705' : '\u274C') + ' ' + (i.latencyMs ? i.latencyMs + 'ms' : '') + ' ' + (i.errorMsg || '')).join('\n') });
+      const okc = ints.filter(i => i.status === 'healthy' || i.status === 'connected' || i.status === 'configured').length;
+      return ok({ content: '\uD83D\uDD0C Integration Status\n\n' + okc + '/' + ints.length + ' healthy\n\n' + ints.map(i => '\u2022 ' + i.service + ' \u2014 ' + (i.status === 'healthy' || i.status === 'connected' || i.status === 'configured' ? '\u2705' : '\u274C') + ' ' + (i.latencyMs ? i.latencyMs + 'ms' : '') + ' ' + (i.errorMsg || '')).join('\n') });
     } catch { return ok({ content: '\uD83D\uDD0C Integrations\n\nCounsel supports CRM, billing, DMS, e-sign, and automation. Go to Feature Connector to set them up.' }); }
   }
 

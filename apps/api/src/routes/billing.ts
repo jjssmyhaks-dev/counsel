@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Stripe billing integration for Counsel platform subscriptions.
  *
  * Handles: checkout session creation, webhook verification, subscription
- * lifecycle (created → active → past_due → canceled), and seat count sync.
+ * lifecycle (created â†’ active â†’ past_due â†’ canceled), and seat count sync.
  *
  * Environment: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID
  */
@@ -12,13 +12,12 @@ import { Request, Response, NextFunction, Router } from 'express';
 import { requireRole } from '../middleware/rbac';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2025-06-30.basil',
   typescript: true,
 });
 
 const router = Router();
 
-// ─── POST /checkout ─── Create Stripe Checkout Session ──────────────────────
+// â”€â”€â”€ POST /checkout â”€â”€â”€ Create Stripe Checkout Session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post(
   '/checkout',
   requireRole('PARTNER'),
@@ -33,7 +32,7 @@ router.post(
 
       const firm = await prisma.firm.findUnique({
         where: { id: req.firmId },
-        select: { id: true, name: true, slug: true },
+        select: { id: true, name: true, slug: true, seatCount: true },
       });
 
       if (!user || !firm) {
@@ -111,8 +110,8 @@ router.post(
   },
 );
 
-// ─── Webhook ─── Handle Stripe webhook events ────────────────────────────────
-// POST /api/v1/billing/webhook — called by Stripe, no auth required
+// â”€â”€â”€ Webhook â”€â”€â”€ Handle Stripe webhook events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// POST /api/v1/billing/webhook â€” called by Stripe, no auth required
 const webhookRouter = Router();
 
 webhookRouter.post('/webhook', async (req: Request, res: Response) => {
@@ -127,7 +126,7 @@ webhookRouter.post('/webhook', async (req: Request, res: Response) => {
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
-      req.body, // raw body — express.raw() needed in production
+      req.body, // raw body â€” express.raw() needed in production
       sig,
       secret,
     );
@@ -169,9 +168,8 @@ webhookRouter.post('/webhook', async (req: Request, res: Response) => {
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subId = typeof invoice.subscription === 'string'
-          ? invoice.subscription
-          : invoice.subscription?.id;
+        const invSub = (invoice as any).subscription;
+        const subId = typeof invSub === 'string' ? invSub : invSub?.id;
 
         if (subId) {
           await prisma.subscription.updateMany({
@@ -188,9 +186,8 @@ webhookRouter.post('/webhook', async (req: Request, res: Response) => {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subId = typeof invoice.subscription === 'string'
-          ? invoice.subscription
-          : invoice.subscription?.id;
+        const invSub = (invoice as any).subscription;
+        const subId = typeof invSub === 'string' ? invSub : invSub?.id;
 
         if (subId) {
           await prisma.subscription.updateMany({
@@ -234,7 +231,7 @@ webhookRouter.post('/webhook', async (req: Request, res: Response) => {
   }
 });
 
-// ─── GET /portal ─── Create Stripe Customer Portal session ──────────────────
+// â”€â”€â”€ GET /portal â”€â”€â”€ Create Stripe Customer Portal session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/portal', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sub = await prisma.subscription.findFirst({
@@ -258,7 +255,7 @@ router.get('/portal', async (req: Request, res: Response, next: NextFunction) =>
   }
 });
 
-// ─── GET / ─── Get current subscription status ──────────────────────────────
+// â”€â”€â”€ GET / â”€â”€â”€ Get current subscription status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sub = await prisma.subscription.findFirst({

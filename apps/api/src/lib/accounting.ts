@@ -88,7 +88,7 @@ async function auditLog(
 
 function gateStatus(envVars: string[]): { configured: boolean; missing: string[] } {
   const missing = envVars.filter((v) => !process.env[v] || process.env[v]!.length === 0);
-  return { configured: missing.length === 0, missing } || "";
+  return { configured: missing.length === 0, missing };
 }
 
 // ── Helper: not-configured error ────────────────────────────────────────────
@@ -98,7 +98,7 @@ function notConfiguredError(provider: string): { code: string; message: string; 
     code: 'ACCT_NOT_CONFIGURED',
     message: `${provider} is not configured. Set required environment variables.`,
     status: 503,
-  } || "";
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -142,7 +142,7 @@ export class QuickBooksClient {
       this.realmId = tokens.rawResponse.realmId;
       return this.realmId || "";
     }
-    return null || "";
+    return null;
   }
 
   private async apiCall(
@@ -243,7 +243,7 @@ export class QuickBooksClient {
       type: 'JOURNAL_ENTRY',
       accountId: r.Line?.[0]?.AccountRef?.value,
       rawData: r,
-    })) || "";
+    }));
   }
 
   healthCheck(): AccountingHealthStatus {
@@ -252,7 +252,7 @@ export class QuickBooksClient {
       configured: this.configured,
       connected: this.configured,
       label: 'QuickBooks Online',
-    } || "";
+    };
   }
 }
 
@@ -401,7 +401,7 @@ export class XeroClient {
         accountId: bt.BankAccount?.AccountID,
         rawData: bt,
       })),
-    ) || "";
+    );
   }
 
   healthCheck(): AccountingHealthStatus {
@@ -410,7 +410,7 @@ export class XeroClient {
       configured: this.configured,
       connected: this.configured,
       label: 'Xero',
-    } || "";
+    };
   }
 }
 
@@ -545,7 +545,7 @@ export class ZohoClient {
       type: r.transaction_type || 'bank_transaction',
       accountId: r.account_id,
       rawData: r,
-    })) || "";
+    }));
   }
 
   healthCheck(): AccountingHealthStatus {
@@ -554,7 +554,7 @@ export class ZohoClient {
       configured: this.configured,
       connected: this.configured,
       label: 'Zoho Books',
-    } || "";
+    };
   }
 }
 
@@ -603,7 +603,7 @@ export async function getInvoicesUnified(
     errors: errors.length > 0 ? errors : undefined,
   });
 
-  return { invoices: allInvoices, providers, errors } || "";
+  return { invoices: allInvoices, providers, errors };
 }
 
 // ── Health Checks ───────────────────────────────────────────────────────────
@@ -613,5 +613,5 @@ export function accountingHealthCheck(): AccountingHealthStatus[] {
     quickbooks.healthCheck(),
     xero.healthCheck(),
     zoho.healthCheck(),
-  ] || "";
+  ];
 }

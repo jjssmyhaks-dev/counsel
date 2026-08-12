@@ -5,7 +5,7 @@
 [![CrewAI](https://img.shields.io/badge/CrewAI-Multi--Agent-green)](https://crewai.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17+pgvector-blue?logo=postgresql)](https://www.postgresql.org/)
 [![Cloudflare Workers AI](https://img.shields.io/badge/Cloudflare-Workers_AI-orange?logo=cloudflare)](https://developers.cloudflare.com/workers-ai/)
-[![Status](https://img.shields.io/badge/status-production--ready-brightgreen)]()
+[![Status](https://img.shields.io/badge/status-launch--ready-yellow)]()
 [![Deploy](https://img.shields.io/badge/deploy-Oracle_Cloud%2BCloudflare-%2300C4B3)](docs/ORACLE-DEPLOY.md)
 [![Cost](https://img.shields.io/badge/running_cost-%240%2Fmonth-brightgreen)]()
 
@@ -33,8 +33,8 @@ An AI workforce platform that deploys 25+ specialized agents across legal, consu
 | **Audit Automation** | SA 315 risk assessment, SA 530 sampling, SA 700 report compilation | — | — | ✅ |
 | **Income Tax** | TDS reconciliation (26AS), ITR data aggregation, notice response drafting | — | — | ✅ |
 | **ROC Compliance** | MCA filing deadline tracking, form data compilation, unified compliance calendar | — | — | ✅ |
-| **Chat Copilot** | AI chat with full firm knowledge base access | ✅ | ✅ | ✅ |
-| **Integrations** | 25 MCP servers: Gmail, Calendar, DocuSign, Stripe, Salesforce, Slack, CourtListener, GST, Tally & more | ✅ | ✅ | ✅ |
+| **Unified AI Chat** | Primary product UX — real CRUD via 15 chat tools for legal, CA & consulting | ✅ | ✅ | ✅ |
+| **Integrations** | 17 MCP servers: Postgres, Cloudflare AI, Docs/OCR, Email, Calendar, Storage, eSign, Billing, CRM, Court, Conflict, Workflow, Time & more (ports 5001–5017) | ✅ | ✅ | ✅ |
 | **Multi-Tenancy** | PostgreSQL RLS, per-firm document indexes, isolated playbooks | ✅ | ✅ | ✅ |
 | **Audit Trail** | Immutable append-only logs (database + JSONL), every AI action tracked | ✅ | ✅ | ✅ |
 | **SSO** | WorkOS SAML/OIDC enterprise single sign-on | ✅ | ✅ | ✅ |
@@ -55,8 +55,8 @@ An AI workforce platform that deploys 25+ specialized agents across legal, consu
 │ Next.js 15 (44 pages)│    │ (secure bridge, no open ports)  │
 │ • Landing, Auth,     │    │                                 │
 │   Dashboard, CA      │    │ api.counsel.ai → localhost:3001 │
-│ • Chat Copilot,      │    │ ai.counsel.ai  → localhost:8000 │
-│   Settings, Admin    │    │                                 │
+│ • Chat, Settings,    │    │ ai.counsel.ai  → localhost:8000 │
+│   Admin, Connector   │    │                                 │
 │ • Unlimited bandwidth │    │                                 │
 │ • 330+ edge locations │    │                                 │
 │ • $0/month forever   │    │                                 │
@@ -197,14 +197,15 @@ The seed script provisions a demo firm with sample documents, matters, and users
 
 | Metric | Value |
 |--------|-------|
-| **Status** | 🟢 Production-ready |
-| **AI Agents** | 31 operational across 9 crews |
-| **MCP Servers** | 17 deployed (78 tools, all verified) |
-| **Dynamic Pages** | 49 — landing, auth, dashboard, CA, admin, integrations, Feature Connector |
-| **Database Models** | 16 (Prisma) |
-| **API Endpoints** | 80+ REST routes + health check script |
+| **Status** | 🟡 Launch-ready codebase — see launch checklist below |
+| **AI Agents** | 31 operational across 13 crews (legal, consulting, CA) |
+| **MCP Servers** | 17 deployed (ports 5001–5017) |
+| **Dynamic Pages** | 49 — landing, auth, dashboard, CA, admin, Connector |
+| **Database Models** | 18 (Prisma) — incl. ChatConversation, Subscription, IntegrationHealthStatus |
+| **API Endpoints** | 80+ REST routes + health check + Prometheus `/api/metrics` |
+| **Test Suite** | 80 tests / 10 files (Vitest) — auth, chat, matters, documents, jwt, tenant, audit, errors, validate, integrations |
+| **TypeScript Errors** | 0 — verified on both API and Web (`tsc --noEmit`) |
 | **Production Cost** | $0/month (Oracle Always Free + Cloudflare Free) |
-| **TypeScript Errors** | 0 — full project compiles clean |
 
 ---
 
@@ -231,37 +232,10 @@ counsel-platform/
 │   ├── ai/                    # Python FastAPI AI Service (port 8000)
 │   │   └── src/
 │   │       ├── agents/         # 31 CrewAI agents (definitions, crews, tasks, MCP bridge)
+│   │       ├── mcp/            # 17 MCP servers (ports 5001–5017)
 │   │       ├── orchestrator/   # Pipeline orchestration + audit trail
 │   │       ├── rag/            # pgvector retriever (cosine similarity)
 │   │       └── routes/         # FastAPI route handlers
-│   └── mcp/                   # 25 Model Context Protocol servers (ports 3100-3124)
-│       ├── registry/           # :3100 Service discovery
-│       ├── postgres-mcp/       # :3101 Database tools
-│       ├── cloudflare-mcp/     # :3102 AI + embeddings
-│       ├── document-mcp/       # :3103 pgvector RAG
-│       ├── email-mcp/          # :3104 Gmail/Outlook
-│       ├── calendar-mcp/       # :3105 Google/Outlook Calendar
-│       ├── storage-mcp/        # :3106 S3/GCS/SharePoint
-│       ├── esign-mcp/          # :3107 DocuSign/HelloSign
-│       ├── billing-mcp/        # :3108 Stripe
-│       ├── court-mcp/          # :3109 CourtListener
-│       ├── communication-mcp/  # :3110 Slack/Teams
-│       ├── crm-mcp/            # :3111 Salesforce/Clio/HubSpot
-│       ├── workflow-mcp/       # :3112 Zapier/n8n/Make
-│       ├── ocr-mcp/            # :3113 AWS Textract/Azure DocIntel
-│       ├── translation-mcp/    # :3114 DeepL/Azure Translator
-│       ├── video-mcp/          # :3115 Zoom/Teams Meetings
-│       ├── time-mcp/           # :3116 Harvest/Toggl
-│       ├── conflict-mcp/       # :3117 Conflict of Interest
-│       ├── gsp-mcp/            # :3118 GST Suvidha Provider
-│       ├── mca-mcp/            # :3119 MCA21/ROC
-│       ├── udin-mcp/           # :3120 UDIN (ICAI)
-│       ├── tally-mcp/          # :3121 Tally connector
-│       ├── eri-mcp/            # :3122 Income Tax ERI
-│       ├── books-mcp/          # :3123 Zoho Books/QuickBooks
-│       ├── whatsapp-mcp/       # :3124 WhatsApp Business
-│       ├── prometheus/         # Monitoring config + 6 alert rules
-│       └── grafana/            # 25 dashboards (auto-provisioned)
 ├── extensions/
 │   └── chrome/                # Chrome Manifest V3 Gmail extension
 ├── nginx/                     # Production reverse proxy + SSL
@@ -393,22 +367,17 @@ Pings every service (API, AI, Web, Auth, Public, Integration), prints a status t
 ## 🧪 Testing
 
 ```bash
-# Auth flow
+# Full API test suite (Vitest) — 80 tests / 10 files
+npm test
+
+# Individual integration scripts
 node scripts/test-auth.cjs
-
-# Standalone AI agent test (all agents)
 node scripts/test-ai-agents.cjs
-
-# Crew 1: Document Intelligence (3-agent pipeline)
 node scripts/test-c1-only.cjs
-
-# Crews 2-4 + Full Pipeline
 node scripts/test-c2-c4-pipeline.cjs
-
-# All links + theme verification
 node scripts/test-links.cjs
 
-# Lint + typecheck
+# Lint + typecheck (both API and Web must report 0 errors)
 npm run lint
 npm run typecheck
 ```
@@ -432,6 +401,9 @@ npm run typecheck
 | [Oracle Cloud Deploy](docs/ORACLE-DEPLOY.md) | Step-by-step Oracle VM provisioning ($0/month production) |
 | [Cloudflare Pages Deploy](docs/CLOUDFLARE-PAGES.md) | Frontend deploy to Cloudflare Pages (free, unlimited) |
 | [Production Runbook](docs/RUNBOOK.md) | Startup, stopping, logs, health checks, failure modes, rollback |
+| [Database Backup & Restore](docs/DATABASE-RESTORE.md) | Neon PITR, pg_dump, disaster recovery procedures |
+| [Security Policy](SECURITY.md) | Vulnerability reporting, security measures, disclosure policy |
+| [Integrations Runbook](docs/INTEGRATIONS-RUNBOOK.md) | MCP server operations and integration health |
 | [Vercel Deploy](apps/web/VERCEL_DEPLOY.md) | Alternative: deploy frontend to Vercel |
 | [User Journey](docs/USER-JOURNEY.md) | Complete 10-step user flow, integration setup guide, agent architecture, MCP server inventory |
 | [Code Map](CODE_MAP.md) | Detailed file-by-file project map |
@@ -440,6 +412,22 @@ npm run typecheck
 | [ADR: Audit Trail Decorator](docs/adr/002-audit-trail-decorator.md) | Decision record for audit trail architecture |
 | [API README](apps/api/README.md) | API-specific documentation |
 | [Nginx README](nginx/README.md) | Reverse proxy configuration |
+
+---
+
+## 🚦 Launch Checklist (what's left before production)
+
+The codebase is launch-ready — typechecks clean (0 errors, API + Web) and the full test suite passes (80/80). The following are **operations tasks** that require your accounts/keys, not code changes:
+
+1. **Stripe billing keys** — set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`. Billing routes now work against the real `Subscription` model but need live keys + the webhook route exposed with `express.raw()`.
+2. **Resend email** — set `RESEND_API_KEY`; verify-email emails are sent on registration (graceful mock fallback today). Add a `/verify-email` landing page on the web app.
+3. **Sentry monitoring** — set `SENTRY_DSN` to enable the error-capture hook (already wired in the error handler).
+4. **WorkOS SSO** — set `WORKOS_API_KEY` + `WORKOS_CLIENT_ID`; SSO routes are implemented against WorkOS v10 (`getAuthorizationUrl`, `getProfileAndToken`) but untested against a live org.
+5. **Cloudflare R2** — set `R2_*` credentials for production document storage (dev falls back to local disk).
+6. **Oracle deploy** — run `scripts/oracle-setup.sh` + Cloudflare Tunnel per [docs/ORACLE-DEPLOY.md](docs/ORACLE-DEPLOY.md).
+7. **Monitoring** — wire `/api/metrics` (Prometheus) into Grafana; add uptime alerts.
+8. **Chat streaming (SSE)** — the chat API is request/response; streamed tokens need an SSE endpoint (planned enhancement).
+9. **Email verification flow** — `verify-email` endpoint + resend UX on the web app (API sends the email already).
 
 ---
 

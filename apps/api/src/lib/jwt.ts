@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken';
+﻿import jwt from 'jsonwebtoken';
 
-const SECRET = process.env.JWT_SECRET;
+const SECRET: string = process.env.JWT_SECRET || '';
 if (!SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }
@@ -16,12 +16,21 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload, expiresIn?: string): string {
-  return jwt.sign(payload, SECRET, { expiresIn: expiresIn || '24h' });
+  return jwt.sign(payload, SECRET, { expiresIn: (expiresIn || '24h') as jwt.SignOptions['expiresIn'] });
 }
 
 export function verifyToken(token: string, allowExpired = false): TokenPayload | null {
   try {
-    return jwt.verify(token, SECRET, allowExpired ? { ignoreExpiration: true } : {}) as TokenPayload;
+    const opts: jwt.VerifyOptions = allowExpired ? { ignoreExpiration: true } : {};
+    const decoded = jwt.verify(token, SECRET, opts) as jwt.JwtPayload;
+    if (typeof decoded === 'string' || !decoded.id) return null;
+    return {
+      id: decoded.id as string,
+      email: decoded.email as string,
+      name: decoded.name as string,
+      firmId: decoded.firmId as string,
+      role: decoded.role as string,
+    };
   } catch {
     return null;
   }

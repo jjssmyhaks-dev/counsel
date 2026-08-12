@@ -32,13 +32,14 @@ export async function sendEmail(params: {
   }
 
   try {
-    const result = await _resend.emails.send({
+    const payload: Record<string, string | string[]> = {
       from: params.from || 'Counsel AI Suite <noreply@counsel.ai>',
       to: params.to,
       subject: params.subject,
-      html: params.html,
-      text: params.text,
-    });
+    };
+    if (params.html) payload.html = params.html;
+    if (params.text) payload.text = params.text;
+    const result = await _resend.emails.send(payload as any);
     return result;
   } catch (err) {
     console.error('Resend send failed:', (err as Error).message);

@@ -47,16 +47,18 @@ export function errorHandler(
   log.error(`Unhandled: ${err.message}`, { requestId, stack: err.stack, path: req.path });
 
   // Item #3 — Error monitoring hook (Sentry-ready)
-  // When SENTRY_DSN is configured, errors are automatically captured
+  // When SENTRY_DSN is configured, errors are automatically captured.
+  // Dynamic import keeps @sentry/node an optional dependency.
   const sentryDsn = process.env.SENTRY_DSN;
   if (sentryDsn) {
-    try {
-      const Sentry = await import('@sentry/node');
-      Sentry.captureException(err, {
-        tags: { requestId, path: req.path },
-        extra: { method: req.method, url: req.url },
-      });
-    } catch { /* Sentry not installed — skip */ }
+    import('@sentry/node')
+      .then((Sentry) => {
+        Sentry.captureException(err, {
+          tags: { requestId, path: req.path },
+          extra: { method: req.method, url: req.url },
+        });
+      })
+      .catch(() => { /* Sentry not installed — skip */ });
   }
 
   // In production, don't leak stack traces

@@ -148,15 +148,17 @@ app.get('/api/health', async (_req, res) => {
 import rateLimit from 'express-rate-limit';
 
 // Global rate limit
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } },
-  }),
-);
+// (Express type packages are duplicated in this monorepo — @types/multer pulls
+// @types/express@5 while the app uses @types/express@4. The cast bridges the
+// version mismatch without changing runtime behavior.)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } },
+}) as unknown as import('express').RequestHandler;
+app.use(globalLimiter);
 
 // Auth-specific rate limit — stricter to prevent brute-force (item #5)
 const authRateLimit = rateLimit({
@@ -165,7 +167,7 @@ const authRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { code: 'AUTH_RATE_LIMITED', message: 'Too many auth attempts. Try again in 15 minutes.' } },
-});
+}) as unknown as import('express').RequestHandler;
 app.use('/api/v1/auth/login', authRateLimit);
 app.use('/api/v1/auth/register', authRateLimit);
 app.use('/api/v1/auth/forgot-password', authRateLimit);

@@ -37,9 +37,9 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     // Storage
     const docs = await prisma.document.findMany({
       where: { firmId },
-      select: { size: true },
+      select: { sizeBytes: true },
     });
-    const totalBytes = docs.reduce((s, d) => s + (d.size || 0), 0);
+    const totalBytes = docs.reduce((s, d) => s + (d.sizeBytes || 0), 0);
     const storageGB = Math.round((totalBytes / (1024 * 1024 * 1024)) * 10) / 10;
 
     // Day count

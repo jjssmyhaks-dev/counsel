@@ -51,20 +51,20 @@ describe('JWT Authentication', () => {
       const parts = signToken(mockPayload).split('.');
       parts[1] = 'dGFtcGVyZWQ'; // base64 for "tampered"
       const tampered = parts.join('.');
-      expect(() => verifyToken(tampered)).toThrow();
+      expect(verifyToken(tampered)).toBeNull();
     });
 
     it('should reject a token signed with a different secret', () => {
       const token = jwt.sign(mockPayload, 'wrong-secret', { expiresIn: '1h' });
-      expect(() => verifyToken(token)).toThrow();
+      expect(verifyToken(token)).toBeNull();
     });
 
     it('should reject an empty string', () => {
-      expect(() => verifyToken('')).toThrow();
+      expect(verifyToken('')).toBeNull();
     });
 
     it('should reject a completely invalid string', () => {
-      expect(() => verifyToken('not-a-token-at-all')).toThrow();
+      expect(verifyToken('not-a-token-at-all')).toBeNull();
     });
 
     it('should handle tokens with minimal fields', () => {

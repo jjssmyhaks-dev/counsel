@@ -48,11 +48,17 @@ router.post(
         .map((c) => c.text)
         .join('\n\n');
 
-      const playbookRules = req.body.playbookId
-        ? await prisma.playbookRule.findMany({
-            where: { firmId: req.firmId, enabled: true },
-          })
-        : [];
+      let playbookRules: any[] = [];
+      if (req.body.playbookId) {
+        const playbooks = await prisma.playbook.findMany({
+          where: { firmId: req.firmId },
+          select: { rules: true },
+        });
+        for (const p of playbooks) {
+          const r = typeof p.rules === 'string' ? JSON.parse(p.rules) : p.rules;
+          if (Array.isArray(r)) playbookRules = playbookRules.concat(r.filter((x: any) => x.enabled !== false));
+        }
+      }
 
       // ── Call the AI pipeline ──
       let aiResult: any;
@@ -65,7 +71,7 @@ router.post(
           where: { id: analysis.id },
           data: {
             status: 'FAILED',
-            error: aiErr?.message?.substring(0, 500) || 'AI analysis failed',
+            errorMessage: aiErr?.message?.substring(0, 500) || 'AI analysis failed',
           },
         });
         res.status(502).json({
@@ -124,13 +130,13 @@ async function analyzeWithAI(
         firm_id: firmId,
         user_id: userId,
         playbook_rules: playbookRules.length > 0 ? playbookRules.map((r) => ({
-          rule_name: r.ruleName,
-          description: r.description,
-          check_type: r.checkType,
-          target_field: r.targetField,
-          required_value: r.requiredValue,
+          rule_name: r.ruleName || r.name || 'Rule',
+          description: r.description || r.criteria || '',
+          check_type: r.checkType || (r.clauseType ? 'REQUIRE' : 'PATTERN'),
+          target_field: r.targetField || r.clauseType,
+          required_value: r.requiredValue || r.recommendedAction || '',
           acceptable_range: r.acceptableRange,
-          risk_level: r.riskLevel,
+          risk_level: (r.riskLevel || 'medium').toUpperCase(),
         })) : undefined,
       }),
       signal: AbortSignal.timeout(300_000), // 5 min timeout for CrewAI pipeline
