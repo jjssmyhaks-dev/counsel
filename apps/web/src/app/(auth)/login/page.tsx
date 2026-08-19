@@ -91,7 +91,8 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div><label htmlFor="email" className="block text-[13px] font-medium text-[#0c0a09] mb-1.5">Email address</label>
                 <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@sterling.law" className="w-full px-4 py-3 rounded-xl border border-black/[0.08] bg-white text-[14px] text-[#0c0a09] placeholder:text-[#969e9b] focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 transition-all" /></div>
-              <div className="relative"><label htmlFor="password" className="block text-[13px] font-medium text-[#0c0a09] mb-1.5">Password</label></div>
+              <div>
+                <label htmlFor="password" className="block text-[13px] font-medium text-[#0c0a09] mb-1.5">Password</label>
                 <div className="relative">
                 <input id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-4 py-3 pr-12 rounded-xl border border-black/[0.08] bg-white text-[14px] text-[#0c0a09] placeholder:text-[#969e9b] focus:outline-none focus:ring-2 focus:ring-[#15b881]/30 focus:border-[#15b881]/40 transition-all" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
@@ -104,6 +105,7 @@ export default function LoginPage() {
                   )}
                 </button>
                 </div>
+              </div>
               <button type="submit" disabled={loading} className="w-full bg-[#0c0a09] text-white py-3 rounded-xl text-[14px] font-medium hover:bg-[#0a8a5f] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_8px_24px_-8px_rgba(12,10,9,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(21,184,129,0.4)]">
                 {loading ? <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Signing in...</> : 'Sign in'}
               </button>

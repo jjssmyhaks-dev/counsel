@@ -332,8 +332,8 @@ async def agents_status():
     return {
         "status": "operational",
         "framework": "CrewAI",
-        "crews": 4,
-        "agents": 10,
+        "crews": 13,
+        "agents": 31,
         "models": {
             "default": settings.cloudflare_text_model,
             "embedding": settings.embedding_model,
@@ -341,6 +341,238 @@ async def agents_status():
         },
         "cloudflare": cf_health,
     }
+
+
+
+
+# ---------------------------------------------------------------
+# CHAT ENDPOINT — Intent Router for Chat-First Interface
+# ---------------------------------------------------------------
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., description="User's natural language message")
+    firm_id: str = Field(..., description="Tenant firm ID")
+    user_id: str = Field(..., description="User who sent the message")
+    context: Optional[Dict[str, Any]] = Field(None, description="Optional context: toolId, matterId, etc.")
+    tools: Optional[List[Dict[str, Any]]] = Field(None, description="Available tool definitions")
+
+
+class ChatResponse(BaseModel):
+    id: str
+    role: str = "assistant"
+    content: str
+    timestamp: str
+    actions: Optional[List[Dict[str, Any]]] = None
+    toolSuggestions: Optional[List[Dict[str, Any]]] = None
+    result: Optional[Dict[str, Any]] = None
+
+
+# Intent classification keywords mapped to crew endpoints
+_INTENT_MAP = {
+    "analyze_contract": {"crew": "document_intelligence", "keywords": ["analyze", "contract", "review contract", "clause", "risk"], "endpoint": "/analyze/contract"},
+    "draft": {"crew": "drafting", "keywords": ["draft", "write", "compose", "memorandum", "memo", "brief", "motion", "contract draft"], "endpoint": "/draft"},
+    "research": {"crew": "research", "keywords": ["research", "case law", "precedent", "find cases", "legal question"], "endpoint": "/research"},
+    "compliance": {"crew": "compliance", "keywords": ["compliance", "gdpr", "ccpa", "soc2", "regulatory", "check compliance"], "endpoint": "/compliance"},
+    "proposal": {"crew": "proposal", "keywords": ["proposal", "sow", "pitch", "rfp", "bid"], "endpoint": "/proposal"},
+    "market_intel": {"crew": "market_intel", "keywords": ["market", "competitor", "swot", "industry", "tam", "competitive"], "endpoint": "/market-intel"},
+    "engagement": {"crew": "engagement", "keywords": ["engagement", "project plan", "wbs", "status report", "deliverable"], "endpoint": "/engagement"},
+    "bookkeeping": {"crew": "ca_bookkeeping", "keywords": ["reconcile", "bank statement", "bookkeeping", "trial balance", "variance", "match transaction"], "endpoint": "/ca/bookkeeping"},
+    "gst": {"crew": "ca_gst", "keywords": ["gst", "gstr", "input tax credit", "itc", "gstin", "gst reconciliation", "gst return"], "endpoint": "/ca/gst"},
+    "audit": {"crew": "ca_audit", "keywords": ["audit", "statutory audit", "internal audit", "sa 315", "sa 530", "audit report", "sampling"], "endpoint": "/ca/audit"},
+    "income_tax": {"crew": "ca_income_tax", "keywords": ["income tax", "tds", "itr", "26as", "tax notice", "pan", "assessment year", "tax reconciliation"], "endpoint": "/ca/income-tax"},
+    "roc": {"crew": "ca_roc", "keywords": ["roc", "mca", "aoc-4", "mgt-7", "filing deadline", "company filing", "director", "din"], "endpoint": "/ca/roc"},
+}
+
+
+def _classify_intent(message: str) -> str:
+    """Simple keyword-based intent classification."""
+    lower = message.lower()
+    for intent, config in _INTENT_MAP.items():
+        for kw in config["keywords"]:
+            if kw in lower:
+                return intent
+    return "general"
+
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat_message(req: ChatRequest):
+    """Chat orchestrator endpoint — routes user messages to appropriate crew or handles directly.
+
+    This is the core endpoint for the chat-first interface. It:
+    1. Classifies user intent from the message
+    2. Routes to the appropriate CrewAI crew endpoint
+    3. Returns a structured response for the chat UI
+    """
+    import uuid
+    from datetime import datetime, timezone
+
+    msg_id = f"msg_{uuid.uuid4().hex[:12]}"
+    ts = datetime.now(timezone.utc).isoformat()
+    tool_id = (req.context or {}).get("toolId")
+    lower_msg = req.message.lower()
+
+    # If a specific tool is requested, route directly
+    if tool_id:
+        return await _handle_tool_call(req, msg_id, ts, tool_id)
+
+    # Classify intent
+    intent = _classify_intent(req.message)
+
+    if intent == "general":
+        # For general messages, use LLM to generate a helpful response
+        try:
+            from ..agents.cloudflare_llm import get_default_llm
+            llm = get_default_llm(temperature=0.3)
+            system_prompt = (
+                "You are Counsel AI, an intelligent legal/consulting/CA assistant. "
+                "You help users with contract analysis, legal research, drafting, compliance, "
+                "proposals, market intelligence, and engagement management. "
+                "Respond helpfully and suggest relevant tools when appropriate."
+            )
+            response = llm.call([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": req.message},
+            ])
+            return ChatResponse(
+                id=msg_id, role="assistant", content=response or "I'm here to help. What would you like to do?",
+                timestamp=ts,
+                toolSuggestions=[
+                    {"id": "analyze_contract", "name": "Analyze Contract", "icon": "scale"},
+                    {"id": "draft", "name": "Draft Document", "icon": "edit"},
+                    {"id": "research", "name": "Legal Research", "icon": "search"},
+                    {"id": "compliance", "name": "Check Compliance", "icon": "shield"},
+                ],
+            )
+        except Exception as e:
+            logger.error("Chat general response failed: %s", e)
+            return ChatResponse(
+                id=msg_id, role="assistant",
+                content="I can help you with contract analysis, drafting, research, compliance, proposals, and more. What would you like to do?",
+                timestamp=ts,
+            )
+
+    # Route to the identified crew
+    config = _INTENT_MAP[intent]
+    crew_name = config["crew"]
+
+    try:
+        logger.info("Chat routing to crew=%s for intent=%s, user=%s", crew_name, intent, req.user_id)
+        audit_trail.log(
+            action=AuditAction.CONTRACT_ANALYSIS_STARTED,
+            resource_id=f"chat_{intent}",
+            firm_id=req.firm_id,
+            user_id=req.user_id,
+            metadata={"message": req.message[:200], "intent": intent},
+        )
+
+        # Dispatch to the appropriate crew
+        raw_output = ""
+        token_usage = {}
+
+        if intent == "analyze_contract":
+            result = await run_document_intelligence(document_text=req.message)
+            raw_output = result.get("raw_output", "")
+            token_usage = result.get("token_usage", {})
+        elif intent == "draft":
+            result = await run_drafting_crew(draft_type="memo", instructions=req.message)
+            raw_output = result.get("raw_output", "")
+            token_usage = result.get("token_usage", {})
+        elif intent == "research":
+            result = await run_research_crew(query=req.message, source_chunks=[])
+            raw_output = result.get("raw_output", "")
+            token_usage = result.get("token_usage", {})
+        elif intent == "compliance":
+            result = await run_compliance_crew(output_text=req.message, output_type="general", firm_id=req.firm_id, user_id=req.user_id)
+            raw_output = result.get("raw_output", "")
+            token_usage = result.get("token_usage", {})
+        elif intent == "proposal":
+            result = await run_proposal_crew(proposal_type="proposal", client_context=req.message, scope="TBD", timeline="TBD", budget_range="TBD")
+            raw_output = result.get("raw_output", "")
+            token_usage = result.get("token_usage", {})
+        elif intent == "market_intel":
+            result = await run_market_intel_crew(industry="general", company="", question=req.message)
+            raw_output = result.get("raw_output", "")
+            token_usage = result.get("token_usage", {})
+        elif intent == "engagement":
+            result = await run_engagement_crew(project_name="Chat Request", client_name="", scope=req.message, start_date="", end_date="")
+            raw_output = result.get("raw_output", "")
+            token_usage = result.get("token_usage", {})
+
+        audit_trail.log(
+            action=AuditAction.CONTRACT_ANALYSIS_COMPLETED,
+            resource_id=f"chat_{intent}",
+            firm_id=req.firm_id,
+            user_id=req.user_id,
+            metadata={"crew": crew_name, "token_usage": token_usage},
+        )
+
+        return ChatResponse(
+            id=msg_id, role="assistant", content=raw_output,
+            timestamp=ts,
+            result={"crew": crew_name, "intent": intent, "token_usage": token_usage},
+        )
+    except Exception as e:
+        logger.error("Chat crew dispatch failed (intent=%s): %s", intent, e, exc_info=True)
+        return ChatResponse(
+            id=msg_id, role="assistant",
+            content=f"I encountered an error processing your {intent.replace('_', ' ')} request: {str(e)}",
+            timestamp=ts,
+        )
+
+
+async def _handle_tool_call(req: ChatRequest, msg_id: str, ts: str, tool_id: str) -> ChatResponse:
+    """Handle a specific tool invocation from the chat UI."""
+    try:
+        if tool_id == "analyze_contract":
+            result = await run_document_intelligence(document_text=req.message)
+        elif tool_id == "draft":
+            result = await run_drafting_crew(draft_type="memo", instructions=req.message)
+        elif tool_id == "research":
+            result = await run_research_crew(query=req.message, source_chunks=[])
+        elif tool_id == "compliance":
+            result = await run_compliance_crew(output_text=req.message, output_type="general", firm_id=req.firm_id, user_id=req.user_id)
+        elif tool_id == "proposal":
+            result = await run_proposal_crew(proposal_type="proposal", client_context=req.message, scope="TBD", timeline="TBD", budget_range="TBD")
+        elif tool_id == "market_intel":
+            result = await run_market_intel_crew(industry="general", company="", question=req.message)
+        elif tool_id == "engagement":
+            result = await run_engagement_crew(project_name="Chat Request", client_name="", scope=req.message, start_date="", end_date="")
+        elif tool_id == "ca_bookkeeping":
+            from ..agents.crews import run_ca_bookkeeping_reconciliation
+            result = await run_ca_bookkeeping_reconciliation(client_name="Client", period="Q1 2026", trial_balance_ref=req.message)
+        elif tool_id == "ca_gst":
+            from ..agents.crews import run_ca_gst
+            result = await run_ca_gst(client_name="Client", gstin="", period="")
+        elif tool_id == "ca_audit":
+            from ..agents.crews import run_ca_audit
+            result = await run_ca_audit(client_name="Client", year="2025-26", engagement_type="Statutory Audit")
+        elif tool_id == "ca_income_tax":
+            from ..agents.crews import run_ca_income_tax
+            result = await run_ca_income_tax(client_name="Client", pan="", assessment_year="2026-27")
+        elif tool_id == "ca_roc":
+            from ..agents.crews import run_ca_roc
+            result = await run_ca_roc(client_name="Client", cin="")
+        else:
+            return ChatResponse(
+                id=msg_id, role="assistant",
+                content=f"Unknown tool: {tool_id}. Available tools: analyze_contract, draft, research, compliance, proposal, market_intel, engagement, ca_bookkeeping, ca_gst, ca_audit, ca_income_tax, ca_roc",
+                timestamp=ts,
+            )
+
+        return ChatResponse(
+            id=msg_id, role="assistant",
+            content=result.get("raw_output", ""),
+            timestamp=ts,
+            result={"tool_id": tool_id, "token_usage": result.get("token_usage", {})},
+        )
+    except Exception as e:
+        logger.error("Tool call failed (tool=%s): %s", tool_id, e)
+        return ChatResponse(
+            id=msg_id, role="assistant",
+            content=f"Error executing {tool_id}: {str(e)}",
+            timestamp=ts,
+        )
 
 
 # ---------------------------------------------------------------
@@ -422,3 +654,111 @@ async def manage_engagement(req: EngagementRequest):
     except Exception as e:
         logger.error("Engagement crew failed: %s", e, exc_info=True)
         return AgentResponse(crew="engagement", status="failed", error=str(e))
+
+
+# ---------------------------------------------------------------
+# CA VERTICAL ROUTES (Crews 9–13)
+# ---------------------------------------------------------------
+
+
+class CABookkeepingRequest(BaseModel):
+    client_name: str = Field("Client", description="Client name")
+    period: str = Field("Q1 2026", description="Reporting period")
+    trial_balance_ref: str = Field("", description="Reference to trial balance document")
+    bank_stmt_ref: str = Field("", description="Reference to bank statement document")
+
+
+class CAGSTRequest(BaseModel):
+    client_name: str = Field("Client")
+    gstin: str = Field("", description="GSTIN")
+    period: str = Field("", description="Tax period")
+
+
+class CAAuditRequest(BaseModel):
+    client_name: str = Field("Client")
+    year: str = Field("2025-26", description="Financial year")
+    engagement_type: str = Field("Statutory Audit")
+
+
+class CAIncomeTaxRequest(BaseModel):
+    client_name: str = Field("Client")
+    pan: str = Field("", description="PAN number")
+    assessment_year: str = Field("2026-27")
+
+
+class CAROCRequest(BaseModel):
+    client_name: str = Field("Client")
+    cin: str = Field("", description="Corporate Identity Number")
+
+
+@router.post("/ca/bookkeeping", response_model=AgentResponse)
+async def ca_bookkeeping(req: CABookkeepingRequest):
+    """Run Bookkeeping Reconciliation crew (C9)."""
+    try:
+        from ..agents.crews import run_ca_bookkeeping_reconciliation
+        result = await run_ca_bookkeeping_reconciliation(
+            client_name=req.client_name, period=req.period,
+            trial_balance_ref=req.trial_balance_ref, bank_stmt_ref=req.bank_stmt_ref,
+        )
+        return AgentResponse(crew="ca_bookkeeping", status="completed",
+                            raw_output=result.get("raw_output"),
+                            token_usage=result.get("token_usage"))
+    except Exception as e:
+        logger.error("CA bookkeeping crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="ca_bookkeeping", status="failed", error=str(e))
+
+
+@router.post("/ca/gst", response_model=AgentResponse)
+async def ca_gst(req: CAGSTRequest):
+    """Run GST Reconciliation crew (C10)."""
+    try:
+        from ..agents.crews import run_ca_gst
+        result = await run_ca_gst(client_name=req.client_name, gstin=req.gstin, period=req.period)
+        return AgentResponse(crew="ca_gst", status="completed",
+                            raw_output=result.get("raw_output"),
+                            token_usage=result.get("token_usage"))
+    except Exception as e:
+        logger.error("CA GST crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="ca_gst", status="failed", error=str(e))
+
+
+@router.post("/ca/audit", response_model=AgentResponse)
+async def ca_audit(req: CAAuditRequest):
+    """Run Audit & Assurance crew (C11)."""
+    try:
+        from ..agents.crews import run_ca_audit
+        result = await run_ca_audit(client_name=req.client_name, year=req.year, engagement_type=req.engagement_type)
+        return AgentResponse(crew="ca_audit", status="completed",
+                            raw_output=result.get("raw_output"),
+                            token_usage=result.get("token_usage"))
+    except Exception as e:
+        logger.error("CA audit crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="ca_audit", status="failed", error=str(e))
+
+
+@router.post("/ca/income-tax", response_model=AgentResponse)
+async def ca_income_tax(req: CAIncomeTaxRequest):
+    """Run Income Tax & TDS crew (C12)."""
+    try:
+        from ..agents.crews import run_ca_income_tax
+        result = await run_ca_income_tax(client_name=req.client_name, pan=req.pan, assessment_year=req.assessment_year)
+        return AgentResponse(crew="ca_income_tax", status="completed",
+                            raw_output=result.get("raw_output"),
+                            token_usage=result.get("token_usage"))
+    except Exception as e:
+        logger.error("CA income tax crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="ca_income_tax", status="failed", error=str(e))
+
+
+@router.post("/ca/roc", response_model=AgentResponse)
+async def ca_roc(req: CAROCRequest):
+    """Run ROC Compliance crew (C13)."""
+    try:
+        from ..agents.crews import run_ca_roc
+        result = await run_ca_roc(client_name=req.client_name, cin=req.cin)
+        return AgentResponse(crew="ca_roc", status="completed",
+                            raw_output=result.get("raw_output"),
+                            token_usage=result.get("token_usage"))
+    except Exception as e:
+        logger.error("CA ROC crew failed: %s", e, exc_info=True)
+        return AgentResponse(crew="ca_roc", status="failed", error=str(e))

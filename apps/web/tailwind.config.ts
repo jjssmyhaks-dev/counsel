@@ -8,23 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        navy: {
-          50: '#f0f4ff',
-          100: '#dbe4ff',
-          200: '#bac8ff',
-          300: '#91a7ff',
-          400: '#748ffc',
-          500: '#5c7cfa',
-          600: '#4c6ef5',
-          700: '#3b5de7',
-          800: '#1e3a5f',
-          900: '#0f2440',
-          950: '#0b1830',
-        },
-      },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
     },

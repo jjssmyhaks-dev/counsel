@@ -1,6 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { getUser } from '@/lib/auth';
+
+const serif = 'font-serif';
 
 interface Stat { label: string; value: string; change: string; }
 interface Deadline { type: string; client: string; form: string; dueDate: string; severity: string; }
@@ -14,7 +18,18 @@ function extractList(res: any): any[] {
   return [];
 }
 
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
 export default function CADashboardPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState<Stat[]>([]);
@@ -23,43 +38,46 @@ export default function CADashboardPage() {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
 
   useEffect(() => {
+    if (!getUser()) { router.replace('/login'); return; }
+
     Promise.all([
-      api.get('/compliance-calendar').catch(() => []),
-      api.get('/filings').catch(() => []),
-      api.get('/clients?limit=5').catch(() => []),
-    ]).then(([compRaw, filingsRaw, clientsRaw]: any[]) => {
+      api.get('/compliance-calendar').catch(() => ({ data: [] })),
+      api.get('/filings?limit=5').catch(() => ({ data: [] })),
+      api.get('/clients?limit=5').catch(() => ({ data: [] })),
+      api.get('/audit/logs?limit=5').catch(() => ({ data: [] })),
+      api.get('/integrations/health').catch(() => ({ data: [] })),
+    ]).then(([compRaw, filingsRaw, clientsRaw, auditRaw, integRaw]: any[]) => {
       const comps = extractList(compRaw);
       const filings = extractList(filingsRaw);
       const clients = extractList(clientsRaw);
+      const auditLogs = extractList(auditRaw);
+      const integHealth = extractList(integRaw);
 
       setStats([
-        { label: 'Active Engagements', value: String(clients.length || 24), change: '+3 this month' },
-        { label: 'Upcoming Deadlines', value: String(comps.filter((c: any) => c.severity === 'warning').length || 8), change: 'Next 30 days' },
-        { label: 'Pending Reviews', value: String(filings.filter((f: any) => f.status === 'pending').length || 12), change: 'Requires partner' },
-        { label: 'Compliance Score', value: '94%', change: 'Above average' },
+        { label: 'Active Clients', value: String(clients.length), change: clients.length > 0 ? 'From database' : 'Add your first client' },
+        { label: 'Upcoming Deadlines', value: String(comps.length), change: 'From compliance calendar' },
+        { label: 'Pending Reviews', value: String(filings.filter((f: any) => f.status === 'pending' || f.status === 'PENDING').length), change: 'Requires partner review' },
+        { label: 'Audit Entries', value: String(auditLogs.length), change: 'Recent activity' },
       ]);
 
       setDeadlines(comps.slice(0, 5).map((c: any) => ({
-        type: c.type, client: c.client, form: c.title || c.form, dueDate: c.dueDate, severity: c.severity,
+        type: c.type || 'Filing', client: c.client?.name || c.clientName || '—', form: c.title || c.form || c.type, dueDate: c.dueDate ? new Date(c.dueDate).toLocaleDateString() : '—', severity: c.severity || 'info',
       })));
 
-      setActivities([
-        { id: '1', action: 'Trial balance uploaded for ABC Pvt Ltd', client: 'ABC Pvt Ltd', time: '2h ago' },
-        { id: '2', action: 'GSTR-3B data prepared — partner review', client: 'ABC Pvt Ltd', time: '3h ago' },
-        { id: '3', action: 'Reconciliation completed — 98% match, 12 flagged', client: 'DEF Ltd', time: '5h ago' },
-        { id: '4', action: 'Notice response drafted for IT notice u/s 143(1)', client: 'DEF Ltd', time: '1d ago' },
-      ]);
+      setActivities(auditLogs.slice(0, 5).map((a: any) => ({
+        id: a.id || String(Math.random()),
+        action: a.action?.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()) || a.description || 'Activity recorded',
+        client: a.resourceId || '—',
+        time: a.createdAt ? timeAgo(a.createdAt) : '—',
+      })));
 
-      setIntegrations([
-        { name: 'Tally', status: 'connected' },
-        { name: 'GSP (GST Filing)', status: 'connected' },
-        { name: 'MCA / ROC', status: 'disconnected' },
-        { name: 'WhatsApp', status: 'connected' },
-        { name: 'Zoho Books', status: 'disconnected' },
-      ]);
+      setIntegrations(integHealth.slice(0, 6).map((s: any) => ({
+        name: s.name || s.service || 'Service',
+        status: s.status || 'unknown',
+      })));
     }).catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
@@ -82,7 +100,7 @@ export default function CADashboardPage() {
   return (
     <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Counsel for CA Firms</h1>
+        <h1 className={`${serif} text-2xl font-normal tracking-[-0.02em] text-[#0c0a09]`}>Counsel for CA Firms</h1>
         <p className="text-gray-500 mt-1">Everything your CA practice needs — GST, Income Tax, Audit, ROC, and Bookkeeping</p>
       </div>
 

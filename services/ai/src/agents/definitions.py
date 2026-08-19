@@ -450,6 +450,29 @@ def _get_mcp_tools(*servers: str):
     except Exception:
         return []  # Fallback: no MCP tools, agents still work
 
+# Pre-resolved tool lists for CA vertical agents
+MCP_PG_TOOLS = _get_mcp_tools("postgres")
+
+# Alias: get_fast_llm is the default (low-temperature) model for extraction tasks
+def get_fast_llm(temperature: float = 0.05):
+    """Fast/default LLM for low-creativity extraction tasks."""
+    return get_default_llm(temperature=temperature)
+
+
+# Agent registry for lookup by name (used by crews.py)
+_AGENT_FACTORIES = {}
+
+def _register_agent(name: str, factory_fn):
+    _AGENT_FACTORIES[name] = factory_fn
+
+def get_agent(name: str):
+    """Get an agent instance by name. Raises KeyError if not found."""
+    factory = _AGENT_FACTORIES.get(name)
+    if not factory:
+        raise KeyError(f"Unknown agent: {name}. Available: {list(_AGENT_FACTORIES.keys())}")
+    return factory()
+
+
 # ─── CA Vertical Agent Factories (Crews 9-13) ──────────────────────────────
 
 def create_transaction_matcher() -> Agent:
@@ -702,3 +725,23 @@ CRITICAL RULES:
         tools=MCP_PG_TOOLS,
         verbose=True, allow_delegation=True, llm=get_reasoning_llm(),
     )
+
+
+# ─── Agent Registry Registration ────────────────────────────────────────────
+# Register CA vertical agents so crews.py can look them up by name.
+
+_register_agent("transaction_matcher", create_transaction_matcher)
+_register_agent("variance_analyzer", create_variance_analyzer)
+_register_agent("reconciliation_reporter", create_reconciliation_reporter)
+_register_agent("input_tax_reconciler", create_input_tax_reconciler)
+_register_agent("gstr_validator", create_gstr_validator)
+_register_agent("filing_prep_advisor", create_filing_prep_advisor)
+_register_agent("risk_assessment_engine", create_risk_assessment_engine)
+_register_agent("sampling_recommendation", create_sampling_recommendation)
+_register_agent("audit_report_compiler", create_audit_report_compiler)
+_register_agent("tds_reconciler", create_tds_reconciler)
+_register_agent("itr_data_aggregator", create_itr_data_aggregator)
+_register_agent("notice_response_drafter", create_notice_response_drafter)
+_register_agent("filing_deadline_tracker", create_filing_deadline_tracker)
+_register_agent("form_data_compiler", create_form_data_compiler)
+_register_agent("compliance_calendar_manager", create_compliance_calendar_manager)

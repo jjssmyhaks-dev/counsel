@@ -83,7 +83,7 @@ router.post('/message', async (req: Request, res: Response, next: NextFunction) 
       const aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
       const ai = await fetch(aiUrl + '/agents/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, firmId, userId, context: { toolId: toolId || null, ...context }, tools: CHAT_TOOLS.map(t => ({ id: t.id, name: t.name, description: t.description })) }),
+        body: JSON.stringify({ message, firm_id: firmId, user_id: userId, context: { toolId: toolId || null, ...context }, tools: CHAT_TOOLS.map(t => ({ id: t.id, name: t.name, description: t.description })) }),
         signal: AbortSignal.timeout(60000),
       });
       if (ai.ok) aiResponse = await ai.json();
