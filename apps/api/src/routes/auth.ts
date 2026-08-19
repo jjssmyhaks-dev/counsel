@@ -187,7 +187,7 @@ const registerSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   name: z.string().min(1, 'Name is required'),
   firmName: z.string().optional(),
-  firmType: z.enum(['LEGAL', 'CONSULTING', 'HYBRID']).optional(),
+  firmType: z.enum(['LEGAL', 'CONSULTING', 'HYBRID', 'CA']).optional(),
 });
 
 router.post(
