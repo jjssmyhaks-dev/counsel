@@ -1,0 +1,11 @@
+# Counsel AI — robots.txt
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth
+
+Sitemap: https://counsel.ai/sitemap.xml
+
+# Crawl-delay for polite bots
+Crawl-delay: 1

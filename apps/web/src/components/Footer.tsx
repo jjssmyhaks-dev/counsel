@@ -35,8 +35,8 @@ export default function Footer() {
           <div>
             <h4 className="font-serif text-sm font-semibold text-[#0c0a09] mb-3">Legal</h4>
             <ul className="space-y-2">
-              <li><Link href="/resources" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/resources" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Terms of Service</Link></li>
+              <li><Link href="/legal/privacy" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/legal/terms" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Terms of Service</Link></li>
               <li><Link href="/product#audit" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">Security</Link></li>
               <li><Link href="/solutions" className="text-[13px] text-[#717d79] hover:text-[#0c0a09] transition-colors">GDPR</Link></li>
             </ul>
@@ -45,8 +45,8 @@ export default function Footer() {
         <div className="border-t border-black/[0.04] pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[13px] text-[#717d79]">
           <p>&copy; 2026 Counsel Technologies, Inc.</p>
           <div className="flex items-center gap-4">
-            <Link href="/resources" className="hover:text-[#0c0a09] transition-colors">Privacy</Link>
-            <Link href="/resources" className="hover:text-[#0c0a09] transition-colors">Terms</Link>
+            <Link href="/legal/privacy" className="hover:text-[#0c0a09] transition-colors">Privacy</Link>
+            <Link href="/legal/terms" className="hover:text-[#0c0a09] transition-colors">Terms</Link>
             <Link href="/product#audit" className="hover:text-[#0c0a09] transition-colors">Security</Link>
           </div>
         </div>
