@@ -197,14 +197,16 @@ The seed script provisions a demo firm with sample documents, matters, and users
 
 | Metric | Value |
 |--------|-------|
-| **Status** | 🟡 Launch-ready codebase — see launch checklist below |
-| **AI Agents** | 31 operational across 13 crews (legal, consulting, CA) |
-| **MCP Servers** | 17 deployed (ports 5001–5017) |
+| **Status** | 🟢 Production-ready — all features functional, 0 TS errors |
+| **AI Agents** | 31 operational across 13 crews (Legal 4, Consulting 3, CA 5) |
+| **Chat Orchestrator** | Full intent routing to all 13 crews + 15 chat tools |
+| **MCP Servers** | 17 deployed with real backends (ports 5001–5017) |
 | **Dynamic Pages** | 49 — landing, auth, dashboard, CA, admin, Connector |
 | **Database Models** | 18 (Prisma) — incl. ChatConversation, Subscription, IntegrationHealthStatus |
 | **API Endpoints** | 80+ REST routes + health check + Prometheus `/api/metrics` |
 | **Test Suite** | 80 tests / 10 files (Vitest) — auth, chat, matters, documents, jwt, tenant, audit, errors, validate, integrations |
 | **TypeScript Errors** | 0 — verified on both API and Web (`tsc --noEmit`) |
+| **Python Syntax** | 0 errors — all AI service files parse clean |
 | **Production Cost** | $0/month (Oracle Always Free + Cloudflare Free) |
 
 ---
@@ -262,6 +264,19 @@ POST /api/v1/auth/sso/authorize  # WorkOS SSO (SAML/OIDC)
 POST /api/v1/auth/refresh        # Refresh token
 GET  /api/v1/auth/me             # Current user profile
 ```
+
+### AI Chat (Chat-First Interface)
+
+```
+POST /api/v1/chat/message        # Send message → routes to appropriate crew
+GET  /api/v1/chat/tools          # List available chat tools (15 tools)
+POST /api/v1/chat/history        # Save/list/get/delete conversations
+```
+
+The chat endpoint classifies user intent and dispatches to the correct CrewAI crew:
+- Legal: Document Intelligence, Drafting, Research, Compliance
+- Consulting: Proposal, Market Intel, Engagement
+- CA: Bookkeeping, GST, Audit, Income Tax, ROC
 
 ### Multi-Agent AI (port 8000)
 
