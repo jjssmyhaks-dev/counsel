@@ -1,6 +1,6 @@
 ﻿import jwt from 'jsonwebtoken';
 
-const SECRET: string = process.env.JWT_SECRET || '';
+const SECRET: string = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? require('crypto').randomBytes(32).toString('hex') : '');
 if (!SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }
