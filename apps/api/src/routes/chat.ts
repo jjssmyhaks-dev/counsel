@@ -27,7 +27,7 @@ router.get('/tools', (_req: Request, res: Response) => {
 
 router.post('/feedback', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { messageId, type, threadId } = req.body;
+    const { messageId, type, threadId, toolOrCrew } = req.body;
     const firmId = (req as any).firmId;
     const userId = (req as any).user?.id;
 
@@ -36,7 +36,24 @@ router.post('/feedback', async (req: Request, res: Response, next: NextFunction)
       return;
     }
 
-    // Log feedback for self-learning
+    const feedbackType = type === 'positive' ? 'explicit_positive' : 'explicit_negative';
+    const score = type === 'positive' ? 1.0 : -1.0;
+
+    // Persist to FeedbackLog (survives restarts)
+    await prisma.feedbackLog.create({
+      data: {
+        firmId,
+        userId: userId || null,
+        messageId,
+        threadId: threadId || null,
+        toolOrCrew: toolOrCrew || 'general',
+        feedbackType,
+        score,
+        metadata: { source: 'chat_feedback_button' },
+      },
+    }).catch(() => {});
+
+    // Also log to audit trail for backward compatibility
     await prisma.auditLog.create({
       data: {
         firmId,
@@ -44,9 +61,9 @@ router.post('/feedback', async (req: Request, res: Response, next: NextFunction)
         action: type === 'positive' ? 'CHAT_FEEDBACK_POSITIVE' : 'CHAT_FEEDBACK_NEGATIVE',
         resourceType: 'ChatMessage',
         resourceId: messageId,
-        details: { type, threadId },
+        details: { type, threadId, toolOrCrew },
       },
-    }).catch(() => {}); // best-effort
+    }).catch(() => {});
 
     res.json({ recorded: true, type });
   } catch (err) { next(err); }
@@ -129,10 +146,42 @@ router.post('/message', async (req: Request, res: Response, next: NextFunction) 
     } catch { /* fall through */ }
 
     if (aiResponse && (aiResponse.content || aiResponse.response)) {
+      const responseContent = aiResponse.content || aiResponse.response;
+      const msgId = aiResponse.id || 'msg_' + Date.now();
+
+      // Auto-eval: score the response quality (heuristic, no LLM call)
+      try {
+        const inputWords = new Set(message.toLowerCase().split(/\s+/).filter(Boolean));
+        const outputWords = new Set(responseContent.toLowerCase().split(/\s+/).filter(Boolean));
+        const overlap = inputWords.size > 0 ? (inputWords.size & outputWords.size) / inputWords.size : 0;
+        const evalScores: Record<string, number> = {
+          relevance: Math.min(1.0, overlap * 2.5),
+          completeness: responseContent.length > 1000 ? 0.85 : responseContent.length > 300 ? 0.65 : 0.4,
+          accuracy: 0.75, // baseline — LLM judge would improve this
+          safety: 0.95,
+          usability: /^[#*\-\d]/m.test(responseContent) ? 0.85 : 0.6,
+        };
+        const weights: Record<string, number> = { relevance: 0.25, completeness: 0.20, accuracy: 0.25, safety: 0.15, usability: 0.15 };
+        const overallScore = Object.entries(weights).reduce((sum, [dim, w]) => sum + (evalScores[dim] || 0.5) * w, 0);
+
+        // Persist eval to database
+        await prisma.evalResult.create({
+          data: {
+            firmId,
+            toolName: toolId || 'general_chat',
+            inputText: message.substring(0, 5000),
+            outputText: responseContent.substring(0, 10000),
+            scores: evalScores,
+            overallScore,
+            metadata: { threadId, userId, source: 'chat_auto_eval' },
+          },
+        }).catch(() => {}); // best-effort
+      } catch { /* eval scoring failed — skip */ }
+
       res.json({
-        id: aiResponse.id || 'msg_' + Date.now(),
+        id: msgId,
         role: 'assistant',
-        content: aiResponse.content || aiResponse.response,
+        content: responseContent,
         timestamp: aiResponse.timestamp || new Date().toISOString(),
         threadId: aiResponse.thread_id || threadId,
         actions: aiResponse.actions,

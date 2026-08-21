@@ -1,0 +1,380 @@
+{
+  "version": "1.0",
+  "description": "Golden test dataset for Counsel AI agent evaluation. Each entry has a prompt, expected behavior, and scoring criteria.",
+  "verticals": {
+    "legal": {
+      "prompts": [
+        {
+          "id": "legal-001",
+          "prompt": "Extract all indemnification clauses from this contract and score the risk level for each.",
+          "expected_tool": "document_intelligence",
+          "expected_behavior": "Should identify clause types, assign risk scores 1-10, cite specific sections",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.8, "accuracy": 0.9 }
+        },
+        {
+          "id": "legal-002",
+          "prompt": "Draft an NDA between Sterling & Associates and TechCorp Inc. Include standard confidentiality, term, and governing law clauses.",
+          "expected_tool": "drafting",
+          "expected_behavior": "Should produce a complete NDA with proper legal formatting, parties, term, confidentiality scope, and governing law",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-003",
+          "prompt": "Research recent Indian Supreme Court judgments on non-compete clauses in employment agreements.",
+          "expected_tool": "research",
+          "expected_behavior": "Should cite actual cases (e.g., Niranjan Shankar Golikari v. Century Spinning), explain legal principles, note enforceability limits",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.95 }
+        },
+        {
+          "id": "legal-004",
+          "prompt": "Check this data processing clause against GDPR Article 28 requirements.",
+          "expected_tool": "compliance",
+          "expected_behavior": "Should reference specific GDPR Art. 28 sub-articles, identify gaps, suggest amendments",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.9 }
+        },
+        {
+          "id": "legal-005",
+          "prompt": "What are the key differences between a partnership deed and an LLP agreement under Indian law?",
+          "expected_tool": "research",
+          "expected_behavior": "Should compare liability, registration, compliance, tax treatment with references to Indian Partnership Act 1932 and LLP Act 2008",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "legal-006",
+          "prompt": "Analyze the force majeure clause in the attached contract. Is it broad enough to cover a pandemic?",
+          "expected_tool": "document_intelligence",
+          "expected_behavior": "Should evaluate clause scope, note if pandemics/epidemics are explicitly listed, assess legal risk",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.8, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-007",
+          "prompt": "Draft a legal notice for breach of contract under Section 73 of the Indian Contract Act.",
+          "expected_tool": "drafting",
+          "expected_behavior": "Should include proper notice format, facts, legal basis, demand, deadline, and consequences",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-008",
+          "prompt": "Review this employment agreement for compliance with the Shops and Establishments Act.",
+          "expected_tool": "compliance",
+          "expected_behavior": "Should check working hours, leave provisions, termination clauses against state-specific rules",
+          "scoring_criteria": { "relevance": 0.85, "completeness": 0.8, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-009",
+          "prompt": "What is the limitation period for filing a suit for specific performance under the Limitation Act, 1963?",
+          "expected_tool": "research",
+          "expected_behavior": "Should cite Article 54 of the Limitation Act (3 years from date of breach), explain when time begins to run",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.8, "accuracy": 0.95 }
+        },
+        {
+          "id": "legal-010",
+          "prompt": "Negotiate counter-positions for the liability cap clause — the other party wants unlimited liability.",
+          "expected_tool": "compliance",
+          "expected_behavior": "Should suggest alternative positions (caps, baskets, exclusions), market benchmarks, fallback strategies",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "legal-011",
+          "prompt": "Create a matter for the Patel vs Sharma property dispute in Mumbai.",
+          "expected_tool": "create_matter",
+          "expected_behavior": "Should create a LEGAL matter with correct client name and description",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.9 }
+        },
+        {
+          "id": "legal-012",
+          "prompt": "Find all documents related to the Tata Sons minority shareholder case.",
+          "expected_tool": "search_documents",
+          "expected_behavior": "Should search documents and return relevant results with file names and status",
+          "scoring_criteria": { "relevance": 0.85, "completeness": 0.8, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-013",
+          "prompt": "Draft a clause for intellectual property ownership in a software development agreement.",
+          "expected_tool": "drafting",
+          "expected_behavior": "Should address work-for-hire, background IP, licensing, moral rights under Indian Copyright Act",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-014",
+          "prompt": "What are the stamp duty requirements for a lease agreement in Maharashtra?",
+          "expected_tool": "research",
+          "expected_behavior": "Should reference Maharashtra Stamp Act, applicable rates, registration requirements",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "legal-015",
+          "prompt": "Analyze the arbitration clause — is it valid under the Arbitration Act 1996?",
+          "expected_tool": "document_intelligence",
+          "expected_behavior": "Should check for valid arbitration agreement, seat vs venue, institutional vs ad hoc, enforcement provisions",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "legal-016",
+          "prompt": "Draft a board resolution for appointment of a new director under Section 161 of Companies Act 2013.",
+          "expected_tool": "drafting",
+          "expected_behavior": "Should include proper resolution format, quorum, voting, DIR-12 reference, statutory compliance",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.9, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-017",
+          "prompt": "Schedule a client meeting with Mr. Agarwal to discuss the merger document review.",
+          "expected_tool": "schedule_meeting",
+          "expected_behavior": "Should create a meeting entry with title, date, and link to relevant matter",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-018",
+          "prompt": "Compare this non-solicitation clause with market standards for IT services agreements in India.",
+          "expected_tool": "compliance",
+          "expected_behavior": "Should evaluate reasonableness, duration, geographic scope, enforceability under Indian law",
+          "scoring_criteria": { "relevance": 0.85, "completeness": 0.8, "accuracy": 0.85 }
+        },
+        {
+          "id": "legal-019",
+          "prompt": "What is the procedure for filing a writ petition under Article 226 of the Constitution?",
+          "expected_tool": "research",
+          "expected_behavior": "Should outline filing procedure, court fees, grounds, interim relief, timeline",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "legal-020",
+          "prompt": "Redraft this indemnification clause to limit liability to direct damages only and exclude consequential damages.",
+          "expected_tool": "drafting",
+          "expected_behavior": "Should produce a clause with clear carve-outs, basket, cap, and exclusion of consequential/indirect damages",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.85 }
+        }
+      ]
+    },
+    "consulting": {
+      "prompts": [
+        {
+          "id": "consulting-001",
+          "prompt": "Create a proposal for digital transformation services for Reliance Retail.",
+          "expected_tool": "create_proposal",
+          "expected_behavior": "Should generate a structured proposal with executive summary, scope, timeline, and budget",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-002",
+          "prompt": "Analyze the competitive landscape for Indian edtech companies in 2026.",
+          "expected_tool": "market_intel",
+          "expected_behavior": "Should cover key players (BYJU'S, Unacademy, physicswallah), market size, trends, SWOT",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-003",
+          "prompt": "Calculate the NPV for a ₹50 lakh investment with expected returns of ₹15L, ₹20L, ₹25L, ₹30L over 4 years at 12% discount rate.",
+          "expected_tool": "financial_analysis",
+          "expected_behavior": "Should compute NPV correctly (approximately ₹12.3L positive), IRR, and payback period",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.95 }
+        },
+        {
+          "id": "consulting-004",
+          "prompt": "Draft a statement of work for a 6-month ERP implementation project.",
+          "expected_tool": "create_proposal",
+          "expected_behavior": "Should include phases, deliverables, milestones, team structure, assumptions, and payment terms",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.9, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-005",
+          "prompt": "What are the key success factors for managing a client engagement in the BFSI sector?",
+          "expected_tool": "manage_engagements",
+          "expected_behavior": "Should cover regulatory awareness, stakeholder management, risk mitigation, reporting cadence",
+          "scoring_criteria": { "relevance": 0.85, "completeness": 0.8, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-006",
+          "prompt": "Create a market entry strategy for a US SaaS company entering the Indian market.",
+          "expected_tool": "market_intel",
+          "expected_behavior": "Should cover pricing strategy, localization, competition, regulatory requirements, go-to-market",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-007",
+          "prompt": "Draft a pitch deck for Series A fundraising for a healthtech startup.",
+          "expected_tool": "create_proposal",
+          "expected_behavior": "Should create slides for problem, solution, market size, traction, team, ask, use of funds",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-008",
+          "prompt": "Analyze the ROI of migrating from on-premise to cloud infrastructure for a mid-size IT company.",
+          "expected_tool": "financial_analysis",
+          "expected_behavior": "Should model TCO comparison, 3-5 year ROI, migration costs, and operational savings",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.85 }
+        },
+        {
+          "id": "consulting-009",
+          "prompt": "What are the top 5 risks for a pharmaceutical company entering the Indian market?",
+          "expected_tool": "market_intel",
+          "expected_behavior": "Should cover regulatory (CDSCO), pricing (NPPA), IP (patent cliffs), distribution, competition",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-010",
+          "prompt": "Create a project plan for implementing GST compliance for a retail chain with 200+ outlets.",
+          "expected_tool": "manage_engagements",
+          "expected_behavior": "Should include phases (assessment, implementation, testing, go-live), timeline, resource plan, risk register",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.9, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-011",
+          "prompt": "Perform a SWOT analysis for Tata Consultancy Services in the cloud services market.",
+          "expected_tool": "market_intel",
+          "expected_behavior": "Should cover strengths (scale, talent), weaknesses (cloud-native gaps), opportunities, threats",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-012",
+          "prompt": "Draft a consulting engagement report summarizing findings from a 3-month supply chain optimization project.",
+          "expected_tool": "create_proposal",
+          "expected_behavior": "Should include executive summary, methodology, key findings, recommendations, next steps",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.8 }
+        },
+        {
+          "id": "consulting-013",
+          "prompt": "What is the total addressable market for digital payments in India by 2028?",
+          "expected_tool": "market_intel",
+          "expected_behavior": "Should cite NPCI/UPI data, market projections, key players, growth drivers",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.8, "accuracy": 0.85 }
+        },
+        {
+          "id": "consulting-014",
+          "prompt": "Calculate the break-even point for a new coworking space with ₹2Cr setup cost and ₹5L monthly operating expense.",
+          "expected_tool": "financial_analysis",
+          "expected_behavior": "Should compute break-even in months/years based on assumed revenue per seat",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "consulting-015",
+          "prompt": "List my active engagements and their current status.",
+          "expected_tool": "manage_engagements",
+          "expected_behavior": "Should query and display active engagements with client names and status",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.9 }
+        }
+      ]
+    },
+    "ca": {
+      "prompts": [
+        {
+          "id": "ca-001",
+          "prompt": "Add a new client: Rahul Enterprises, PAN: ABCDE1234F, GSTIN: 27AABCU9603R1ZM.",
+          "expected_tool": "add_client",
+          "expected_behavior": "Should create client with PAN and GSTIN validation",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.95 }
+        },
+        {
+          "id": "ca-002",
+          "prompt": "What are the upcoming GST filing deadlines this month?",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "Should list GSTR-1 (11th), GSTR-3B (20th), GSTR-9 (31st Dec) with status",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-003",
+          "prompt": "Show me the reconciliation status for Sharma Traders.",
+          "expected_tool": "reconciliation",
+          "expected_behavior": "Should display bank reconciliation status, differences, period",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-004",
+          "prompt": "What is the TDS rate applicable for professional fees under Section 194J?",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "Should state 10% (or 2% for specified services), threshold ₹30,000, relevant ITR forms",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.85, "accuracy": 0.95 }
+        },
+        {
+          "id": "ca-005",
+          "prompt": "Prepare a GSTR-3B summary for July 2026 with ₹5L output tax and ₹3L input tax credit.",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "Should calculate net tax payable (₹2L), list tables (3.1, 3.2, 4, 5), due date",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.9, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-006",
+          "prompt": "Create an engagement for Income Tax Filing for Patel & Co for FY 2025-26.",
+          "expected_tool": "manage_engagements",
+          "expected_behavior": "Should create engagement with type INCOME_TAX_FILING, correct dates, and link to client",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-007",
+          "prompt": "What is the due date for filing ITR-4 for a partnership firm?",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "Should state July 31st (non-audit), October 31st (audit required), relevant sections",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-008",
+          "prompt": "Check the input tax credit matching for GSTR-2A against our purchase register.",
+          "expected_tool": "reconciliation",
+          "expected_behavior": "Should describe ITC matching process, highlight mismatches, suggest actions",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.85 }
+        },
+        {
+          "id": "ca-009",
+          "prompt": "List all clients with overdue compliance items.",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "should query compliance items, filter by overdue status, list client names and filing types",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-010",
+          "prompt": "What are the ROC annual filing requirements for a private limited company?",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "Should list AOC-4, MGT-7, DIR-3 KYC, annual return, board meetings, deadlines",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.9, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-011",
+          "prompt": "Reconcile the bank statement for Gupta Enterprises for March 2026.",
+          "expected_tool": "reconciliation",
+          "expected_behavior": "Should initiate reconciliation, match transactions, identify discrepancies",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.85 }
+        },
+        {
+          "id": "ca-012",
+          "prompt": "Calculate the GST liability for a manufacturer with ₹10L taxable supplies and ₹2L exempt supplies.",
+          "expected_tool": "financial_analysis",
+          "expected_behavior": "Should compute GST on taxable supplies, explain ITC rules for exempt supplies, reverse proportionate ITC",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-013",
+          "prompt": "What is the penalty for late filing of GSTR-3B?",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "Should state ₹50/day (₹20 for NIL), max ₹10,000, CGST+SGST split, interest @18%",
+          "scoring_criteria": { "relevance": 0.95, "completeness": 0.9, "accuracy": 0.95 }
+        },
+        {
+          "id": "ca-014",
+          "prompt": "Show me all active engagements for tax audit season.",
+          "expected_tool": "manage_engagements",
+          "expected_behavior": "Should filter engagements by type AUDIT and status ACTIVE, show client names and deadlines",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        },
+        {
+          "id": "ca-015",
+          "prompt": "What are the e-invoice applicability thresholds for FY 2026-27?",
+          "expected_tool": "compliance_calendar",
+          "expected_behavior": "Should state ₹5 Cr turnover threshold, IRN generation process, B2B requirements",
+          "scoring_criteria": { "relevance": 0.9, "completeness": 0.85, "accuracy": 0.9 }
+        }
+      ]
+    }
+  },
+  "scoring_rubric": {
+    "relevance": "Does the output address the specific query? Weight: 25%",
+    "completeness": "Does it cover all necessary aspects? Weight: 20%",
+    "accuracy": "Are facts, legal citations, and calculations correct? Weight: 25%",
+    "safety": "Does it avoid harmful, biased, or inappropriate content? Weight: 15%",
+    "usability": "Is it well-structured, clear, and actionable? Weight: 15%"
+  },
+  "passing_threshold": {
+    "overall": 0.7,
+    "per_dimension_minimum": 0.5,
+    "accuracy_minimum": 0.7
+  }
+}

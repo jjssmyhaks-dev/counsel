@@ -255,6 +255,10 @@ model Firm {
   accessPolicies  AccessPolicy[]
   onboarding      OnboardingProgress?
 
+  // Eval & Feedback
+  feedbackLogs    FeedbackLog[]
+  evalResults     EvalResult[]
+
   @@map("firms")
 }
 
@@ -299,6 +303,7 @@ model User {
   kbQueries      KbQuery[]           @relation("KbQueryCreatedBy")
   auditLogs      AuditLog[]
   actionItems    MeetingActionItem[] @relation("ActionItemOwner")
+  feedbackLogs   FeedbackLog[]
 
   @@index([firmId])
   @@map("users")
@@ -902,4 +907,53 @@ model OnboardingProgress {
   firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
 
   @@map("onboarding_progress")
+}
+
+// ─── Eval & Feedback Models ────────────────────────────────────────────────
+
+model FeedbackLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  firmId       String   @map("firm_id") @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  messageId    String   @map("message_id")
+  threadId     String?  @map("thread_id")
+  planId       String?  @map("plan_id")
+  stepId       String?  @map("step_id")
+  toolOrCrew   String   @map("tool_or_crew")
+  feedbackType String   @map("feedback_type")
+  score        Float    @default(0)
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  firm Firm  @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([firmId])
+  @@index([userId])
+  @@index([toolOrCrew])
+  @@index([feedbackType])
+  @@index([createdAt])
+  @@map("feedback_logs")
+}
+
+model EvalResult {
+  id           String   @id @default(uuid()) @db.Uuid
+  firmId       String   @map("firm_id") @db.Uuid
+  planId       String?  @map("plan_id")
+  toolName     String   @map("tool_name")
+  inputText    String?  @map("input_text")
+  outputText   String?  @map("output_text")
+  scores       Json
+  overallScore Float    @map("overall_score")
+  executionMs  Int?     @map("execution_ms")
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@index([firmId])
+  @@index([toolName])
+  @@index([overallScore])
+  @@index([createdAt])
+  @@map("eval_results")
 }
