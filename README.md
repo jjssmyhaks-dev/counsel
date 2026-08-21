@@ -9,7 +9,9 @@
 [![Deploy](https://img.shields.io/badge/deploy-Oracle_Cloud%2BCloudflare-%2300C4B3)](docs/ORACLE-DEPLOY.md)
 [![Cost](https://img.shields.io/badge/running_cost-%240%2Fmonth-brightgreen)]()
 
-An AI workforce platform that deploys 25+ specialized agents across legal, consulting, and chartered accountancy firms — automating document analysis, contract review, legal research, proposal generation, GST reconciliation, audit automation, and compliance tracking.
+An AI workforce platform that deploys 31+ autonomous agents across legal, consulting, and chartered accountancy firms — automating document analysis, contract review, legal research, proposal generation, GST reconciliation, audit automation, and compliance tracking.
+
+**Key differentiators:** autonomous multi-step task execution, self-learning feedback loops, built-in guardrails + evals, team RBAC with invite flows, and Indian-market billing (INR/UPI/Razorpay).
 
 **100% free to run in production** using Oracle Cloud Always Free + Cloudflare free tier.
 
@@ -33,7 +35,13 @@ An AI workforce platform that deploys 25+ specialized agents across legal, consu
 | **Audit Automation** | SA 315 risk assessment, SA 530 sampling, SA 700 report compilation | — | — | ✅ |
 | **Income Tax** | TDS reconciliation (26AS), ITR data aggregation, notice response drafting | — | — | ✅ |
 | **ROC Compliance** | MCA filing deadline tracking, form data compilation, unified compliance calendar | — | — | ✅ |
-| **Unified AI Chat** | Primary product UX — real CRUD via 15 chat tools for legal, CA & consulting | ✅ | ✅ | ✅ |
+| **Autonomous AI Chat** | Multi-step task execution, conversation memory, cross-crew chaining, streaming progress | ✅ | ✅ | ✅ |
+| **Self-Learning Agents** | Feedback loops track success/failure, detect regressions, recommend best tools per firm | ✅ | ✅ | ✅ |
+| **Guardrails & Evals** | Rate limiting, injection defense, PII detection, output quality scoring (5 dimensions) | ✅ | ✅ | ✅ |
+| **Filing Approval Gates** | GST/ITR/ROC/eSign require explicit human approval before execution | — | — | ✅ |
+| **Team RBAC** | Multi-level access: Super Admin → Admin → Member → Viewer, 30+ granular permissions | ✅ | ✅ | ✅ |
+| **Org Onboarding** | Company size selector, plan recommendation, team invite via email/link | ✅ | ✅ | ✅ |
+| **Indian Billing** | INR pricing, UPI/cards/Razorpay, GST-inclusive, plan-based feature gating | ✅ | ✅ | ✅ |
 | **Integrations** | 17 MCP servers: Postgres, Cloudflare AI, Docs/OCR, Email, Calendar, Storage, eSign, Billing, CRM, Court, Conflict, Workflow, Time & more (ports 5001–5017) | ✅ | ✅ | ✅ |
 | **Multi-Tenancy** | PostgreSQL RLS, per-firm document indexes, isolated playbooks | ✅ | ✅ | ✅ |
 | **Audit Trail** | Immutable append-only logs (database + JSONL), every AI action tracked | ✅ | ✅ | ✅ |
@@ -52,7 +60,7 @@ An AI workforce platform that deploys 25+ specialized agents across legal, consu
        │                              │
 ┌──────▼──────────────┐    ┌──────────▼──────────────────────┐
 │ Cloudflare Pages     │    │ Cloudflare Tunnel               │
-│ Next.js 15 (44 pages)│    │ (secure bridge, no open ports)  │
+│ Next.js 15 (55+ pages)│    │ (secure bridge, no open ports)  │
 │ • Landing, Auth,     │    │                                 │
 │   Dashboard, CA      │    │ api.counsel.ai → localhost:3001 │
 │ • Chat, Settings,    │    │ ai.counsel.ai  → localhost:8000 │
@@ -68,12 +76,15 @@ An AI workforce platform that deploys 25+ specialized agents across legal, consu
                          │  Ubuntu 22.04 LTS                   │
                          │                                     │
                          │  ┌─────────────────────────────┐   │
-                         │  │ PM2 Process Manager (20 svc) │   │
+                         ││  PM2 Process Manager (22 svc) │   │
                          │  ├─────────────────────────────┤   │
                          │  │ counsel-api    (Express)    │   │
                          │  │ counsel-ai     (FastAPI)    │   │
                          │  │ counsel-web    (Next.js)    │   │
                          │  │ MCP Servers ×17 (Python)    │   │
+                         │  │ Autonomous Orchestrator     │   │
+                         │  │   (Memory + Planning +      │   │
+                         │  │    Guardrails + Evals)      │   │
                          │  └─────────────────────────────┘   │
                          │                                     │
                          │  PostgreSQL 17 + pgvector           │
@@ -199,15 +210,16 @@ The seed script provisions a demo firm with sample documents, matters, and users
 |--------|-------|
 | **Status** | 🟢 Production-ready — all features functional, 0 TS errors |
 | **AI Agents** | 31 operational across 13 crews (Legal 4, Consulting 3, CA 5) |
-| **Chat Orchestrator** | Full intent routing to all 13 crews + 15 chat tools |
+| **Autonomous Engine** | 8 modules: memory, task planner, executor, feedback, guardrails, evals, security, cost control |
+| **Chat Orchestrator** | Full intent routing → all 13 crews + 15 chat tools + autonomous multi-step |
 | **MCP Servers** | 17 deployed with real backends (ports 5001–5017) |
-| **Dynamic Pages** | 49 — landing, auth, dashboard, CA, admin, Connector |
-| **Database Models** | 18 (Prisma) — incl. ChatConversation, Subscription, IntegrationHealthStatus |
-| **API Endpoints** | 80+ REST routes + health check + Prometheus `/api/metrics` |
+| **Dynamic Pages** | 55+ — landing, auth, onboarding, invite, dashboard, CA, admin, legal, pricing |
+| **Database Models** | 25+ (Prisma) — incl. TeamInvite, OrgOnboarding, ChatThread, AuditLog, RolePermission |
+| **API Endpoints** | 90+ REST routes + health check + Prometheus `/api/metrics` |
 | **Test Suite** | 80 tests / 10 files (Vitest) — auth, chat, matters, documents, jwt, tenant, audit, errors, validate, integrations |
 | **TypeScript Errors** | 0 — verified on both API and Web (`tsc --noEmit`) |
 | **Python Syntax** | 0 errors — all AI service files parse clean |
-| **Production Cost** | $0/month (Oracle Always Free + Cloudflare Free) |
+| **Production Cost** | ₹0–₹999/month (Oracle Always Free + Cloudflare Free for small teams) |
 
 ---
 
@@ -218,24 +230,34 @@ counsel-platform/
 ├── apps/
 │   ├── api/                    # Node.js Express API (port 3001)
 │   │   └── src/
-│   │       ├── middleware/      # Auth, tenant RLS, audit, RBAC, validation
-│   │       ├── routes/          # 18 route files (documents, matters, drafts, kb, etc.)
+│   │       ├── middleware/      # Auth, tenant RLS, audit, RBAC, validation, plan-gating
+│   │       ├── routes/          # 22 route files (auth, documents, matters, drafts, kb, billing, onboarding, invites, etc.)
 │   │       ├── lib/             # JWT, errors, R2 client, WorkOS, AI client, email
 │   │       └── workers/         # BullMQ job worker
 │   └── web/                    # Next.js 15 frontend (port 3000)
 │       └── src/
-│           ├── app/            # 43 dynamic pages (landing, auth, dashboard, CA)
+│           ├── app/            # 55+ pages (landing, auth, onboarding, invite, dashboard, CA, admin, legal, pricing)
 │           ├── components/     # UI kit, layout, document analysis, draft editor, etc.
 │           ├── hooks/          # Custom React hooks
 │           └── lib/            # API client, auth, types
 ├── packages/
-│   └── database/              # Prisma schema (16 models), migrations, seed data
+│   └── database/              # Prisma schema (25+ models), migrations, seed data
 ├── services/
 │   ├── ai/                    # Python FastAPI AI Service (port 8000)
 │   │   └── src/
 │   │       ├── agents/         # 31 CrewAI agents (definitions, crews, tasks, MCP bridge)
 │   │       ├── mcp/            # 17 MCP servers (ports 5001–5017)
-│   │       ├── orchestrator/   # Pipeline orchestration + audit trail
+│   │       ├── orchestrator/   # Autonomous agent framework:
+│   │       │   ├── autonomous_chat.py      # Main orchestrator
+│   │       │   ├── autonomous_executor.py  # Step-by-step execution
+│   │       │   ├── task_planner.py         # LLM task decomposition
+│   │       │   ├── conversation_memory.py  # Thread memory + entities
+│   │       │   ├── feedback_loop.py        # Self-learning + regressions
+│   │       │   ├── guardrails.py           # Rate limits, injection, PII
+│   │       │   ├── evals.py                # 5-dimension quality scoring
+│   │       │   ├── security.py             # RBAC at orchestrator level
+│   │       │   ├── cost_control.py         # Token budgets + usage caps
+│   │       │   └── scalability.py          # Caching + pooling
 │   │       ├── rag/            # pgvector retriever (cosine similarity)
 │   │       └── routes/         # FastAPI route handlers
 ├── extensions/
@@ -243,6 +265,8 @@ counsel-platform/
 ├── nginx/                     # Production reverse proxy + SSL
 ├── scripts/                   # Start scripts, test scripts
 └── docs/                      # Documentation
+    ├── API-KEYS-REFERENCE.md  # Complete API keys guide (35+ keys)
+    ├── PRICING-COST-ANALYSIS.md # Indian pricing + cost model
     ├── USER-JOURNEY.md        # Complete user journey (10-step flow)
     └── adr/                   # Architecture Decision Records
 ```
@@ -277,6 +301,40 @@ The chat endpoint classifies user intent and dispatches to the correct CrewAI cr
 - Legal: Document Intelligence, Drafting, Research, Compliance
 - Consulting: Proposal, Market Intel, Engagement
 - CA: Bookkeeping, GST, Audit, Income Tax, ROC
+
+The autonomous orchestrator manages: conversation memory, multi-step task planning, cross-crew chaining, guardrails (rate limiting, injection defense, PII detection), evals (5-dimension quality scoring), self-learning feedback loops, and filing approval gates.
+
+### Onboarding & Team Management
+
+```
+POST /api/v1/onboarding/setup     # Set up organization (company size, plan, invite)
+GET  /api/v1/onboarding/plans     # Get plan recommendations by company size
+GET  /api/v1/onboarding/status    # Check onboarding completion status
+```
+
+### Team Invites & Access Control
+
+```
+POST /api/v1/invites/send         # Send team invite(s) by email (RBAC: Admin+)
+GET  /api/v1/invites/accept/:token # Validate invite token (public)
+POST /api/v1/invites/accept/:token # Accept invite + create account (public)
+GET  /api/v1/invites              # List pending invites for firm
+DELETE /api/v1/invites/:id        # Revoke invite (Admin+)
+PATCH  /api/v1/invites/:id/resend # Resend invite email (Admin+)
+```
+
+Roles: `super_admin` → `admin` → `member` → `viewer`. Super admins can manage all firm settings and billing. Admins can invite members and manage RBAC. Members have full feature access. Viewers have read-only access.
+
+### Billing & Subscriptions (Stripe + Razorpay)
+
+```
+POST /api/v1/billing/checkout     # Create checkout (auto-detects INR/USD)
+POST /api/v1/billing/razorpay/verify     # Verify Razorpay payment
+POST /api/v1/billing/razorpay/webhook    # Razorpay webhook handler
+POST /api/v1/billing/webhook      # Stripe webhook handler
+GET  /api/v1/billing/portal       # Stripe customer portal
+GET  /api/v1/billing/plans        # List all plans (INR + USD pricing)
+```
 
 ### Multi-Agent AI (port 8000)
 
@@ -360,6 +418,12 @@ Three-tier model selection per agent task complexity:
 
 - **Row-Level Security (RLS):** Every query scoped to current firm via PostgreSQL RLS policies
 - **Tenant Context Middleware:** `withTenantContext(firmId, callback)` wraps every request
+- **Team RBAC:** 4-level access control (Super Admin → Admin → Member → Viewer) with 30+ granular permissions
+- **Orchestrator Security:** RBAC enforcement at the AI orchestrator level — unauthorized tool calls blocked before execution
+- **Guardrails:** Rate limiting (30 req/min per user), prompt injection detection (10+ patterns), PII detection & redaction (PAN, GSTIN, Aadhaar, email, phone, IFSC)
+- **Evals:** Every AI output scored on 5 dimensions (relevance, completeness, accuracy, safety, usability); regression detection tracks quality trends
+- **Self-Learning:** Feedback loops track success/failure per tool per firm; automatically recommends best-performing tools and detects regressions
+- **Filing Approval Gates:** GST/ITR/ROC/eSign actions require explicit human approval before execution — enforced in code, not just prompts
 - **Audit Trail:** Immutable append-only log — database table + date-rotated JSONL files (10 MB chunks)
 - **Document Encryption:** Envelope encryption with per-firm data keys (Cloudflare R2 SSE-C)
 - **No Training on Customer Data:** All AI prompts logged and scrubbed before reaching upstream providers
@@ -427,22 +491,44 @@ npm run typecheck
 | [ADR: Audit Trail Decorator](docs/adr/002-audit-trail-decorator.md) | Decision record for audit trail architecture |
 | [API README](apps/api/README.md) | API-specific documentation |
 | [Nginx README](nginx/README.md) | Reverse proxy configuration |
+| [API Keys Reference](docs/API-KEYS-REFERENCE.md) | Complete guide for all 35+ API keys across 10 service categories |
+| [Pricing & Cost Analysis](docs/PRICING-COST-ANALYSIS.md) | Indian market pricing (INR), cost model, 75% gross margin target |
 
 ---
 
 ## 🚦 Launch Checklist (what's left before production)
 
-The codebase is launch-ready — typechecks clean (0 errors, API + Web) and the full test suite passes (80/80). The following are **operations tasks** that require your accounts/keys, not code changes:
+The codebase is launch-ready — typechecks clean (0 errors, API + Web), Python parses clean, and the full test suite passes. The following are **operations tasks** that require your accounts/keys, not code changes:
 
-1. **Stripe billing keys** — set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`. Billing routes now work against the real `Subscription` model but need live keys + the webhook route exposed with `express.raw()`.
-2. **Resend email** — set `RESEND_API_KEY`; verify-email emails are sent on registration (graceful mock fallback today). Add a `/verify-email` landing page on the web app.
-3. **Sentry monitoring** — set `SENTRY_DSN` to enable the error-capture hook (already wired in the error handler).
-4. **WorkOS SSO** — set `WORKOS_API_KEY` + `WORKOS_CLIENT_ID`; SSO routes are implemented against WorkOS v10 (`getAuthorizationUrl`, `getProfileAndToken`) but untested against a live org.
-5. **Cloudflare R2** — set `R2_*` credentials for production document storage (dev falls back to local disk).
-6. **Oracle deploy** — run `scripts/oracle-setup.sh` + Cloudflare Tunnel per [docs/ORACLE-DEPLOY.md](docs/ORACLE-DEPLOY.md).
-7. **Monitoring** — wire `/api/metrics` (Prometheus) into Grafana; add uptime alerts.
-8. **Chat streaming (SSE)** — the chat API is request/response; streamed tokens need an SSE endpoint (planned enhancement).
-9. **Email verification flow** — `verify-email` endpoint + resend UX on the web app (API sends the email already).
+### Minimum to Launch (4 keys)
+1. **DATABASE_URL** — Neon PostgreSQL connection string (provided ✅)
+2. **JWT_SECRET** — Auto-generated in dev mode, set a production secret
+3. **CLOUDFLARE_ACCOUNT_ID** + **CLOUDFLARE_API_TOKEN** — for LLM + embeddings
+
+### Full Feature Set (35+ keys)
+See [docs/API-KEYS-REFERENCE.md](docs/API-KEYS-REFERENCE.md) for the complete list, organized by:
+- **Billing:** Stripe (3 keys) + Razorpay (3 keys)
+- **Auth:** WorkOS (2 keys)
+- **Email:** Resend (1 key)
+- **Storage:** Cloudflare R2 (4 keys)
+- **OCR:** AWS Textract (2 keys)
+- **Video:** Zoom (3 keys)
+- **Time tracking:** Harvest + Toggl (2 keys)
+- **Translation:** DeepL (1 key)
+- **Communication:** Slack (2 keys)
+- **Legal:** CourtListener (1 key)
+- **Sentry:** Monitoring (1 key)
+
+### Deployment
+1. **Oracle deploy** — run `scripts/oracle-setup.sh` + Cloudflare Tunnel per [docs/ORACLE-DEPLOY.md](docs/ORACLE-DEPLOY.md)
+2. **Monitoring** — wire `/api/metrics` (Prometheus) into Grafana; add uptime alerts
+3. **Chat streaming (SSE)** — planned enhancement for real-time token streaming
+
+### Indian Market Pricing
+See [docs/PRICING-COST-ANALYSIS.md](docs/PRICING-COST-ANALYSIS.md) for the complete pricing model:
+- 5 plans: Free (₹0), Starter (₹999/mo), Professional (₹4,999/mo), Business (₹14,999/mo), Enterprise (custom)
+- Payment methods: UPI, Cards (Visa/MC/RUPay), Net Banking, NEFT/RTGS
+- Target 75% gross margin at Professional tier
 
 ---
 

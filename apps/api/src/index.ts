@@ -47,6 +47,8 @@ import integrationsRoutes from './routes/integrations';
 import mediumIntegrationsRoutes from './routes/medium-integrations';
 import docusignRoutes from './routes/docusign';
 import googleRoutes from './routes/google';
+import onboardingRoutes from './routes/onboarding';
+import inviteRoutes from './routes/invites';
 
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -214,6 +216,9 @@ app.use('/api/v1/integrations', integrationsRoutes);
 app.use('/api/v1', mediumIntegrationsRoutes);
 app.use('/api/v1/docusign', docusignRoutes);
 app.use('/api/v1/google', googleRoutes);
+app.use('/api/v1/onboarding', onboardingRoutes);
+app.use('/api/v1/invites', inviteRoutes);
+app.use('/api/v1/team', inviteRoutes);  // alias for team management
 
 // ─── Global error handler (must be last) ────────────────────────────────────
 app.use(errorHandler);

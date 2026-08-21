@@ -26,11 +26,27 @@ enum FirmVertical {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   PARTNER
   ASSOCIATE
   ANALYST
   READONLY
+}
+
+enum CompanySize {
+  SOLO
+  SMALL
+  MEDIUM
+  LARGE
+  ENTERPRISE
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
 }
 
 enum MatterType {
@@ -202,9 +218,13 @@ model Firm {
   slug                String       @unique
   firmType            FirmType     @default(LEGAL) @map("firm_type")
   firmVertical        FirmVertical @default(LEGAL) @map("firm_vertical")
+  companySize         CompanySize  @default(SOLO) @map("company_size")
   onboardingCompleted Boolean      @default(false) @map("onboarding_completed")
   plan                String       @default("free")
   seatCount           Int          @default(5) @map("seat_count")
+  inviteCount         Int          @default(0) @map("invite_count")
+  aiTokensUsed        Int          @default(0) @map("ai_tokens_used")
+  aiTokensBudget      Int          @default(100000) @map("ai_tokens_budget")
   createdAt           DateTime     @default(now()) @map("created_at")
   updatedAt           DateTime     @updatedAt @map("updated_at")
 
@@ -229,6 +249,11 @@ model Firm {
   reconciliations Reconciliation[]
   dscKeys         DSCKey[]
   subscriptions   Subscription[]
+
+  // Team management
+  teamInvites     TeamInvite[]
+  accessPolicies  AccessPolicy[]
+  onboarding      OnboardingProgress?
 
   @@map("firms")
 }
@@ -258,7 +283,7 @@ model User {
   email        String   @unique
   name         String
   passwordHash String?  @map("password_hash")
-  role         UserRole @default(READONLY)
+  role         UserRole @default(ASSOCIATE)
   avatarUrl    String?  @map("avatar_url")
   lastLoginAt  DateTime? @map("last_login_at")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -805,4 +830,76 @@ model ChatConversation {
   @@index([userId])
   @@index([updatedAt])
   @@map("chat_conversations")
+}
+
+// ─── Team Invites ─────────────────────────────────────────────────
+model TeamInvite {
+  id           String       @id @default(uuid()) @db.Uuid
+  firmId       String       @map("firm_id") @db.Uuid
+  email        String
+  role         UserRole     @default(ASSOCIATE)
+  invitedById  String       @map("invited_by_id") @db.Uuid
+  status       InviteStatus @default(PENDING)
+  token        String       @unique
+  expiresAt    DateTime     @map("expires_at")
+  acceptedAt   DateTime?    @map("accepted_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@index([firmId])
+  @@index([email])
+  @@index([token])
+  @@map("team_invites")
+}
+
+// ─── Access Policies (fine-grained RBAC) ───────────────────────────
+model AccessPolicy {
+  id           String   @id @default(uuid()) @db.Uuid
+  firmId       String   @map("firm_id") @db.Uuid
+  role         UserRole
+  resource     String   // e.g. "matters", "documents", "billing", "admin"
+  permission   String   // e.g. "read", "write", "delete", "manage"
+  allowed      Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@unique([firmId, role, resource, permission])
+  @@index([firmId])
+  @@map("access_policies")
+}
+
+// ─── AI Usage Logs (cost tracking) ────────────────────────────────
+model AiUsageLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  firmId       String   @map("firm_id") @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  toolName     String   @map("tool_name")
+  tokensIn     Int      @default(0) @map("tokens_in")
+  tokensOut    Int      @default(0) @map("tokens_out")
+  costUsd      Float    @default(0) @map("cost_usd")
+  modelUsed    String?  @map("model_used")
+  durationMs   Int?     @map("duration_ms")
+  status       String   @default("success")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([firmId])
+  @@index([createdAt])
+  @@map("ai_usage_logs")
+}
+
+// ─── Onboarding Steps ─────────────────────────────────────────────
+model OnboardingProgress {
+  id           String   @id @default(uuid()) @db.Uuid
+  firmId       String   @unique @map("firm_id") @db.Uuid
+  completedSteps Json   @default("[]")
+  currentStep   String  @default("welcome")
+  completedAt   DateTime? @map("completed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_progress")
 }
