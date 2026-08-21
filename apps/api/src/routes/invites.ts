@@ -4,6 +4,43 @@ import bcrypt from 'bcryptjs';
 
 const router = Router();
 
+// ─── Helper: generate invite token ─────────────────────────────────────
+function generateInviteToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 32; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+  return result;
+}
+
+// ─── GET /invites ─── List all invites for firm ────────────────────────
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const firmId = (req as any).firmId;
+    const invites = await prisma.teamInvite.findMany({
+      where: { firmId }, orderBy: { createdAt: 'desc' },
+      select: { id: true, email: true, role: true, status: true, expiresAt: true, createdAt: true },
+    });
+    res.json({ data: invites, total: invites.length });
+  } catch (err) { next(err); }
+});
+
+// ─── POST /invites/send ─── Send team invite by email ──────────────────
+router.post('/send', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const firmId = (req as any).firmId;
+    const { email, role } = req.body;
+    if (!email || !email.includes('@')) { res.status(400).json({ error: 'Valid email required' }); return; }
+    const existing = await prisma.user.findFirst({ where: { firmId, email } });
+    if (existing) { res.status(400).json({ error: 'Already a team member' }); return; }
+    const userId = (req as any).user?.id;
+    const token = generateInviteToken();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    if (!userId) { res.status(401).json({ error: 'Authentication required' }); return; }
+    const invite = await prisma.teamInvite.create({ data: { firmId, email, role: (role || 'ASSOCIATE') as any, token, expiresAt, invitedById: userId } });
+    res.status(201).json({ invite: { id: invite.id, email, role: invite.role, expiresAt } });
+  } catch (err) { next(err); }
+});
+
 // ─── GET /invites/accept/:token ─── Validate invite token ────────
 router.get('/accept/:token', async (req: Request, res: Response, next: NextFunction) => {
   try {

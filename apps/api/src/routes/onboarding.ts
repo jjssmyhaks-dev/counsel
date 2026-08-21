@@ -37,6 +37,21 @@ const PLAN_RECOMMENDATIONS: Record<string, { plan: string; seats: number; price:
   },
 };
 
+// ─── GET /onboarding/plans ─── Get plan recommendations by company size ───
+router.get('/plans', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const firmId = (req as any).firmId;
+    const firm = await prisma.firm.findUnique({ where: { id: firmId }, select: { companySize: true, plan: true, firmType: true } });
+
+    res.json({
+      currentPlan: firm?.plan || 'free',
+      companySize: firm?.companySize || 'SOLO',
+      recommendations: PLAN_RECOMMENDATIONS,
+      allSizes: Object.keys(PLAN_RECOMMENDATIONS),
+    });
+  } catch (err) { next(err); }
+});
+
 // ─── GET /onboarding/status ─── Get onboarding progress ─────────
 router.get('/status', async (req: Request, res: Response, next: NextFunction) => {
   try {

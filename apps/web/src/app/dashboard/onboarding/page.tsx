@@ -49,9 +49,9 @@ function getSteps(firmType: string) {
 }
 
 const PLAN_DATA: { id: PlanTier; name: string; price: string; features: string[]; highlight: boolean }[] = [
-  { id: 'starter', name: 'Starter', price: 'Free', features: ['50 documents/month', 'Standard playbook', '12 clause types', '1 user'], highlight: false },
-  { id: 'growth', name: 'Growth', price: '$299/mo', features: ['Unlimited documents', 'Custom playbooks', '23 clause types', 'AI drafting', 'Up to 25 users', 'SSO/SAML'], highlight: true },
-  { id: 'scale', name: 'Scale', price: '$799/mo', features: ['Everything in Growth', 'Custom AI fine-tuning', 'API access', 'Dedicated CSM', 'Unlimited users', '99.9% SLA'], highlight: false },
+  { id: 'starter', name: 'Starter', price: '₹999/mo', features: ['200 documents/month', 'Standard playbook', '23 clause types', '3 users', 'Email support'], highlight: false },
+  { id: 'growth', name: 'Professional', price: '₹4,999/mo', features: ['Unlimited documents', 'Custom playbooks', '23 clause types', 'AI drafting', 'Up to 15 users', 'SSO/SAML', 'Priority support'], highlight: true },
+  { id: 'scale', name: 'Business', price: '₹14,999/mo', features: ['Everything in Professional', 'Custom AI fine-tuning', 'API access', 'Dedicated CSM', 'Unlimited users', '99.9% SLA', 'Custom integrations'], highlight: false },
 ];
 
 const INTEGRATIONS = [

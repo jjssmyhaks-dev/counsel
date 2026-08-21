@@ -1,7 +1,10 @@
 import dotenv from 'dotenv';
 import path from 'path';
-// Load env from project root as fallback (workspace .env)
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Load env from multiple locations (API dir → workspace → project root)
+dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env.local') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config();
 import express from 'express';
 import cors from 'cors';

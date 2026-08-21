@@ -53,37 +53,48 @@ export default function UsersPage() {
  }
  }
 
- function handleInvite() {
+ async function handleInvite() {
  if (!inviteName.trim() || !inviteEmail.trim()) return;
- const newUser: User = {
- id: `user-${Date.now()}`,
- email: inviteEmail,
- name: inviteName,
- role: inviteRole,
- firmId: 'firm-001',
- createdAt: new Date().toISOString(),
- lastLoginAt: undefined,
- };
- setUsers((prev) => [...prev, newUser]);
+ try {
+ await api.post('/invites/send', { email: inviteEmail, role: inviteRole.toUpperCase() });
  setShowInvite(false);
  setInviteName('');
  setInviteEmail('');
  setInviteRole('associate');
+ loadUsers(); // Refresh the list
+ } catch (err: any) {
+ setError(err.message || 'Failed to send invitation');
+ }
  }
 
- function handleEditRole(userId: string, newRole: User['role']) {
+ async function handleEditRole(userId: string, newRole: User['role']) {
+ try {
+ await api.post(`/invites/access/members/${userId}/role`, { role: newRole.toUpperCase() });
  setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
  setEditRoleId(null);
+ } catch (err: any) {
+ setError(err.message || 'Failed to update role');
+ }
  }
 
- function handleDeactivate(userId: string) {
+ async function handleDeactivate(userId: string) {
+ try {
+ await api.delete(`/invites/access/members/${userId}`);
  setUsers((prev) => prev.filter((u) => u.id !== userId));
  setDeactivateId(null);
+ } catch (err: any) {
+ setError(err.message || 'Failed to remove user');
+ }
  }
 
- function handleRemove(userId: string) {
+ async function handleRemove(userId: string) {
+ try {
+ await api.delete(`/invites/access/members/${userId}`);
  setUsers((prev) => prev.filter((u) => u.id !== userId));
  setRemoveId(null);
+ } catch (err: any) {
+ setError(err.message || 'Failed to remove user');
+ }
  }
 
  return (
