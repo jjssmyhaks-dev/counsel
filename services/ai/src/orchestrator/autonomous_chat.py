@@ -22,6 +22,10 @@ from .conversation_memory import memory_store, ThreadContext, TaskContext
 from .task_planner import task_planner, ExecutionPlan, StepStatus
 from .autonomous_executor import AutonomousExecutor
 from .audit_agent import audit_trail, AuditAction
+from .feedback_loop import feedback_loop, FeedbackType
+from .guardrails import guardrails
+from .evals import eval_framework
+from .security import security, SecurityContext, UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +93,7 @@ class AutonomousChatEngine:
         thread_id: Optional[str] = None,
         approved_steps: Optional[List[str]] = None,
         on_progress: Optional[callable] = None,
+        user_role: str = "ASSOCIATE",
     ) -> Dict[str, Any]:
         """
         Process a chat message autonomously.
@@ -100,6 +105,7 @@ class AutonomousChatEngine:
             thread_id: Existing thread ID (or None to create new)
             approved_steps: List of step IDs that were pre-approved by user
             on_progress: Callback for streaming progress updates
+            user_role: User's role for RBAC
 
         Returns:
             {
@@ -111,6 +117,26 @@ class AutonomousChatEngine:
                 "tool_suggestions": [...],  # Suggested next actions
             }
         """
+        # 0. Security context
+        ctx = SecurityContext(
+            firm_id=firm_id, user_id=user_id,
+            user_role=UserRole(user_role) if user_role in [r.value for r in UserRole] else UserRole.ASSOCIATE,
+        )
+        valid, reason = security.validate_session(ctx)
+        if not valid:
+            return {"thread_id": thread_id or "", "message_id": "", "content": f"Security error: {reason}", "plan": None, "entities": {}, "tool_suggestions": []}
+
+        # 0b. Rate limit check
+        rate_allowed, rate_reason = guardrails.rate_limiter.check_rate_limit(firm_id)
+        if not rate_allowed:
+            return {"thread_id": thread_id or "", "message_id": "", "content": f"{rate_reason}. Please wait a moment.", "plan": None, "entities": {}, "tool_suggestions": []}
+
+        # 0c. Input validation + PII detection
+        valid, reason, sanitized_message = guardrails.input_validator.validate_message(message)
+        if not valid:
+            return {"thread_id": thread_id or "", "message_id": "", "content": f"Input rejected: {reason}", "plan": None, "entities": {}, "tool_suggestions": []}
+        message = sanitized_message
+
         # 1. Load or create thread
         thread = memory_store.get_or_create_thread(firm_id, user_id, thread_id)
 
@@ -183,7 +209,7 @@ class AutonomousChatEngine:
             thread_context={"entities": thread.entities, "preferences": thread.user_preferences},
         )
 
-        # 7. Store task results in thread context
+        # 7. Store task results + feedback + evals
         for step in plan.steps:
             task = TaskContext(
                 task_id=step.id,
@@ -204,6 +230,30 @@ class AutonomousChatEngine:
                 output_data=task.output_data,
                 error=task.error,
             )
+
+            # Record feedback for self-learning
+            if step.status == StepStatus.COMPLETED:
+                feedback_loop.record_feedback(
+                    firm_id=firm_id, user_id=user_id, thread_id=thread.thread_id,
+                    plan_id=plan.id, step_id=step.id, tool_or_crew=step.tool_or_crew,
+                    feedback_type=FeedbackType.TASK_SUCCESS,
+                )
+                # Post-execution output validation
+                output_text = step.result.get("raw_output", "") if step.result else ""
+                if output_text:
+                    guardrails.post_execution_check(firm_id, step.tool_or_crew, output_text, message)
+                    # Run eval
+                    eval_framework.evaluate(
+                        firm_id=firm_id, plan_id=plan.id, tool_name=step.tool_or_crew,
+                        input_text=message, output_text=output_text,
+                    )
+            elif step.status == StepStatus.FAILED:
+                feedback_loop.record_feedback(
+                    firm_id=firm_id, user_id=user_id, thread_id=thread.thread_id,
+                    plan_id=plan.id, step_id=step.id, tool_or_crew=step.tool_or_crew,
+                    feedback_type=FeedbackType.TASK_FAILURE,
+                    metadata={"error": step.error or ""},
+                )
 
         # 8. Build response
         content = result.get("final_output", "I wasn't able to complete your request.")
