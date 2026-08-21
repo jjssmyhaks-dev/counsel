@@ -263,9 +263,9 @@ counsel-platform/
 ├── apps/
 │   ├── api/                    # Node.js Express API (port 3001)
 │   │   └── src/
-│   │       ├── middleware/      # Auth, tenant RLS, audit, RBAC, validation, plan-gating
+│   │       ├── middleware/      # Auth, tenant RLS, audit, RBAC, validation, plan-gating, cache
 │   │       ├── routes/          # 22 route files (auth, documents, matters, drafts, kb, billing, onboarding, invites, etc.)
-│   │       ├── lib/             # JWT, errors, R2 client, WorkOS, AI client, email
+│   │       ├── lib/             # JWT, errors, R2 client, WorkOS, AI client, email, Redis
 │   │       └── workers/         # BullMQ job worker
 │   └── web/                    # Next.js 15 frontend (port 3000)
 │       └── src/
@@ -494,6 +494,71 @@ npm run lint
 npm run typecheck
 ```
 
+### CI/CD Pipeline (GitHub Actions)
+
+The `.github/workflows/ci.yml` runs a 7-stage pipeline on every push/PR to `main`:
+
+1. **Lint** — ESLint for API + Web
+2. **TypeCheck** — `tsc --noEmit` for both apps (0 errors required)
+3. **Tests** — Vitest with Redis service container
+4. **Python Check** — `py_compile` all 82 files + import validation
+5. **Build** — Next.js + Express build with artifact upload
+6. **Deploy** — Main branch only (configure your deploy target)
+7. **Docker Build** — Builds all 4 images (API, Web, AI, MCP) with layer caching
+
+Concurrency groups cancel in-progress runs on the same branch.
+
+---
+
+## 🗄️ Redis Caching
+
+Counsel uses Redis (ioredis) for distributed caching, rate limiting, and locking. Gracefully falls back to in-memory Map when Redis is unavailable.
+
+| Feature | Description |
+|---------|-------------|
+| **HTTP Response Cache** | GET responses cached per-route + per-user + per-firm (tenant-scoped) |
+| **Distributed Rate Limiting** | Sliding-window rate limiter via sorted sets (supplements express-rate-limit) |
+| **Distributed Locks** | Lua-based compare-and-delete for preventing duplicate job processing |
+| **Pattern Invalidation** | SCAN-based cache busting on mutations (safe for production) |
+| **Health Check** | Redis status reported in `GET /api/health` |
+
+Cached routes: matters (2min), documents (2min), drafts (1min), meetings (1min), KB (5min), playbook (10min), audit (30s), public stats (5min).
+
+```bash
+# Set Redis URL in your .env
+REDIS_URL=redis://localhost:6379
+```
+
+---
+
+## 🐳 Docker
+
+### Development (with hot-reload)
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+Starts: Redis + API (tsx watch) + Web (Next.js) + AI (uvicorn) — all with source mounting for live reload.
+
+### Production (full stack)
+
+```bash
+docker compose --profile full up -d
+```
+
+Starts: Redis + API + Web + AI + all 17 MCP servers + Prometheus + Grafana + Nginx reverse proxy.
+
+### Profiles
+
+| Profile | Services |
+|---------|----------|
+| `core` | Redis, API, Web, AI |
+| `mcp` | All 17 MCP servers |
+| `monitoring` | Prometheus + Grafana |
+| `production` | Nginx reverse proxy + SSL |
+| `full` | Everything |
+
 ---
 
 ## 🧭 Architecture Decisions
@@ -503,6 +568,9 @@ npm run typecheck
 - **Why a separate Python service?** Python ML ecosystem (CrewAI, HuggingFace, SentenceTransformers) is more mature. Independent scaling.
 - **Why Cloudflare R2?** S3-compatible with zero egress fees. Legal documents are large.
 - **Why JWT instead of sessions?** Stateless auth scales horizontally. JWT carries user + firm ID for fast tenant resolution.
+- **Why Redis?** Distributed caching across multiple API instances, distributed rate limiting (prevents bypass via load balancer), distributed locks for job deduplication, and BullMQ job queue backing. Falls back to in-memory when unavailable.
+- **Why Docker Compose profiles?** Avoids starting 30+ services for local dev. `core` profile gives you the 4 essential services; `full` mirrors production.
+- **Why GitHub Actions CI/CD?** Native GitHub integration, free for public repos, Redis service container for test isolation, Docker layer caching via GHA cache.
 
 ---
 
