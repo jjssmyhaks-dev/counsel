@@ -78,19 +78,43 @@ router.post('/message', async (req: Request, res: Response, next: NextFunction) 
 
     if (!message || typeof message !== 'string') { res.status(400).json({ error: 'message required' }); return; }
 
+    // Extract thread_id from context if provided
+    const threadId = context?.threadId || context?.thread_id || null;
+    const approvedSteps = context?.approvedSteps || context?.approved_steps || null;
+
     let aiResponse = null;
     try {
       const aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
       const ai = await fetch(aiUrl + '/agents/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, firm_id: firmId, user_id: userId, context: { toolId: toolId || null, ...context }, tools: CHAT_TOOLS.map(t => ({ id: t.id, name: t.name, description: t.description })) }),
-        signal: AbortSignal.timeout(60000),
+        body: JSON.stringify({
+          message,
+          firm_id: firmId,
+          user_id: userId,
+          thread_id: threadId,
+          approved_steps: approvedSteps,
+          context: { toolId: toolId || null, ...context },
+          tools: CHAT_TOOLS.map(t => ({ id: t.id, name: t.name, description: t.description }))
+        }),
+        signal: AbortSignal.timeout(120000),  // 2 min for multi-step plans
       });
       if (ai.ok) aiResponse = await ai.json();
     } catch { /* fall through */ }
 
     if (aiResponse && (aiResponse.content || aiResponse.response)) {
-      res.json({ id: aiResponse.id || 'msg_' + Date.now(), role: 'assistant', content: aiResponse.content || aiResponse.response, timestamp: aiResponse.timestamp || new Date().toISOString(), actions: aiResponse.actions, toolSuggestions: aiResponse.toolSuggestions, result: aiResponse.result });
+      res.json({
+        id: aiResponse.id || 'msg_' + Date.now(),
+        role: 'assistant',
+        content: aiResponse.content || aiResponse.response,
+        timestamp: aiResponse.timestamp || new Date().toISOString(),
+        threadId: aiResponse.thread_id || threadId,
+        actions: aiResponse.actions,
+        toolSuggestions: aiResponse.toolSuggestions,
+        result: aiResponse.result,
+        requiresApproval: aiResponse.requiresApproval || null,
+        approvalSteps: aiResponse.approvalSteps || null,
+        entities: aiResponse.entities || null,
+      });
       return;
     }
 

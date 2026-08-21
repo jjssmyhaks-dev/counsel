@@ -354,8 +354,10 @@ class ChatRequest(BaseModel):
     message: str = Field(..., description="User's natural language message")
     firm_id: str = Field(..., description="Tenant firm ID")
     user_id: str = Field(..., description="User who sent the message")
+    thread_id: Optional[str] = Field(None, description="Existing conversation thread ID")
     context: Optional[Dict[str, Any]] = Field(None, description="Optional context: toolId, matterId, etc.")
     tools: Optional[List[Dict[str, Any]]] = Field(None, description="Available tool definitions")
+    approved_steps: Optional[List[str]] = Field(None, description="Step IDs pre-approved by user")
 
 
 class ChatResponse(BaseModel):
@@ -363,9 +365,13 @@ class ChatResponse(BaseModel):
     role: str = "assistant"
     content: str
     timestamp: str
+    thread_id: Optional[str] = None
     actions: Optional[List[Dict[str, Any]]] = None
     toolSuggestions: Optional[List[Dict[str, Any]]] = None
     result: Optional[Dict[str, Any]] = None
+    requiresApproval: Optional[bool] = None
+    approvalSteps: Optional[List[Dict[str, Any]]] = None
+    entities: Optional[Dict[str, Any]] = None
 
 
 # Intent classification keywords mapped to crew endpoints
@@ -397,182 +403,97 @@ def _classify_intent(message: str) -> str:
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_message(req: ChatRequest):
-    """Chat orchestrator endpoint — routes user messages to appropriate crew or handles directly.
+    """Autonomous chat endpoint — plans, executes, and tracks multi-step tasks.
 
-    This is the core endpoint for the chat-first interface. It:
-    1. Classifies user intent from the message
-    2. Routes to the appropriate CrewAI crew endpoint
-    3. Returns a structured response for the chat UI
+    Uses the autonomous engine for:
+    - Conversation memory across turns
+    - LLM-powered task decomposition
+    - Cross-crew chaining
+    - MCP tool calling
+    - Filing approval gates
+    - Entity extraction
     """
     import uuid
     from datetime import datetime, timezone
 
     msg_id = f"msg_{uuid.uuid4().hex[:12]}"
     ts = datetime.now(timezone.utc).isoformat()
-    tool_id = (req.context or {}).get("toolId")
-    lower_msg = req.message.lower()
 
-    # If a specific tool is requested, route directly
-    if tool_id:
-        return await _handle_tool_call(req, msg_id, ts, tool_id)
+    try:
+        from ..orchestrator.autonomous_chat import autonomous_chat
 
-    # Classify intent
-    intent = _classify_intent(req.message)
+        # Use autonomous engine
+        result = await autonomous_chat.chat(
+            firm_id=req.firm_id,
+            user_id=req.user_id,
+            message=req.message,
+            thread_id=req.thread_id,
+            approved_steps=req.approved_steps,
+        )
 
-    if intent == "general":
-        # For general messages, use LLM to generate a helpful response
+        return ChatResponse(
+            id=result.get("message_id", msg_id),
+            role="assistant",
+            content=result.get("content", ""),
+            timestamp=ts,
+            thread_id=result.get("thread_id"),
+            toolSuggestions=result.get("tool_suggestions"),
+            result=result.get("plan"),
+            requiresApproval=result.get("requires_approval"),
+            approvalSteps=result.get("approval_steps"),
+            entities=result.get("entities"),
+        )
+
+    except Exception as e:
+        logger.error("Autonomous chat failed: %s", e, exc_info=True)
+        # Fallback to simple LLM response
         try:
             from ..agents.cloudflare_llm import get_default_llm
             llm = get_default_llm(temperature=0.3)
-            system_prompt = (
-                "You are Counsel AI, an intelligent legal/consulting/CA assistant. "
-                "You help users with contract analysis, legal research, drafting, compliance, "
-                "proposals, market intelligence, and engagement management. "
-                "Respond helpfully and suggest relevant tools when appropriate."
-            )
             response = llm.call([
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": "You are Counsel AI, an expert legal/consulting/CA assistant."},
                 {"role": "user", "content": req.message},
             ])
             return ChatResponse(
-                id=msg_id, role="assistant", content=response or "I'm here to help. What would you like to do?",
+                id=msg_id, role="assistant",
+                content=response or "I encountered an error. Please try again.",
                 timestamp=ts,
-                toolSuggestions=[
-                    {"id": "analyze_contract", "name": "Analyze Contract", "icon": "scale"},
-                    {"id": "draft", "name": "Draft Document", "icon": "edit"},
-                    {"id": "research", "name": "Legal Research", "icon": "search"},
-                    {"id": "compliance", "name": "Check Compliance", "icon": "shield"},
-                ],
             )
-        except Exception as e:
-            logger.error("Chat general response failed: %s", e)
+        except Exception:
             return ChatResponse(
                 id=msg_id, role="assistant",
-                content="I can help you with contract analysis, drafting, research, compliance, proposals, and more. What would you like to do?",
+                content="I encountered an error processing your request. Please try again.",
                 timestamp=ts,
             )
 
-    # Route to the identified crew
-    config = _INTENT_MAP[intent]
-    crew_name = config["crew"]
 
-    try:
-        logger.info("Chat routing to crew=%s for intent=%s, user=%s", crew_name, intent, req.user_id)
-        audit_trail.log(
-            action=AuditAction.CONTRACT_ANALYSIS_STARTED,
-            resource_id=f"chat_{intent}",
-            firm_id=req.firm_id,
-            user_id=req.user_id,
-            metadata={"message": req.message[:200], "intent": intent},
-        )
-
-        # Dispatch to the appropriate crew
-        raw_output = ""
-        token_usage = {}
-
-        if intent == "analyze_contract":
-            result = await run_document_intelligence(document_text=req.message)
-            raw_output = result.get("raw_output", "")
-            token_usage = result.get("token_usage", {})
-        elif intent == "draft":
-            result = await run_drafting_crew(draft_type="memo", instructions=req.message)
-            raw_output = result.get("raw_output", "")
-            token_usage = result.get("token_usage", {})
-        elif intent == "research":
-            result = await run_research_crew(query=req.message, source_chunks=[])
-            raw_output = result.get("raw_output", "")
-            token_usage = result.get("token_usage", {})
-        elif intent == "compliance":
-            result = await run_compliance_crew(output_text=req.message, output_type="general", firm_id=req.firm_id, user_id=req.user_id)
-            raw_output = result.get("raw_output", "")
-            token_usage = result.get("token_usage", {})
-        elif intent == "proposal":
-            result = await run_proposal_crew(proposal_type="proposal", client_context=req.message, scope="TBD", timeline="TBD", budget_range="TBD")
-            raw_output = result.get("raw_output", "")
-            token_usage = result.get("token_usage", {})
-        elif intent == "market_intel":
-            result = await run_market_intel_crew(industry="general", company="", question=req.message)
-            raw_output = result.get("raw_output", "")
-            token_usage = result.get("token_usage", {})
-        elif intent == "engagement":
-            result = await run_engagement_crew(project_name="Chat Request", client_name="", scope=req.message, start_date="", end_date="")
-            raw_output = result.get("raw_output", "")
-            token_usage = result.get("token_usage", {})
-
-        audit_trail.log(
-            action=AuditAction.CONTRACT_ANALYSIS_COMPLETED,
-            resource_id=f"chat_{intent}",
-            firm_id=req.firm_id,
-            user_id=req.user_id,
-            metadata={"crew": crew_name, "token_usage": token_usage},
-        )
-
-        return ChatResponse(
-            id=msg_id, role="assistant", content=raw_output,
-            timestamp=ts,
-            result={"crew": crew_name, "intent": intent, "token_usage": token_usage},
-        )
-    except Exception as e:
-        logger.error("Chat crew dispatch failed (intent=%s): %s", intent, e, exc_info=True)
-        return ChatResponse(
-            id=msg_id, role="assistant",
-            content=f"I encountered an error processing your {intent.replace('_', ' ')} request: {str(e)}",
-            timestamp=ts,
-        )
+@router.get("/chat/threads")
+async def list_chat_threads(firm_id: str, user_id: Optional[str] = None):
+    """List all chat threads for a firm."""
+    from ..orchestrator.autonomous_chat import autonomous_chat
+    threads = autonomous_chat.list_threads(firm_id, user_id)
+    return {"threads": threads}
 
 
-async def _handle_tool_call(req: ChatRequest, msg_id: str, ts: str, tool_id: str) -> ChatResponse:
-    """Handle a specific tool invocation from the chat UI."""
-    try:
-        if tool_id == "analyze_contract":
-            result = await run_document_intelligence(document_text=req.message)
-        elif tool_id == "draft":
-            result = await run_drafting_crew(draft_type="memo", instructions=req.message)
-        elif tool_id == "research":
-            result = await run_research_crew(query=req.message, source_chunks=[])
-        elif tool_id == "compliance":
-            result = await run_compliance_crew(output_text=req.message, output_type="general", firm_id=req.firm_id, user_id=req.user_id)
-        elif tool_id == "proposal":
-            result = await run_proposal_crew(proposal_type="proposal", client_context=req.message, scope="TBD", timeline="TBD", budget_range="TBD")
-        elif tool_id == "market_intel":
-            result = await run_market_intel_crew(industry="general", company="", question=req.message)
-        elif tool_id == "engagement":
-            result = await run_engagement_crew(project_name="Chat Request", client_name="", scope=req.message, start_date="", end_date="")
-        elif tool_id == "ca_bookkeeping":
-            from ..agents.crews import run_ca_bookkeeping_reconciliation
-            result = await run_ca_bookkeeping_reconciliation(client_name="Client", period="Q1 2026", trial_balance_ref=req.message)
-        elif tool_id == "ca_gst":
-            from ..agents.crews import run_ca_gst
-            result = await run_ca_gst(client_name="Client", gstin="", period="")
-        elif tool_id == "ca_audit":
-            from ..agents.crews import run_ca_audit
-            result = await run_ca_audit(client_name="Client", year="2025-26", engagement_type="Statutory Audit")
-        elif tool_id == "ca_income_tax":
-            from ..agents.crews import run_ca_income_tax
-            result = await run_ca_income_tax(client_name="Client", pan="", assessment_year="2026-27")
-        elif tool_id == "ca_roc":
-            from ..agents.crews import run_ca_roc
-            result = await run_ca_roc(client_name="Client", cin="")
-        else:
-            return ChatResponse(
-                id=msg_id, role="assistant",
-                content=f"Unknown tool: {tool_id}. Available tools: analyze_contract, draft, research, compliance, proposal, market_intel, engagement, ca_bookkeeping, ca_gst, ca_audit, ca_income_tax, ca_roc",
-                timestamp=ts,
-            )
+@router.get("/chat/threads/{thread_id}/messages")
+async def get_thread_messages(firm_id: str, thread_id: str):
+    """Get message history for a thread."""
+    from ..orchestrator.autonomous_chat import autonomous_chat
+    messages = autonomous_chat.get_thread_history(firm_id, thread_id)
+    return {"messages": messages}
 
-        return ChatResponse(
-            id=msg_id, role="assistant",
-            content=result.get("raw_output", ""),
-            timestamp=ts,
-            result={"tool_id": tool_id, "token_usage": result.get("token_usage", {})},
-        )
-    except Exception as e:
-        logger.error("Tool call failed (tool=%s): %s", tool_id, e)
-        return ChatResponse(
-            id=msg_id, role="assistant",
-            content=f"Error executing {tool_id}: {str(e)}",
-            timestamp=ts,
-        )
+
+@router.post("/chat/plan")
+async def preview_chat_plan(req: ChatRequest):
+    """Preview the execution plan without executing (for approval flow)."""
+    from ..orchestrator.autonomous_chat import autonomous_chat
+    result = autonomous_chat.plan_and_preview(
+        firm_id=req.firm_id,
+        user_id=req.user_id,
+        message=req.message,
+        thread_id=req.thread_id,
+    )
+    return result
 
 
 # ---------------------------------------------------------------
