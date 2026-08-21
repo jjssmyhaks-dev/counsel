@@ -18,6 +18,7 @@ interface ChatMessage {
     type: string;
     fields: { name: string; label: string; type: string; required: boolean; options?: string[]; placeholder?: string }[];
   };
+  feedback?: 'positive' | 'negative' | null;
 }
 
 interface ChatTool {
@@ -64,6 +65,7 @@ export default function ChatPage() {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [pendingApproval, setPendingApproval] = useState<any>(null);
   const [executingSteps, setExecutingSteps] = useState<string[]>([]);
+  const [feedbackSent, setFeedbackSent] = useState<Record<string, 'positive' | 'negative'>>({});
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -325,6 +327,17 @@ export default function ChatPage() {
       e.preventDefault();
       handleSend();
     }
+  }
+
+  async function handleFeedback(msgId: string, type: 'positive' | 'negative') {
+    setFeedbackSent(prev => ({ ...prev, [msgId]: type }));
+    try {
+      await api.post('/chat/feedback', {
+        messageId: msgId,
+        type,
+        threadId: threadId || undefined,
+      });
+    } catch { /* feedback is best-effort */ }
   }
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -616,6 +629,39 @@ export default function ChatPage() {
                   </div>
                 )}
 
+                {/* Feedback buttons (assistant messages only) */}
+                {msg.role === 'assistant' && (
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-black/[0.04] dark:border-slate-800">
+                    {feedbackSent[msg.id] ? (
+                      <span className="text-[11px] text-[#969e9b] dark:text-slate-500 flex items-center gap-1">
+                        {feedbackSent[msg.id] === 'positive' ? '👍 Thanks for the feedback!' : '👎 Noted — we\'ll improve.'}
+                      </span>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleFeedback(msg.id, 'positive')}
+                          className="p-1 rounded-md hover:bg-[#eaf7f0] dark:hover:bg-slate-800 transition-colors text-[#969e9b] hover:text-[#0a8a5f]"
+                          title="Helpful"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3.75a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 5.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23a1.875 1.875 0 01-1.486-.724l-1.248-1.635-.37.37a.75.75 0 01-1.06 0l-1.5-1.5a.75.75 0 010-1.06l.37-.37-.37-.37-.37.37a.75.75 0 01-1.06 0l-1.5-1.5a.75.75 0 010-1.06l.37-.37-.37-.37-.37.37a.75.75 0 01-1.06 0L6.633 10.5z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 3v6" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleFeedback(msg.id, 'negative')}
+                          className="p-1 rounded-md hover:bg-[#fdf0ee] dark:hover:bg-slate-800 transition-colors text-[#969e9b] hover:text-[#c2452e]"
+                          title="Not helpful"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ transform: 'rotate(180deg)' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3.75a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 5.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23a1.875 1.875 0 01-1.486-.724l-1.248-1.635-.37.37a.75.75 0 01-1.06 0l-1.5-1.5a.75.75 0 010-1.06l.37-.37-.37-.37-.37.37a.75.75 0 01-1.06 0l-1.5-1.5a.75.75 0 010-1.06l.37-.37-.37-.37-.37.37a.75.75 0 01-1.06 0L6.633 10.5z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 3v6" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
                 <p className="text-[10px] text-[#969e9b] dark:text-slate-500 mt-1.5">{msg.timestamp}</p>
               </div>
             </div>

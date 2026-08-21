@@ -25,6 +25,33 @@ router.get('/tools', (_req: Request, res: Response) => {
   res.json({ tools: CHAT_TOOLS });
 });
 
+router.post('/feedback', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { messageId, type, threadId } = req.body;
+    const firmId = (req as any).firmId;
+    const userId = (req as any).user?.id;
+
+    if (!messageId || !type || !['positive', 'negative'].includes(type)) {
+      res.status(400).json({ error: 'messageId and type (positive|negative) required' });
+      return;
+    }
+
+    // Log feedback for self-learning
+    await prisma.auditLog.create({
+      data: {
+        firmId,
+        userId,
+        action: type === 'positive' ? 'CHAT_FEEDBACK_POSITIVE' : 'CHAT_FEEDBACK_NEGATIVE',
+        resourceType: 'ChatMessage',
+        resourceId: messageId,
+        details: { type, threadId },
+      },
+    }).catch(() => {}); // best-effort
+
+    res.json({ recorded: true, type });
+  } catch (err) { next(err); }
+});
+
 router.post('/history', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { action, messages, conversationId } = req.body;

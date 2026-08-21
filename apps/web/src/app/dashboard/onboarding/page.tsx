@@ -99,7 +99,16 @@ export default function OnboardingWizard() {
     setStep(3);
   }, []);
 
-  const handleComplete = useCallback(() => {
+  const handleComplete = useCallback(async () => {
+    // Save onboarding setup to the API
+    try {
+      await api.post('/onboarding/setup', {
+        companySize: 'SOLO', // Default, can be updated later
+        firmType: firmType,
+        firmName: firm?.name || undefined,
+      });
+    } catch { /* best-effort — continue even if API fails */ }
+
     const f = getFirm();
     if (f) { f.onboardingCompleted = true; localStorage.setItem('counsel_firm', JSON.stringify(f)); }
     if (firmType === 'CA') {
@@ -107,7 +116,7 @@ export default function OnboardingWizard() {
     } else {
       router.push('/dashboard');
     }
-  }, [router, firmType]);
+  }, [router, firmType, firm]);
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
