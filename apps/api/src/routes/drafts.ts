@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { validate } from '../middleware/validate';
 import { auditAction } from '../middleware/audit';
 import { NotFoundError } from '../lib/errors';
+import { checkFreeTier } from '../middleware/free-tier';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ const createDraftSchema = z.object({
 
 router.post(
   '/',
+  checkFreeTier('drafts'),
   validate('body', createDraftSchema),
   auditAction('Draft', 'DRAFT_CREATED'),
   async (req: Request, res: Response, next: NextFunction) => {

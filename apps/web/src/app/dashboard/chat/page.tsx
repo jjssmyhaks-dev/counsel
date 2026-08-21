@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
+import FreeTierBanner from '@/components/FreeTierBanner';
 
 const serif = 'font-serif';
 
@@ -66,6 +67,7 @@ export default function ChatPage() {
   const [pendingApproval, setPendingApproval] = useState<any>(null);
   const [executingSteps, setExecutingSteps] = useState<string[]>([]);
   const [feedbackSent, setFeedbackSent] = useState<Record<string, 'positive' | 'negative'>>({});
+  const [upgradeModal, setUpgradeModal] = useState<{ show: boolean; message?: string }>({ show: false });
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -231,11 +233,17 @@ export default function ChatPage() {
         setTimeout(() => saveConversation(updated), 100);
         return updated;
       });
-    } catch {
+    } catch (err: any) {
+      // Check if this is a free tier limit exceeded error
+      if (err?.code === 'FREE_TIER_LIMIT_EXCEEDED' || err?.status === 403) {
+        setUpgradeModal({ show: true, message: err?.message || err?.upgrade?.message || 'You have reached your daily free limit.' });
+      }
       const errMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I had trouble processing that. Please try again.',
+        content: err?.code === 'FREE_TIER_LIMIT_EXCEEDED'
+          ? (err?.upgrade?.message || 'You\'ve reached your daily free limit. Upgrade to continue using Counsel AI.')
+          : 'Sorry, I had trouble processing that. Please try again.',
         timestamp: 'just now',
       };
       setMessages(prev => [...prev, errMsg]);
@@ -501,6 +509,8 @@ export default function ChatPage() {
 
       {/* ── Main Chat Area ────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Free tier usage banner */}
+        <FreeTierBanner />
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-black/[0.04] dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-sm">
           <div className="flex items-center gap-3">
@@ -723,6 +733,46 @@ export default function ChatPage() {
 
           <div ref={bottomRef} />
         </div>
+
+        {/* ── Upgrade Modal (shown when free limits are hit) ─────────── */}
+        {upgradeModal.show && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-black/[0.08] dark:border-slate-800 shadow-2xl max-w-md w-full mx-4 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#0c0a09] dark:text-white" style={{ fontFamily: 'Georgia, serif' }}>Upgrade Required</h3>
+                  <p className="text-xs text-[#717d79]">Daily free limit reached</p>
+                </div>
+              </div>
+              <p className="text-sm text-[#717d79] dark:text-[#969e9b] mb-5">{upgradeModal.message || "You've used all free AI messages for today. Upgrade to unlock unlimited access."}</p>
+              <div className="space-y-2 mb-5">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#f0faf5] border border-[#15b881]/20">
+                  <div><p className="text-sm font-semibold text-[#0c0a09]">Starter — ₹999/mo</p><p className="text-xs text-[#717d79]">Unlimited chat, 100 docs/mo</p></div>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#0c0a09] text-white">
+                  <div><p className="text-sm font-semibold">Professional — ₹4,999/mo</p><p className="text-xs text-white/70">Unlimited everything + API</p></div>
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-[#15b881] rounded-full">POPULAR</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#faf8f5] border border-black/[0.06]">
+                  <div><p className="text-sm font-semibold text-[#0c0a09]">Business — ₹14,999/mo</p><p className="text-xs text-[#717d79]">Audit, ROC, team, SSO</p></div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <a href="/dashboard/billing" className="flex-1 text-center px-4 py-2.5 bg-[#15b881] text-white rounded-xl text-sm font-semibold hover:bg-[#0a8a5f] transition-colors">
+                  View Plans
+                </a>
+                <button onClick={() => setUpgradeModal({ show: false })} className="px-4 py-2.5 text-sm font-medium text-[#717d79] border border-black/[0.08] rounded-xl hover:bg-black/[0.03] transition-colors">
+                  Later
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Tool Picker Bar ─────────────────────────────────────────── */}
         <div className="px-6 pb-2">

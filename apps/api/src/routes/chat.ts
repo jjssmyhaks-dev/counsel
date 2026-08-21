@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@counsel/database';
+import { checkFreeTier } from '../middleware/free-tier';
 
 const router = Router();
 
@@ -114,7 +115,7 @@ router.post('/history', async (req: Request, res: Response, next: NextFunction) 
   } catch (err) { next(err); }
 });
 
-router.post('/message', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/message', checkFreeTier('chatMessages'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { message, toolId, context } = req.body;
     const firmId = (req as any).firmId;

@@ -5,6 +5,7 @@ import { validate } from '../middleware/validate';
 import { auditAction } from '../middleware/audit';
 import { NotFoundError } from '../lib/errors';
 import { aiClient } from '../lib/ai-client';
+import { checkFreeTier } from '../middleware/free-tier';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ const querySchema = z.object({
 
 router.post(
   '/query',
+  checkFreeTier('kbQueries'),
   validate('body', querySchema),
   auditAction('KbQuery', 'KB_QUERY'),
   async (req: Request, res: Response, next: NextFunction) => {

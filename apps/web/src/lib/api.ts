@@ -26,13 +26,16 @@ import type {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 export class ApiError extends Error {
+  public upgrade?: { message?: string; plans?: any[]; checkoutUrl?: string };
   constructor(
     public status: number,
     message: string,
-    public code?: string
+    public code?: string,
+    extra?: Record<string, any>
   ) {
     super(message);
     this.name = 'ApiError';
+    if (extra?.upgrade) this.upgrade = extra.upgrade;
   }
 }
 
@@ -77,8 +80,9 @@ async function request<T>(
     }));
     throw new ApiError(
       res.status,
-      err.error?.message || res.statusText,
-      err.error?.code
+      err.error?.message || err.upgrade?.message || res.statusText,
+      err.error?.code || err.code,
+      { upgrade: err.upgrade }
     );
   }
 
