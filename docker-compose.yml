@@ -592,6 +592,23 @@ services:
     restart: unless-stopped
     profiles: ["mcp", "full"]
 
+  # ──────────── Infrastructure ────────────
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    profiles: ["core", "full", "monitoring"]
+
   # ──────────── Core Services ────────────
 
   ai:
@@ -702,3 +719,4 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+  redis_data:

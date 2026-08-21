@@ -57,6 +57,8 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { URL } from 'url';
 import { startWorkers } from './workers/jobWorker';
+import { caches, invalidators } from './middleware/cache';
+import { redisHealthCheck, closeRedis } from './lib/redis';
 
 // Initialize services
 initWorkOS();
@@ -132,6 +134,9 @@ app.get('/api/health', async (_req, res) => {
     checks.status = 'degraded';
   }
 
+  // Redis check
+  checks.redis = await redisHealthCheck();
+
   // Live AI service check
   try {
     const ai = await fetch(`${process.env.AI_SERVICE_URL || 'http://localhost:8000'}/health`, {
@@ -182,7 +187,7 @@ app.use('/api/v1/auth/register', authRateLimit);
 app.use('/api/v1/auth/forgot-password', authRateLimit);
 
 // ─── Public routes (no auth) — landing page stats ───────────────────────────
-app.use('/api/v1/public', publicRoutes);
+app.use('/api/v1/public', caches.publicStats, publicRoutes);
 
 // ─── Auth middleware (applied to all routes except /auth/login) ─────────────
 app.use(authMiddleware);
@@ -193,18 +198,18 @@ app.use(tenantMiddleware);
 // ─── Routes ─────────────────────────────────────────────────────────────────
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/firms', firmRoutes);
-app.use('/api/v1/documents', documentRoutes);
-app.use('/api/v1/matters', matterRoutes);
+app.use('/api/v1/documents', caches.documents, documentRoutes);
+app.use('/api/v1/matters', caches.matters, matterRoutes);
 app.use('/api/v1/research', researchRoutes);
-app.use('/api/v1/drafts', draftRoutes);
-app.use('/api/v1/meetings', meetingRoutes);
-app.use('/api/v1/kb', kbRoutes);
+app.use('/api/v1/drafts', caches.drafts, draftRoutes);
+app.use('/api/v1/meetings', caches.meetings, meetingRoutes);
+app.use('/api/v1/kb', caches.kb, kbRoutes);
 app.use('/api/v1/jobs', jobRoutes);
-app.use('/api/v1/playbook', playbookRoutes);
+app.use('/api/v1/playbook', caches.playbook, playbookRoutes);
 app.use('/api/v1/analysis', analysisRoutes);
 app.use('/api/v1/billing', billingRoutes);
 app.use('/api/v1/billing', billingWebhook);
-app.use('/api/v1/audit', auditRoutes);
+app.use('/api/v1/audit', caches.audit, auditRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/clients', clientRoutes);
 app.use('/api/v1/engagements', engagementRoutes);
@@ -317,3 +322,16 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export default app;
+
+// ─── Graceful shutdown — close Redis + HTTP server ───────────────────────────
+process.on('SIGTERM', async () => {
+  console.log('[SIGTERM] Shutting down gracefully...');
+  await closeRedis();
+  server.close(() => process.exit(0));
+});
+
+process.on('SIGINT', async () => {
+  console.log('[SIGINT] Shutting down gracefully...');
+  await closeRedis();
+  server.close(() => process.exit(0));
+});
