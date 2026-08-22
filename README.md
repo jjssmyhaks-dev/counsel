@@ -43,6 +43,7 @@ An AI workforce platform that deploys 31+ autonomous agents across legal, consul
 | **Org Onboarding** | Company size selector, plan recommendation, team invite via email/link | ✅ | ✅ | ✅ |
 | **Indian Billing** | INR pricing, UPI/cards/Razorpay, GST-inclusive, plan-based feature gating | ✅ | ✅ | ✅ |
 | **Integrations** | 17 MCP servers: Postgres, Cloudflare AI, Docs/OCR, Email, Calendar, Storage, eSign, Billing, CRM, Court, Conflict, Workflow, Time & more (ports 5001–5017) | ✅ | ✅ | ✅ |
+| **Knowledge Base** | Open Knowledge Format (schema.org), structured entries (7 types), knowledge graph, AI ingestion, semantic search | ✅ | ✅ | ✅ |
 | **Multi-Tenancy** | PostgreSQL RLS, per-firm document indexes, isolated playbooks | ✅ | ✅ | ✅ |
 | **Audit Trail** | Immutable append-only logs (database + JSONL), every AI action tracked | ✅ | ✅ | ✅ |
 | **SSO** | WorkOS SAML/OIDC enterprise single sign-on | ✅ | ✅ | ✅ |
@@ -214,7 +215,7 @@ The seed script provisions a demo firm with sample documents, matters, and users
 | **Chat Orchestrator** | Full intent routing → all 13 crews + 15 chat tools + autonomous multi-step |
 | **MCP Servers** | 17 deployed — Postgres uses real asyncpg, Email uses Resend API (ports 5001–5017) |
 | **Dynamic Pages** | 55+ — landing, auth, onboarding, invite, dashboard, CA, admin, legal, pricing |
-| **Database Models** | 25+ (Prisma) — incl. TeamInvite, OnboardingProgress, AccessPolicy, ChatConversation, AiUsageLog |
+| **Database Models** | 28+ (Prisma) — incl. TeamInvite, OnboardingProgress, AccessPolicy, ChatConversation, AiUsageLog, KnowledgeBase, KnowledgeEntry, KnowledgeRelation |
 | **API Endpoints** | 90+ REST routes + health check + Prometheus `/api/metrics` |
 | **Test Suite** | 80 tests / 10 files (Vitest) — auth, chat, matters, documents, jwt, tenant, audit, errors, validate, integrations |
 | **TypeScript Errors** | 0 — verified on both API and Web (`tsc --noEmit`) |
@@ -291,8 +292,11 @@ counsel-platform/
 │   │       │   ├── security.py             # RBAC at orchestrator level
 │   │       │   ├── cost_control.py         # Token budgets + usage caps
 │   │       │   └── scalability.py          # Caching + pooling
+│   │       ├── knowledge/        # Knowledge Base system:
+│   │       │   ├── base.py       #   CRUD, search, graph traversal
+│   │       │   └── ingestion.py  #   LLM-based knowledge extraction
 │   │       ├── rag/            # pgvector retriever (cosine similarity)
-│   │       └── routes/         # FastAPI route handlers
+│   │       └── routes/         # FastAPI route handlers (incl. knowledge routes)
 ├── extensions/
 │   └── chrome/                # Chrome Manifest V3 Gmail extension
 ├── nginx/                     # Production reverse proxy + SSL
@@ -386,6 +390,11 @@ POST /agents/ca/audit            # Crew 11: Audit Automation (3 agents)
 POST /agents/ca/income-tax       # Crew 12: Income Tax (3 agents)
 POST /agents/ca/roc              # Crew 13: ROC Compliance (3 agents)
 GET  /agents/status              # Agent system health + model info
+
+# Knowledge Base (AI Service)
+POST /knowledge/extract          # Extract knowledge entries from a document
+POST /knowledge/search           # Semantic search across knowledge entries
+POST /knowledge/query            # RAG-augmented query (KB + documents)
 ```
 
 ### Core Resources
@@ -402,6 +411,25 @@ GET    /api/v1/matters            # List firm matters
 POST   /api/v1/drafts             # Generate AI draft
 POST   /api/v1/kb/query           # RAG query (Ask the Firm)
 POST   /api/v1/meetings/transcripts # Process transcript
+
+# Knowledge Base (Open Knowledge Format)
+GET    /api/v1/kb/stats                        # KB statistics for the firm
+GET    /api/v1/kb/bases                        # List all knowledge bases
+POST   /api/v1/kb/bases                        # Create a new knowledge base
+GET    /api/v1/kb/bases/:id                    # Get KB with stats & entries
+PATCH  /api/v1/kb/bases/:id                    # Update KB metadata
+DELETE /api/v1/kb/bases/:id                    # Delete KB and all entries
+POST   /api/v1/kb/bases/:baseId/entries        # Create a knowledge entry
+GET    /api/v1/kb/bases/:baseId/entries        # List entries (filterable)
+GET    /api/v1/kb/entries/:id                  # Get single entry
+PATCH  /api/v1/kb/entries/:id                  # Update entry
+DELETE /api/v1/kb/entries/:id                  # Soft-delete entry
+POST   /api/v1/kb/search                       # Semantic search across KBs
+POST   /api/v1/kb/ingest                       # Extract knowledge from a document
+POST   /api/v1/kb/relations                    # Create relation between entries
+GET    /api/v1/kb/entries/:id/relations        # Get relations for an entry
+DELETE /api/v1/kb/relations/:id                # Delete a relation
+POST   /api/v1/kb/graph                        # Knowledge graph traversal
 ```
 
 ---
