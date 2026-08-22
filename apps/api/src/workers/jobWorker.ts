@@ -97,6 +97,43 @@ export async function processDocumentJobImpl(documentId: string, firmId: string)
     data: { status: 'READY' as any },
   });
 
+  // Auto-ingest knowledge from document (best-effort)
+  try {
+    // Find or create "Document Knowledge" KB
+    let docKb = await prisma.knowledgeBase.findFirst({
+      where: { firmId, name: 'Document Knowledge' },
+    });
+    if (!docKb) {
+      docKb = await prisma.knowledgeBase.create({
+        data: {
+          firmId,
+          name: 'Document Knowledge',
+          description: 'Auto-extracted knowledge from uploaded documents',
+          type: 'GENERAL',
+          createdById: 'system',
+        },
+      });
+    }
+
+    // Trigger knowledge extraction via AI service (fire-and-forget)
+    const aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    await fetch(`${aiUrl}/knowledge/extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        document_id: document.id,
+        knowledge_base_id: docKb.id,
+        firm_id: firmId,
+        user_id: 'system',
+        entry_types: ['FACT', 'RULE', 'CLAUSE', 'GUIDELINE'],
+      }),
+      signal: AbortSignal.timeout(60000),
+    });
+    console.log(`[Worker] Knowledge extraction triggered for document ${document.id}`);
+  } catch (kbErr: any) {
+    console.warn(`[Worker] Knowledge extraction failed for document ${document.id}:`, kbErr.message);
+  }
+
   return { chunks: parseResult.chunks.length, pages: parseResult.total_pages };
 }
 

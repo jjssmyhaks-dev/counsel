@@ -20,6 +20,7 @@ const CHAT_TOOLS = [
   { id: 'reconciliation', name: 'Reconciliation', description: 'Bank & ledger reconciliation status', icon: 'refresh-cw', category: 'ca' },
   { id: 'manage_engagements', name: 'Engagements', description: 'Track client engagements & projects', icon: 'clipboard-list', category: 'consulting' },
   { id: 'manage_integrations', name: 'Integrations', description: 'Connect CRM, billing, DMS', icon: 'plug', category: 'integrations' },
+  { id: 'search_knowledge', name: 'Knowledge Base', description: 'Search structured knowledge entries (rules, precedents, regulations)', icon: 'book-open', category: 'knowledge' },
 ];
 
 router.get('/tools', (_req: Request, res: Response) => {
@@ -387,6 +388,32 @@ async function localDispatch(message: string, toolId: string | undefined, firmId
       const eLines = engs.map(function(e: any) { return '\u2022 ' + e.name + ' — ' + (e.client?.name || 'N/A') + ' | ' + e.type + ' | Start: ' + new Date(e.startDate).toLocaleDateString(); }).join('\n');
       return ok({ content: '\uD83D\uDCCB Engagements (' + engs.length + ')\n\n' + eLines });
     } catch (err: any) { return ok({ content: '\u274C Failed: ' + (err.message || 'Unknown error') }); }
+  }
+
+  // KNOWLEDGE BASE SEARCH
+  if (toolId === 'search_knowledge' || /\b(knowledge\s*base|search\s*knowledge|find\s*(rule|precedent|regulation|guideline|policy))\b/i.test(lowerMsg)) {
+    const kbQuery = extractBetween(message, [/(?:search|find|about|for|query)\s+"([^"]+)"/i, /(?:search|find|about|for|query)\s+'([^']+)'/i]) || message;
+    try {
+      const searchResult = await fetch(`${process.env.AI_SERVICE_URL || 'http://localhost:8000'}/knowledge/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: kbQuery, firm_id: firmId, top_k: 10 }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (searchResult.ok) {
+        const data = await searchResult.json();
+        const results = data.results || [];
+        if (results.length > 0) {
+          const lines = results.map((r: any) => {
+            const typeEmoji: Record<string, string> = { FACT: '\u2139\uFE0F', RULE: '\u2696\uFE0F', PRECEDENT: '\u2660\uFE0F', REGULATION: '\u26A0\uFE0F', TEMPLATE: '\uD83D\uDCDD', CLAUSE: '\uD83D\uDCD6', GUIDELINE: '\uD83D\uDCA1' };
+            return `${typeEmoji[r.entry_type] || '\u2022'} **${r.title}** (${r.entry_type})\n   ${r.summary || r.content?.substring(0, 150) || ''}`;
+          }).join('\n\n');
+          return ok({ content: `Knowledge Base Results (${results.length})\n\n${lines}\n\nUse the Knowledge Base page (/dashboard/knowledge) to manage entries.`, result: { action: 'knowledge_search', query: kbQuery, results }, toolSuggestions: [{ id: 'search_knowledge', name: 'Search Again', icon: 'book-open' }] });
+        }
+        return ok({ content: `No knowledge entries found for "${kbQuery}".\n\nTry:\n- Upload documents and ingest them into the Knowledge Base\n- Create knowledge entries manually at /dashboard/knowledge`, toolSuggestions: [{ id: 'upload_document', name: 'Upload Document', icon: 'file-up' }] });
+      }
+    } catch { /* AI service unavailable */ }
+    return ok({ content: 'Knowledge base search is temporarily unavailable. The AI service may be offline.' });
   }
 
   // ── INTEGRATIONS ───────────────────────────────────────────────────

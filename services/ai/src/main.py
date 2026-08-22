@@ -55,6 +55,7 @@ from .orchestrator.pipeline_orchestrator import PipelineOrchestrator, PipelineJo
 from .orchestrator.audit_agent import audit_trail, AuditAction
 from .orchestrator.audit_persistence import setup_audit_persistence
 from .routes.agents import router as agents_router
+from .routes.knowledge import router as knowledge_router
 
 
 # ── Lifespan ────────────────────────────────────────────────────
@@ -111,6 +112,9 @@ app.add_middleware(
 
 # Register multi-agent CrewAI routes
 app.include_router(agents_router)
+
+# Register knowledge base routes
+app.include_router(knowledge_router)
 
 
 # ── Health ──────────────────────────────────────────────────────

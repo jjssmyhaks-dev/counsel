@@ -259,6 +259,11 @@ model Firm {
   feedbackLogs    FeedbackLog[]
   evalResults     EvalResult[]
 
+  // Knowledge Base
+  knowledgeBases  KnowledgeBase[]
+  knowledgeEntries KnowledgeEntry[]
+  knowledgeRelations KnowledgeRelation[]
+
   @@map("firms")
 }
 
@@ -304,6 +309,8 @@ model User {
   auditLogs      AuditLog[]
   actionItems    MeetingActionItem[] @relation("ActionItemOwner")
   feedbackLogs   FeedbackLog[]
+  knowledgeBases KnowledgeBase[] @relation("KnowledgeBaseCreatedBy")
+  knowledgeEntries KnowledgeEntry[] @relation("KnowledgeEntryCreatedBy")
 
   @@index([firmId])
   @@map("users")
@@ -386,6 +393,7 @@ model Document {
   uploadedBy User            @relation("DocumentUploadedBy", fields: [uploadedById], references: [id])
   chunks     DocumentChunk[]
   analyses   Analysis[]
+  knowledgeEntries KnowledgeEntry[]
 
   @@index([firmId])
   @@index([matterId])
@@ -956,4 +964,83 @@ model EvalResult {
   @@index([overallScore])
   @@index([createdAt])
   @@map("eval_results")
+}
+
+// ─── Knowledge Base Models (Structured Knowledge Format) ─────────────────────
+
+model KnowledgeBase {
+  id          String   @id @default(uuid()) @db.Uuid
+  firmId      String   @map("firm_id") @db.Uuid
+  name        String
+  description String?
+  type        String   @default("GENERAL") // GENERAL, LEGAL, CONSULTING, CA, PLAYBOOK
+  status      String   @default("ACTIVE") // ACTIVE, ARCHIVED
+  entryCount  Int      @default(0) @map("entry_count")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById String   @map("created_by_id") @db.Uuid
+
+  firm      Firm             @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  createdBy User             @relation("KnowledgeBaseCreatedBy", fields: [createdById], references: [id])
+  entries   KnowledgeEntry[]
+
+  @@index([firmId])
+  @@index([type])
+  @@map("knowledge_bases")
+}
+
+model KnowledgeEntry {
+  id              String   @id @default(uuid()) @db.Uuid
+  knowledgeBaseId String   @map("knowledge_base_id") @db.Uuid
+  firmId          String   @map("firm_id") @db.Uuid
+  title           String
+  content         String   @map("content")
+  summary         String?
+  entryType       String   @map("entry_type") // FACT, RULE, PRECEDENT, REGULATION, TEMPLATE, CLAUSE, GUIDELINE
+  category        String?  // e.g. "indemnification", "gst-filing", "mca-compliance"
+  tags            Json     @default("[]") // JSON array of string tags
+  sourceDocumentId String? @map("source_document_id") @db.Uuid
+  sourceChunkId   String? @map("source_chunk_id") @db.Uuid
+  confidence      Float    @default(1.0)
+  embedding       Unsupported("vector(768)")
+  metadata        Json     @default("{}") // structured metadata (schema.org-inspired)
+  isActive        Boolean  @default(true) @map("is_active")
+  accessLevel     String   @default("FIRM") // FIRM, TEAM, PRIVATE
+  usageCount      Int      @default(0) @map("usage_count")
+  lastUsedAt      DateTime? @map("last_used_at")
+  createdById     String   @map("created_by_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  firm          Firm          @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  createdBy     User          @relation("KnowledgeEntryCreatedBy", fields: [createdById], references: [id])
+  sourceDocument Document?    @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([knowledgeBaseId])
+  @@index([firmId])
+  @@index([entryType])
+  @@index([category])
+  @@index([isActive])
+  @@map("knowledge_entries")
+}
+
+model KnowledgeRelation {
+  id          String   @id @default(uuid()) @db.Uuid
+  firmId      String   @map("firm_id") @db.Uuid
+  sourceId    String   @map("source_id") @db.Uuid
+  targetId    String   @map("target_id") @db.Uuid
+  relationType String  @map("relation_type") // REFERENCES, SUPPORTS, CONTRADICTS, SUPERSEDES, RELATED_TO
+  weight      Float    @default(1.0)
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId, relationType])
+  @@index([firmId])
+  @@index([sourceId])
+  @@index([targetId])
+  @@map("knowledge_relations")
 }
